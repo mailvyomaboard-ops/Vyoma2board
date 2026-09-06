@@ -5,6 +5,10 @@ import '../index.css';
 
 const ROLES = ['Casual', 'Student', 'Teacher', 'Interviewer', 'Interviewee', 'Employee', 'Manager'];
 
+import { auth, db } from '../firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
@@ -39,14 +43,12 @@ export default function Auth() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.success) throw new Error(data.error || 'Login failed');
-      applySession(data);
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const user = userCredential.user;
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.exists() ? userDoc.data() : { name: 'User', email: user.email, role: 'Casual' };
+      
+      applySession({ token: await user.getIdToken(), user: { id: user.uid, ...userData } });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -63,14 +65,17 @@ export default function Auth() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), password, role })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.success) throw new Error(data.error || 'Sign up failed');
-      applySession(data);
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const user = userCredential.user;
+      const userData = {
+        name: name.trim(),
+        email: email.trim(),
+        role: role,
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, 'users', user.uid), userData);
+      
+      applySession({ token: await user.getIdToken(), user: { id: user.uid, ...userData } });
     } catch (err) {
       setError(err.message);
     } finally {

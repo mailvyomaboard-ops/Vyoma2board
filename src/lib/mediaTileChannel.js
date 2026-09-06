@@ -9,6 +9,7 @@
 //   - The sharer answers every viewer with its captured stream.
 //   - ICE candidates are relayed both ways through /comms.
 
+import { getWsUrl } from './config';
 let socket = null;
 let roomId = null;
 let myUserId = null;
@@ -57,10 +58,9 @@ export function startMediaTileChannel(id) {
   myUserId = 'mtile-' + (localStorage.getItem('userId') || Math.random().toString(36).substring(2, 9)) + '-' + Math.random().toString(36).substring(2, 7);
 
   const connect = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const token = localStorage.getItem('token') || (import.meta.env.DEV ? 'dev-mode-token-12345' : '');
-    const wsHost = window.location.host;
-    socket = new WebSocket(`${protocol}//${wsHost}/comms?token=${encodeURIComponent(token)}`);
+    const wsUrl = `${getWsUrl()}/comms?token=${encodeURIComponent(token)}`;
+    socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
       socket.send(JSON.stringify({ type: 'join', roomId, userId: myUserId, name: 'Media Tile', color: '#111111', hidden: true }));

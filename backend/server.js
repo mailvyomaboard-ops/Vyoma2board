@@ -5,7 +5,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import sqlite3 from 'sqlite3';
+import { Pool } from 'pg';
 import https from 'https';
 import AdmZip from 'adm-zip';
 import { exec, spawn, execFile } from 'child_process';
@@ -44,74 +44,53 @@ const DEFAULT_PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3002
 let server;
 
 // Setup database
-const dbPath = path.join(__dirname, 'database.sqlite');
-const db = new sqlite3.Database(dbPath);
-
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS yjs_documents (
-    room_id TEXT PRIMARY KEY,
-    document_state BLOB,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-  
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    username TEXT,
-    role TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-  
-  db.run(`CREATE TABLE IF NOT EXISTS annotations (
-    file_id TEXT PRIMARY KEY,
-    strokes TEXT NOT NULL DEFAULT '[]',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-  
-  db.run(`CREATE TABLE IF NOT EXISTS rooms (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    hostName TEXT,
-    hostId TEXT,
-    parentId TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/vyomaboard',
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Migrate older databases: add username/role columns if missing, then index them.
-db.all(`PRAGMA table_info(users)`, (migErr, rows) => {
-  if (migErr) return console.error('Migration check failed:', migErr);
-  const names = rows.map(r => r.name);
-  const addColumn = (column, definition) => {
-    if (!names.includes(column)) {
-      db.run(`ALTER TABLE users ADD COLUMN ${column} ${definition}`, (alterErr) => {
-        if (alterErr) console.error('Migration failed to add column:', alterErr);
-      });
-    }
-  };
-  addColumn('username', 'TEXT');
-  addColumn('role', 'TEXT');
-  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username) WHERE username IS NOT NULL`);
-});
-
-// Migrate annotations table if it uses old schema
-db.all(`PRAGMA table_info(annotations)`, (migErr, rows) => {
-  if (migErr) return console.error('Migration check failed:', migErr);
-  const names = rows.map(r => r.name);
-  if (names.includes('fileId') && !names.includes('file_id')) {
-    db.run(`ALTER TABLE annotations RENAME TO annotations_old`, () => {
-      db.run(`CREATE TABLE IF NOT EXISTS annotations (
-        file_id TEXT PRIMARY KEY,
-        strokes TEXT NOT NULL DEFAULT '[]',
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`, () => {
-         db.run(`INSERT INTO annotations (file_id, strokes) SELECT fileId, strokesData FROM annotations_old`);
-      });
-    });
+const setupDatabase = async () => {
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS yjs_documents (
+      room_id TEXT PRIMARY KEY,
+      document_state BYTEA,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    await pool.query(`CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      username TEXT,
+      role TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    await pool.query(`CREATE TABLE IF NOT EXISTS annotations (
+      file_id TEXT PRIMARY KEY,
+      strokes TEXT NOT NULL DEFAULT '[]',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    await pool.query(`CREATE TABLE IF NOT EXISTS rooms (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      hostName TEXT,
+      hostId TEXT,
+      parentId TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    // Create unique index for username
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username) WHERE username IS NOT NULL`);
+    
+    console.log('PostgreSQL database schema initialized.');
+  } catch (err) {
+    console.error('Failed to initialize PostgreSQL database schema:', err);
   }
-});
+};
+setupDatabase();
 
 // Auth Middleware
 const authenticateToken = (req, res, next) => {
@@ -148,8 +127,9 @@ app.post('/api/auth/google', express.json(), async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized payload' });
   }
 
-  db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, user) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const userRes = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+    const user = userRes.rows[0];
     
     if (user) {
       // User exists, log them in
@@ -158,22 +138,24 @@ app.post('/api/auth/google', express.json(), async (req, res) => {
     } else {
       // User doesn't exist, create account with a dummy hash
       const dummyHash = 'google-auth-no-password';
-      db.run(`INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)`, [displayName, email, dummyHash], function(err2) {
-        if (err2) return res.status(500).json({ error: err2.message });
-        const token = jwt.sign({ id: this.lastID, name: displayName, email }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ success: true, token, user: { id: this.lastID, name: displayName, email } });
-      });
+      const insertRes = await pool.query(`INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id`, [displayName, email, dummyHash]);
+      const newId = insertRes.rows[0].id;
+      const token = jwt.sign({ id: newId, name: displayName, email }, JWT_SECRET, { expiresIn: '7d' });
+      res.json({ success: true, token, user: { id: newId, name: displayName, email } });
     }
-  });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/auth/account', express.json(), (req, res) => {
+app.post('/api/auth/account', express.json(), async (req, res) => {
   const { username, email, password } = req.body;
   const identifier = (username || email || '').trim();
   if (!identifier || !password) return res.status(400).json({ error: 'Email and password are required' });
 
-  db.get(`SELECT * FROM users WHERE email = ? OR username = ?`, [identifier, identifier], (err, user) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const userRes = await pool.query(`SELECT * FROM users WHERE email = $1 OR username = $2`, [identifier, identifier]);
+    const user = userRes.rows[0];
 
     if (!user) return res.status(401).json({ error: 'No account found with this email' });
 
@@ -191,7 +173,9 @@ app.post('/api/auth/account', express.json(), (req, res) => {
       token,
       user: { id: user.id, name: user.name, email: user.email, username: user.username, role }
     });
-  });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // Public sign-up: create an account straight from the sign-in page.
@@ -202,27 +186,28 @@ const registerSchema = z.object({
   role: z.string().optional()
 });
 
-app.post('/api/auth/register', express.json(), (req, res) => {
+app.post('/api/auth/register', express.json(), async (req, res) => {
   const result = registerSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ success: false, error: result.error.errors[0].message });
   }
   const { name, email, password, role = 'Casual' } = result.data;
 
-  db.get(`SELECT id FROM users WHERE email = ?`, [email], (err, existing) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (existing) return res.status(409).json({ success: false, error: 'An account with this email already exists' });
+  try {
+    const existingRes = await pool.query(`SELECT id FROM users WHERE email = $1`, [email]);
+    if (existingRes.rows.length > 0) return res.status(409).json({ success: false, error: 'An account with this email already exists' });
 
     const hash = bcrypt.hashSync(password, 10);
-    db.run(`INSERT INTO users (name, email, password_hash, username, role) VALUES (?, ?, ?, NULL, ?)`,
-      [name, email, hash, role],
-      function (err2) {
-        if (err2) return res.status(500).json({ error: err2.message });
-        const token = jwt.sign({ id: this.lastID, name, email, username: null, role }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ success: true, token, user: { id: this.lastID, name, email, username: null, role } });
-      }
+    const insertRes = await pool.query(
+      `INSERT INTO users (name, email, password_hash, username, role) VALUES ($1, $2, $3, NULL, $4) RETURNING id`,
+      [name, email, hash, role]
     );
-  });
+    const newId = insertRes.rows[0].id;
+    const token = jwt.sign({ id: newId, name, email, username: null, role }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, token, user: { id: newId, name, email, username: null, role } });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // Account management (create/list). Requires a valid token.
@@ -234,81 +219,80 @@ const accountSchema = z.object({
   role: z.string().optional()
 });
 
-app.get('/api/accounts', authenticateToken, (req, res) => {
-  db.all(`SELECT id, username, name, email, role, created_at FROM users ORDER BY id`, (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ success: true, accounts: rows });
-  });
+app.get('/api/accounts', authenticateToken, async (req, res) => {
+  try {
+    const accountsRes = await pool.query(`SELECT id, username, name, email, role, created_at FROM users ORDER BY id`);
+    res.json({ success: true, accounts: accountsRes.rows });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/accounts', authenticateToken, express.json(), (req, res) => {
+app.post('/api/accounts', authenticateToken, express.json(), async (req, res) => {
   const result = accountSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ success: false, error: result.error.errors[0].message });
   }
   const { username, password, name, email = '', role = 'Casual' } = result.data;
 
-  db.get(`SELECT id FROM users WHERE username = ? OR email = ?`, [username, email], (err, existing) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (existing) return res.status(409).json({ success: false, error: 'Username or email already exists' });
+  try {
+    const existingRes = await pool.query(`SELECT id FROM users WHERE username = $1 OR email = $2`, [username, email]);
+    if (existingRes.rows.length > 0) return res.status(409).json({ success: false, error: 'Username or email already exists' });
 
     const hash = bcrypt.hashSync(password, 10);
-    db.run(`INSERT INTO users (name, email, password_hash, username, role) VALUES (?, ?, ?, ?, ?)`,
-      [name, email, hash, username, role],
-      function (err2) {
-        if (err2) return res.status(500).json({ error: err2.message });
-        res.json({
-          success: true,
-          account: { id: this.lastID, username, name, email, role }
-        });
-      }
+    const insertRes = await pool.query(
+      `INSERT INTO users (name, email, password_hash, username, role) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [name, email, hash, username, role]
     );
-  });
+    const newId = insertRes.rows[0].id;
+    res.json({
+      success: true,
+      account: { id: newId, username, name, email, role }
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // Setup Yjs Persistence
-const saveYdoc = (docName, ydoc) => {
-  return new Promise((resolve, reject) => {
+const saveYdoc = async (docName, ydoc) => {
+  try {
     const stateVector = Y.encodeStateAsUpdate(ydoc);
     const buffer = Buffer.from(stateVector);
-    db.run(
+    await pool.query(
       `INSERT INTO yjs_documents (room_id, document_state, updated_at) 
-       VALUES (?, ?, CURRENT_TIMESTAMP) 
-       ON CONFLICT(room_id) DO UPDATE SET document_state=excluded.document_state, updated_at=CURRENT_TIMESTAMP`,
-      [docName, buffer],
-      (err) => {
-        if (err) reject(err);
-        else resolve();
-      }
+       VALUES ($1, $2, CURRENT_TIMESTAMP) 
+       ON CONFLICT (room_id) DO UPDATE SET document_state = EXCLUDED.document_state, updated_at = CURRENT_TIMESTAMP`,
+      [docName, buffer]
     );
-  });
+  } catch (err) {
+    throw err;
+  }
 };
 
 setPersistence({
   bindState: async (docName, ydoc) => {
-    return new Promise((resolve) => {
-      db.get(`SELECT document_state FROM yjs_documents WHERE room_id = ?`, [docName], (err, row) => {
-        if (err) {
-          console.error('Error loading Yjs document:', err);
-        } else if (row && row.document_state) {
-          try {
-            Y.applyUpdate(ydoc, new Uint8Array(row.document_state));
-            console.log(`Loaded persisted state for room: ${docName}`);
-          } catch (e) {
-            console.error('Error applying Yjs update:', e);
-          }
+    try {
+      const res = await pool.query(`SELECT document_state FROM yjs_documents WHERE room_id = $1`, [docName]);
+      const row = res.rows[0];
+      if (row && row.document_state) {
+        try {
+          Y.applyUpdate(ydoc, new Uint8Array(row.document_state));
+          console.log(`Loaded persisted state for room: ${docName}`);
+        } catch (e) {
+          console.error('Error applying Yjs update:', e);
         }
-        
-        let timeoutId;
-        ydoc.on('update', () => {
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            saveYdoc(docName, ydoc).catch(console.error);
-          }, 2000);
-        });
-        
-        resolve();
-      });
+      }
+    } catch (err) {
+      console.error('Error loading Yjs document:', err);
+    }
+    
+    let timeoutId;
+    ydoc.on('update', () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        saveYdoc(docName, ydoc).catch(console.error);
+      }, 2000);
     });
   },
   writeState: async (docName, ydoc) => {
@@ -431,10 +415,11 @@ const codeRunLimiter = rateLimit({
 });
 
 // Annotations Endpoints
-app.get('/api/annotations/:fileId', authenticateToken, (req, res) => {
+app.get('/api/annotations/:fileId', authenticateToken, async (req, res) => {
   const { fileId } = req.params;
-  db.get('SELECT strokes FROM annotations WHERE file_id = ?', [fileId], (err, row) => {
-    if (err) return res.status(500).json({ success: false, error: err.message });
+  try {
+    const strokesRes = await pool.query('SELECT strokes FROM annotations WHERE file_id = $1', [fileId]);
+    const row = strokesRes.rows[0];
     if (!row) return res.json({ success: true, strokes: [] });
     try {
       const strokes = JSON.parse(row.strokes);
@@ -442,10 +427,12 @@ app.get('/api/annotations/:fileId', authenticateToken, (req, res) => {
     } catch (e) {
       res.json({ success: true, strokes: [] });
     }
-  });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-app.post('/api/annotations/:fileId', authenticateToken, express.json(), (req, res) => {
+app.post('/api/annotations/:fileId', authenticateToken, express.json(), async (req, res) => {
   const { fileId } = req.params;
   const { strokes } = req.body;
   
@@ -454,16 +441,17 @@ app.post('/api/annotations/:fileId', authenticateToken, express.json(), (req, re
   }
   
   const strokesStr = JSON.stringify(strokes);
-  db.run(
-    `INSERT INTO annotations (file_id, strokes, updated_at) 
-     VALUES (?, ?, CURRENT_TIMESTAMP) 
-     ON CONFLICT(file_id) DO UPDATE SET strokes=excluded.strokes, updated_at=CURRENT_TIMESTAMP`,
-    [fileId, strokesStr],
-    (err) => {
-      if (err) return res.status(500).json({ success: false, error: err.message });
-      res.json({ success: true });
-    }
-  );
+  try {
+    await pool.query(
+      `INSERT INTO annotations (file_id, strokes, updated_at) 
+       VALUES ($1, $2, CURRENT_TIMESTAMP) 
+       ON CONFLICT (file_id) DO UPDATE SET strokes = EXCLUDED.strokes, updated_at = CURRENT_TIMESTAMP`,
+      [fileId, strokesStr]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Save Workspace File Endpoint for Terminal
@@ -696,7 +684,7 @@ app.post('/api/terminal/sync', express.json({ limit: '50mb' }), (req, res) => {
 });
 
 // Room Endpoints
-app.post('/api/rooms', authenticateToken, express.json(), (req, res) => {
+app.post('/api/rooms', authenticateToken, express.json(), async (req, res) => {
   const result = roomSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ success: false, error: result.error.errors[0].message });
@@ -705,21 +693,29 @@ app.post('/api/rooms', authenticateToken, express.json(), (req, res) => {
   const roomId = 'room-' + Math.random().toString(36).substring(2, 9);
   const roomName = requestedName || `Untitled Workspace`;
   
-  db.run(`INSERT INTO rooms (id, name, hostName, hostId) VALUES (?, ?, ?, ?)`, [roomId, roomName, hostName || 'Anonymous', hostId], (err) => {
-    if (err) return res.status(500).json({ success: false, error: err.message });
+  try {
+    await pool.query(
+      `INSERT INTO rooms (id, name, hostName, hostId) VALUES ($1, $2, $3, $4)`, 
+      [roomId, roomName, hostName || 'Anonymous', hostId]
+    );
     res.json({ success: true, roomId, name: roomName, hostName, hostId });
-  });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-app.get('/api/rooms/:id', (req, res) => {
-  db.get(`SELECT * FROM rooms WHERE id = ?`, [req.params.id], (err, row) => {
-    if (err) return res.status(500).json({ success: false, error: err.message });
+app.get('/api/rooms/:id', async (req, res) => {
+  try {
+    const roomRes = await pool.query(`SELECT * FROM rooms WHERE id = $1`, [req.params.id]);
+    const row = roomRes.rows[0];
     if (!row) return res.status(404).json({ success: false, error: 'Room not found' });
     res.json({ success: true, room: row });
-  });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-app.delete('/api/rooms/:id', authenticateToken, (req, res) => {
+app.delete('/api/rooms/:id', authenticateToken, async (req, res) => {
   const roomId = req.params.id;
   
   // Check if room is empty by checking commsRooms
@@ -738,27 +734,38 @@ app.delete('/api/rooms/:id', authenticateToken, (req, res) => {
     return res.status(400).json({ success: false, error: 'Room is not empty' });
   }
   
-  db.run(`DELETE FROM rooms WHERE id = ?`, [roomId], (err) => {
-    if (err) return res.status(500).json({ success: false, error: err.message });
+  try {
+    await pool.query(`DELETE FROM rooms WHERE id = $1`, [roomId]);
     res.json({ success: true });
-  });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 function startServer(port) {
-  try {
-    const options = {
-      key: fs.readFileSync(path.join(__dirname, '../localhost+2-key.pem')),
-      cert: fs.readFileSync(path.join(__dirname, '../localhost+2.pem'))
-    };
-    
-    const serverInstance = https.createServer(options, app).listen(port, () => {
-      console.log(`Backend server running on HTTPS port ${port} (All interfaces)`);
+  const keyPath = path.join(__dirname, '../localhost+2-key.pem');
+  const certPath = path.join(__dirname, '../localhost+2.pem');
+
+  if (process.env.NODE_ENV === 'production' || (!fs.existsSync(keyPath) || !fs.existsSync(certPath))) {
+    // Render and other cloud platforms terminate SSL natively and expect HTTP
+    const http = require('http');
+    const serverInstance = http.createServer(app).listen(port, () => {
+      console.log(`Backend server running on HTTP port ${port} (Cloud/Fallback mode)`);
       serverInstance.on('upgrade', upgradeHandler);
     });
     server = serverInstance;
-  } catch (err) {
-    console.error('Failed to read SSL certificates. Make sure mkcert files exist:', err);
-    process.exit(1);
+  } else {
+    // Local dev uses HTTPS
+    const options = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath)
+    };
+    
+    const serverInstance = https.createServer(options, app).listen(port, () => {
+      console.log(`Backend server running on HTTPS port ${port} (Local Dev mode)`);
+      serverInstance.on('upgrade', upgradeHandler);
+    });
+    server = serverInstance;
   }
 }
 

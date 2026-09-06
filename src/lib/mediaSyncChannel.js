@@ -1,3 +1,4 @@
+import { getWsUrl } from './config';
 let socket = null;
 let roomId = null;
 let myId = 'media-sync-user';
@@ -21,10 +22,9 @@ export function startMediaSync(id) {
   myId = 'media-sync-' + (localStorage.getItem('userId') || Math.random().toString(36).substring(2, 9));
 
   const connect = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const token = localStorage.getItem('token') || (import.meta.env.DEV ? 'dev-mode-token-12345' : '');
-    const wsHost = window.location.host;
-    socket = new WebSocket(`${protocol}//${wsHost}/comms?token=${encodeURIComponent(token)}`);
+    const wsUrl = `${getWsUrl()}/?room=${encodeURIComponent(roomId)}&type=sync&id=${encodeURIComponent(myId)}&token=${encodeURIComponent(token)}`;
+    socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
       socket.send(JSON.stringify({

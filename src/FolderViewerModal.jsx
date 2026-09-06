@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { X, Folder, FileCode, FileText, Plus, Save } from 'lucide-react';
-import { useEditor } from 'tldraw';
+
 import FileViewerModal from './FileViewerModal';
 
 export default function FolderViewerModal({ folderId, initialName, initialFiles, onClose }) {
-  const editor = useEditor();
+  
   const [files, setFiles] = useState(initialFiles || []);
   const [activeFile, setActiveFile] = useState(null);
 
   // Sync files to Tldraw store whenever they change
   const syncFiles = (newFiles) => {
     setFiles(newFiles);
-    editor.updateShape({
-      id: folderId,
-      type: 'milanote-folder',
-      props: { files: newFiles }
-    });
+    // editor.updateShape({
+    //   id: folderId,
+    //   type: 'milanote-folder',
+    //   props: { files: newFiles }
+    // });
   };
 
   const handleCreateFile = () => {

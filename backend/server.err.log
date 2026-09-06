@@ -1,2 +1,0 @@
-Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
-WARNING: Using insecure default JWT_SECRET. Set the JWT_SECRET environment variable in production.

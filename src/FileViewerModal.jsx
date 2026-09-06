@@ -15,6 +15,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import PDFViewer from './components/PDFViewer';
 import { ErrorBoundary } from './ErrorBoundary';
+import { getApiUrl, getWsUrl } from './config';
 
 export default function FileViewerModal({ fileData, folderFiles = [], onClose, onSaveCloudFile, onCreateCloudFile, onOpenFile, editor, boardName }) {
   const [content, setContent] = useState('');
@@ -452,7 +453,7 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
                 try {
                   const folderFiles = await new Promise((resolve) => {
                     const yDoc = new Y.Doc();
-                    const hostUrl = import.meta.env.VITE_YJS_URL || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/yjs`;
+                    const hostUrl = `${getWsUrl()}/yjs`;
                     const token = localStorage.getItem('token');
                     const roomWithToken = token ? `${otherShape.props.roomId}?token=${token}` : otherShape.props.roomId;
                     const provider = new WebsocketProvider(hostUrl, roomWithToken, yDoc);
@@ -493,7 +494,7 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
     const nameWithoutExt = filename.split('.')[0] || 'main';
     
     try {
-      await fetch('/api/terminal/sync', {
+      await fetch(`${getApiUrl()}/api/terminal/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,4 +1,4 @@
-import { createShapeId } from 'tldraw';
+
 
 export const TEMPLATE_CATEGORIES = [
   {

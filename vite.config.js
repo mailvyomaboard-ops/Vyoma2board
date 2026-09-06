@@ -7,6 +7,9 @@ export default defineConfig(({ mode }) => {
   const backendPort = Number(process.env.BACKEND_PORT || env.BACKEND_PORT || env.PORT || 3002)
 
   return {
+    define: {
+      'process.env': {}
+    },
     plugins: [react()],
     server: {
       host: true,

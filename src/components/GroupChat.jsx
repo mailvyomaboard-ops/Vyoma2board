@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, X, MessageSquare, Maximize, Minimize } from 'lucide-react';
+import { getWsUrl } from '../config';
 import { useParams } from 'react-router-dom';
 import '../index.css';
 
@@ -23,10 +24,9 @@ export default function GroupChat({ onClose, isFullscreen = false, onToggleFulls
 
   useEffect(() => {
     let active = true;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const token = localStorage.getItem('token');
-    const wsHost = window.location.host;
-    const ws = new WebSocket(`${protocol}//${wsHost}/comms${token ? `?token=${token}` : ''}`);
+    const token = localStorage.getItem('token') || (import.meta.env.DEV ? 'dev-mode-token-12345' : '');
+    const wsUrl = `${getWsUrl()}/comms?token=${encodeURIComponent(token)}`;
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {

@@ -1,1 +1,0 @@
-const cp = require('child_process'); cp.exec('"C:\\Program Files\\LibreOffice\\program\\soffice.exe" --headless --convert-to pdf "test.pptx" --outdir "test"', (err, stdout, stderr) => { console.log('err:', err); console.log('stdout:', stdout); });

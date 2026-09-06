@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { Play, Plus, Trash2, ChevronUp, ChevronDown, Code, Type, Loader2, Upload, X, Eraser, FileText, Eye } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { getApiUrl } from '../config';
 
 export default function NotebookIDE({
   fileData,
@@ -117,7 +118,7 @@ export default function NotebookIDE({
 
     try {
       const token = localStorage.getItem('token') || '';
-      const response = await fetch('/api/run-code', {
+      const response = await fetch(`${getApiUrl()}/api/run-code`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

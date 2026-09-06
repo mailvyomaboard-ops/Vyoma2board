@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
+import { getWsUrl } from '../config';
 
 const CallContext = createContext(null);
 
@@ -93,10 +94,9 @@ export const CallProvider = ({ children, roomId }) => {
     if (!roomId) return;
     
     let active = true;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const token = localStorage.getItem('token');
-    const wsHost = window.location.host;
-    const ws = new WebSocket(`${protocol}//${wsHost}/comms${token ? `?token=${token}` : ''}`);
+    const token = localStorage.getItem('token') || (import.meta.env.DEV ? 'dev-mode-token-12345' : '');
+    const wsUrl = `${getWsUrl()}/comms?token=${encodeURIComponent(token)}`;
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {

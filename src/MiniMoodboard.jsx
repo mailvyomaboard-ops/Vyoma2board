@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Tldraw } from 'tldraw';
-import 'tldraw/tldraw.css';
+import { Excalidraw } from '@excalidraw/excalidraw';
 import { Download, X, FileText, Loader2 } from 'lucide-react';
 
 export default function MiniMoodboard({ fileData, onClose }) {
