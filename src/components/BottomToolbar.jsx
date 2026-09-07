@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   MousePointer2, 
   Hand, 
@@ -24,7 +24,7 @@ const TOOLBAR_ITEMS = [
   { id: 'nested', icon: LayoutDashboard, label: 'Nested Board' }
 ];
 
-export default function BottomToolbar({ activeTool, onToolSelect }) {
+const BottomToolbar = React.memo(function BottomToolbar({ activeTool, onToolSelect }) {
   const [hoveredTool, setHoveredTool] = useState(null);
 
   return (
@@ -77,4 +77,6 @@ export default function BottomToolbar({ activeTool, onToolSelect }) {
       })}
     </div>
   );
-}
+});
+
+export default BottomToolbar;

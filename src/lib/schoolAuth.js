@@ -10,7 +10,11 @@ import { db } from '../firebase';
 // SQLite accounts first, then enterprise SSO, then Google Workspace, then email, then no-account.
 export const DEFAULT_METHOD_ORDER = ['account', 'sso', 'google', 'email', 'no-account'];
 
-// Resolve the school id from, in order: URL param, subdomain, saved value.
+/**
+ * Resolve the school id from, in order: URL param, subdomain, saved value.
+ * Time Complexity: O(L) where L is the length of URL/host strings.
+ * Space Complexity: O(L) for string splitting.
+ */
 export function resolveSchoolId() {
   const params = new URLSearchParams(window.location.search);
   const fromQuery = params.get('school');
@@ -21,10 +25,18 @@ export function resolveSchoolId() {
   return (localStorage.getItem('schoolId') || '').toLowerCase();
 }
 
+/**
+ * Time Complexity: O(1)
+ * Space Complexity: O(1)
+ */
 export function saveSchoolId(id) {
   if (id) localStorage.setItem('schoolId', id);
 }
 
+/**
+ * Time Complexity: O(1) network request overhead.
+ * Space Complexity: O(D) where D is document data size.
+ */
 export async function getSchoolConfig(schoolId) {
   if (!schoolId) return null;
   try {
@@ -36,6 +48,10 @@ export async function getSchoolConfig(schoolId) {
   return null;
 }
 
+/**
+ * Time Complexity: O(N) where N is number of schools (API response).
+ * Space Complexity: O(N)
+ */
 export async function listSchools() {
   try {
     const snap = await getDocs(collection(db, 'schools'));

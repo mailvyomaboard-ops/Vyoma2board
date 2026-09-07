@@ -1,6 +1,10 @@
 // Shared assessment helpers used by ExamPortal, Gradebook and Analytics.
 
-// Build a structured list of questions from the current page shapes.
+/**
+ * Build a structured list of questions from the current page shapes.
+ * Time Complexity: O(N log N) where N is the total number of shapes, due to sorting.
+ * Space Complexity: O(Q) where Q is the number of quiz shapes (Q <= N) returned.
+ */
 export function extractQuestions(shapes) {
   return shapes
     .filter(s => s.type === 'quiz-mcq-shape' || s.type === 'quiz-written-shape' || s.type === 'quiz-code-shape')
@@ -43,7 +47,11 @@ export function extractQuestions(shapes) {
     });
 }
 
-// Score a single question. Returns null for written (manual grading required).
+/**
+ * Score a single question. Returns null for written (manual grading required).
+ * Time Complexity: O(1)
+ * Space Complexity: O(1)
+ */
 export function scoreQuestion(q) {
   if (q.type === 'mcq') {
     const answered = !!q.studentAnswer && q.studentAnswer > 0;
@@ -61,7 +69,12 @@ export function scoreQuestion(q) {
   return null; // written -> teacher grades
 }
 
-// Score an entire submission. Returns { totalMarks, obtainedMarks, perQuestion, autoGraded, pendingManual }
+/**
+ * Score an entire submission. 
+ * Returns { totalMarks, obtainedMarks, perQuestion, autoGraded, pendingManual }
+ * Time Complexity: O(Q) where Q is the number of questions.
+ * Space Complexity: O(Q) to store the result array.
+ */
 export function gradeSubmission(questions) {
   let totalMarks = 0;
   let obtainedMarks = 0;

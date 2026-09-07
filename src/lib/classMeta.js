@@ -40,32 +40,45 @@ export function classMetaLabel(cm) {
   return [parts.filter(Boolean).join(' · '), group].filter(Boolean).join(' · ');
 }
 
-// Priority list of people allowed to manage this room.
+/**
+ * Priority list of people allowed to manage this room.
+ * Time Complexity: O(T) where T is the number of assigned teachers.
+ * Space Complexity: O(T) for the Set used for uniqueness.
+ */
 export function teachersOf(room) {
-  const list = [];
-  const push = (id) => { if (id && !list.includes(id)) list.push(id); };
+  const set = new Set();
   if (room) {
-    push(room.hostId);
-    (room.classMeta?.assignedTeachers || []).forEach(push);
-    push(room.createdBy);
+    if (room.hostId) set.add(room.hostId);
+    (room.classMeta?.assignedTeachers || []).forEach(id => {
+      if (id) set.add(id);
+    });
+    if (room.createdBy) set.add(room.createdBy);
   }
-  return list;
+  return Array.from(set);
 }
 
+/**
+ * Checks if the user is in the priority teachers list.
+ * Time Complexity: O(T)
+ * Space Complexity: O(T)
+ */
 export function isAssignedTeacher(room, userId) {
   return teachersOf(room).includes(userId);
 }
 
-// Which user currently "holds the host hat" for a room, given who is present.
-// Priority: hostId -> assignedTeachers -> createdBy -> first present user.
-// Recomputed on every awareness update, so the hat reverts automatically.
+/**
+ * Which user currently "holds the host hat" for a room, given who is present.
+ * Priority: hostId -> assignedTeachers -> createdBy -> first present user.
+ * Time Complexity: O(P + T) where P is present users, T is teachers. Reduced from O(P * T).
+ * Space Complexity: O(P) to store the presence Set for O(1) lookups.
+ */
 export function actingHostId(room, presentUserIds = []) {
   if (!room) return null;
-  const present = presentUserIds.filter(Boolean);
+  const presentSet = new Set(presentUserIds.filter(Boolean));
   for (const id of teachersOf(room)) {
-    if (present.includes(id)) return id;
+    if (presentSet.has(id)) return id;
   }
-  return present[0] || null;
+  return presentUserIds[0] || null;
 }
 
 // Is a room "teacher-created"? (drives the stricter delete rules)

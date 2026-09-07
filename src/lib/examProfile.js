@@ -7,30 +7,44 @@ export const YEARS = ['FY', 'SY', 'TY', 'Final Year'];
 export const DIVISIONS = ['A', 'B', 'C', 'D', 'E'];
 
 // Sort priority for designation: interviewer, interviewee, teacher, student, then others.
-const DESIGNATION_ORDER = ['interviewer', 'interviewee', 'teacher', 'student'];
+const DESIGNATION_MAP = new Map(['interviewer', 'interviewee', 'teacher', 'student'].map((d, i) => [d, i]));
 // Sort priority for year: fy, sy, ty, final/degree year.
-const YEAR_ORDER = ['fy', 'sy', 'ty', 'final', 'degree', 'final year', '4th', 'fourth'];
+const YEAR_MAP = new Map(['fy', 'sy', 'ty', 'final', 'degree', 'final year', '4th', 'fourth'].map((y, i) => [y, i]));
 
+/**
+ * Normalizes a string for comparison.
+ * Time Complexity: O(L) where L is string length.
+ * Space Complexity: O(L) for the new string.
+ */
 export function normalize(v) {
   return String(v == null ? '' : v).trim().toLowerCase();
 }
 
+/**
+ * Time Complexity: O(L) string normalization + O(1) Map lookup.
+ */
 function designationIndex(designation) {
-  const idx = DESIGNATION_ORDER.indexOf(normalize(designation));
-  return idx === -1 ? 99 : idx;
+  const norm = normalize(designation);
+  return DESIGNATION_MAP.has(norm) ? DESIGNATION_MAP.get(norm) : 99;
 }
 
+/**
+ * Time Complexity: O(L) string normalization + O(1) Map lookup.
+ */
 function yearIndex(year) {
   const n = normalize(year);
   if (n.startsWith('fy') || n.startsWith('1st') || n === '1') return 0;
   if (n.startsWith('sy') || n.startsWith('2nd') || n === '2') return 1;
   if (n.startsWith('ty') || n.startsWith('3rd') || n === '3') return 2;
   if (n.startsWith('fin') || n.startsWith('deg') || n === '4') return 3;
-  const idx = YEAR_ORDER.indexOf(n);
-  return idx === -1 ? 99 : idx;
+  return YEAR_MAP.has(n) ? YEAR_MAP.get(n) : 99;
 }
 
-// Comparator for master-sheet rows: designation -> domain -> year -> division -> roll no.
+/**
+ * Comparator for master-sheet rows: designation -> domain -> year -> division -> roll no.
+ * Time Complexity: O(L) where L is max string length.
+ * Space Complexity: O(L) for normalizations.
+ */
 export function compareByProfile(a, b) {
   const byDesignation = designationIndex(a.designation) - designationIndex(b.designation);
   if (byDesignation !== 0) return byDesignation;
@@ -52,6 +66,11 @@ export function compareByProfile(a, b) {
   return aRoll - bRoll;
 }
 
+/**
+ * Loads user profile from localStorage.
+ * Time Complexity: O(L) where L is string length.
+ * Space Complexity: O(L)
+ */
 export function loadProfile() {
   let profile = {};
   try {
