@@ -99,10 +99,19 @@ export default function Board() {
       if (customCardsMap) {
         // Sync to Yjs
         ydoc.transact(() => {
+          const nextIds = new Set(next.map(c => c.id));
+          
+          // Delete removed cards
+          prev.forEach(card => {
+            if (!nextIds.has(card.id)) {
+              customCardsMap.delete(card.id);
+            }
+          });
+
+          // Set updated or new cards
           next.forEach(card => {
             customCardsMap.set(card.id, card);
           });
-          // Note: for deletions, we'd need to compare prev and next and call .delete()
         });
       }
       return next;
@@ -404,6 +413,9 @@ export default function Board() {
           themeMode={mode}
           customCards={customCards}
           setCustomCards={handleUpdateCustomCards}
+          onCardDelete={(id) => {
+            handleUpdateCustomCards(prev => prev.filter(c => c.id !== id));
+          }}
           ydoc={ydoc}
           provider={provider}
           elementsMap={elementsMap}

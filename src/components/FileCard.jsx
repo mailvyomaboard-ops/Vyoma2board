@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { File, FileCode, FileSpreadsheet, FileText, Image as ImageIcon, Music, Play, Folder } from 'lucide-react';
+import { File, FileCode, FileSpreadsheet, FileText, Image as ImageIcon, Music, Play, Folder, Trash2 } from 'lucide-react';
 import '../index.css';
 
 export default function FileCard({ 
@@ -8,11 +8,13 @@ export default function FileCard({
   scrollX, 
   scrollY, 
   onUpdatePosition, 
-  onDoubleClick 
+  onDoubleClick,
+  onDelete
 }) {
   const cardRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
 
   const getIcon = () => {
     if (card.type === 'nested-board') return Folder;
@@ -69,6 +71,8 @@ export default function FileCard({
     <div
       ref={cardRef}
       onPointerDown={handlePointerDown}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onDoubleClick={(e) => {
         e.stopPropagation();
         onDoubleClick(card);
@@ -121,6 +125,35 @@ export default function FileCard({
       }}>
         {card.name}
       </div>
+
+      {isHovered && onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(card.id);
+          }}
+          style={{
+            position: 'absolute',
+            top: '-10px',
+            right: '-10px',
+            background: 'var(--accent-red, #ff4444)',
+            color: 'white',
+            border: '2px solid var(--border-color)',
+            borderRadius: '50%',
+            width: '28px',
+            height: '28px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '2px 2px 0px var(--shadow-color)',
+            zIndex: 100,
+          }}
+          title="Delete Card"
+        >
+          <Trash2 size={14} strokeWidth={3} />
+        </button>
+      )}
     </div>
   );
 }

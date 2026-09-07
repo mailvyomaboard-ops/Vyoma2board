@@ -27,6 +27,7 @@ export default function ExcalidrawCanvas({
   customCards = [],
   setCustomCards,
   onCardDoubleClick,
+  onCardDelete,
   onCustomToolClick,
   onCanvasReady,
   onLinkOpen,
@@ -289,6 +290,7 @@ export default function ExcalidrawCanvas({
               setCustomCards(prev => prev.map(c => c.id === id ? { ...c, x, y } : c));
             }}
             onDoubleClick={onCardDoubleClick}
+            onDelete={onCardDelete}
           />
         ))}
       </div>
