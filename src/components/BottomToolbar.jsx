@@ -24,11 +24,23 @@ const TOOLBAR_ITEMS = [
   { id: 'nested', icon: LayoutDashboard, label: 'Nested Board' }
 ];
 
+/**
+ * @param {{
+ *   activeTool: string,
+ *   onToolSelect: (tool: string) => void,
+ *   onMenuToggle?: any,
+ *   openMenu?: any,
+ *   canUndo?: boolean,
+ *   canRedo?: boolean,
+ *   onUndo?: () => void,
+ *   onRedo?: () => void
+ * }} props
+ */
 const BottomToolbar = React.memo(function BottomToolbar({ activeTool, onToolSelect }) {
   const [hoveredTool, setHoveredTool] = useState(null);
 
   return (
-    <div style={{
+    <div className="neo-brutalist-panel" style={{
       position: 'absolute',
       bottom: '24px',
       left: '50%',
@@ -45,7 +57,13 @@ const BottomToolbar = React.memo(function BottomToolbar({ activeTool, onToolSele
     }}>
       {TOOLBAR_ITEMS.map((item) => {
         const Icon = item.icon;
-        const isActive = activeTool === item.id;
+        const isShape = ['shape', 'rectangle', 'ellipse', 'diamond', 'triangle', 'arrow', 'line'].includes(activeTool);
+        const isFreeDraw = ['freedraw', 'highlighter', 'eraser', 'laser'].includes(activeTool);
+        
+        let isActive = activeTool === item.id;
+        if (item.id === 'shape') isActive = isShape;
+        if (item.id === 'freedraw') isActive = isFreeDraw;
+
         const isHovered = hoveredTool === item.id;
 
         return (

@@ -3,7 +3,7 @@ import { Mic, MicOff, Lock, Unlock, MonitorUp, FileCode, Shield, X, MonitorOff, 
 import { sendHostAction } from '../lib/hostControl';
 import '../index.css';
 
-export default function HostControlPanel({ provider, localClientId, onClose, perms = {}, setPerms = () => {}, hostLocked = false, setHostLocked = () => {}, editor }) {
+export default function HostControlPanel({ provider, localClientId, onClose, perms = {}, setPerms = () => {}, hostLocked = false, setHostLocked = () => {}, api }) {
   const toggles = {
     mic: perms?.mic ?? true,
     draw: !hostLocked,
@@ -27,9 +27,9 @@ export default function HostControlPanel({ provider, localClientId, onClose, per
   };
 
   const handleBringAllToMe = () => {
-    if (!editor) return;
-    const camera = editor.getCamera();
-    act({ cmd: 'bringAllToMe', target: 'all', x: camera.x, y: camera.y, z: camera.z });
+    if (!api) return;
+    const appState = api.getAppState();
+    act({ cmd: 'bringAllToMe', target: 'all', x: appState.scrollX, y: appState.scrollY, zoom: appState.zoom.value });
   };
 
   return (
@@ -126,10 +126,10 @@ export default function HostControlPanel({ provider, localClientId, onClose, per
             </button>
             <button className="neo-btn" style={{ padding: '8px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'var(--accent-pink)' }} onClick={() => {
               if (window.confirm("Are you sure you want to clear the entire board for everyone?")) {
-                if (editor) {
-                  const allShapes = editor.getCurrentPageShapes();
-                  const unlockedShapes = allShapes.filter(s => !s.isLocked);
-                  editor.deleteShapes(unlockedShapes.map(s => s.id));
+                if (api) {
+                  const elements = api.getSceneElements();
+                  const remainingElements = elements.filter(el => el.locked);
+                  api.updateScene({ elements: remainingElements });
                 }
                 act({ cmd: 'clearBoard', target: 'all' });
               }

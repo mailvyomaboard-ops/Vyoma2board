@@ -1,9 +1,11 @@
 import React from 'react';
 import { 
   PenTool, Highlighter, Zap, Eraser,
-  Square, Circle, Triangle, Diamond, Hexagon, Cloud, Heart, ArrowRight, Minus, 
-  Type, AlignLeft, AlignCenter, AlignRight
+  Square, Circle, Triangle, Diamond, ArrowRight, Minus,
+  AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
+
+/* eslint-disable no-unused-vars */
 import '../index.css';
 
 const NOTE_COLORS = {
@@ -26,6 +28,23 @@ const SHAPES = [
   { id: 'line', icon: Minus }
 ];
 
+/**
+ * @param {{
+ *   activeTool?: string,
+ *   selectedElements?: any[],
+ *   onStyleChange?: (key: string, value: any) => void,
+ *   activeColor?: string,
+ *   activeFill?: string,
+ *   activeDash?: string,
+ *   activeSize?: string,
+ *   activeFont?: string,
+ *   activeAlign?: string,
+ *   onDelete?: () => void,
+ *   onBringForward?: () => void,
+ *   onSendBackward?: () => void,
+ *   onToolChange?: (tool: string) => void
+ * }} props
+ */
 export default function ContextualPanel({ 
   activeTool, 
   selectedElements, 
@@ -33,18 +52,29 @@ export default function ContextualPanel({
   activeSize, 
   activeFont, 
   activeAlign, 
-  onUpdateStyle, 
-  onToolSelect 
+  onStyleChange,
+  activeFill,
+  activeDash,
+  onDelete,
+  onBringForward,
+  onSendBackward,
+  onToolChange = () => {}
 }) {
   
-  // Determine context
+  // Determine context based on activeTool (if drawing/creating) OR selected elements (if selecting)
   const hasSelection = selectedElements && selectedElements.length > 0;
-  const showDrawPanel = activeTool === 'freedraw' || activeTool === 'eraser' || activeTool === 'highlighter' || activeTool === 'laser';
-  const showShapePanel = ['rectangle', 'ellipse', 'diamond', 'triangle', 'arrow', 'line'].includes(activeTool);
-  const showTextPanel = activeTool === 'text' || (hasSelection && selectedElements.every(el => el.type === 'text'));
+  
+  const showDrawPanel = ['freedraw', 'eraser', 'highlighter', 'laser'].includes(activeTool) || 
+    (hasSelection && selectedElements.some(el => el.type === 'freedraw'));
+    
+  const showShapePanel = ['shape', 'rectangle', 'ellipse', 'diamond', 'triangle', 'arrow', 'line'].includes(activeTool) || 
+    (hasSelection && selectedElements.some(el => ['rectangle', 'ellipse', 'diamond', 'triangle', 'arrow', 'line'].includes(el.type)));
+    
+  const showTextPanel = activeTool === 'text' || 
+    (hasSelection && selectedElements.some(el => el.type === 'text'));
 
-  if (!hasSelection && !showDrawPanel && !showShapePanel && !showTextPanel) {
-    return null; // No contextual panel needed
+  if (!showDrawPanel && !showShapePanel && !showTextPanel) {
+    return null; // Return null if nothing to show (e.g. for images)
   }
 
   const panelStyle = {
@@ -77,7 +107,7 @@ export default function ContextualPanel({
       {Object.entries(NOTE_COLORS).map(([name, { bg }]) => (
         <button
           key={name}
-          onClick={() => onUpdateStyle('color', name)}
+          onClick={() => onStyleChange('color', name)}
           style={{
             width: '24px', height: '24px',
             background: bg,
@@ -99,10 +129,10 @@ export default function ContextualPanel({
         <>
           <Section title="Draw Tools">
             <div style={{ display: 'flex', gap: '8px' }}>
-              <ToolBtn icon={PenTool} active={activeTool === 'freedraw'} onClick={() => onToolSelect('freedraw')} />
-              <ToolBtn icon={Highlighter} active={activeTool === 'highlighter'} onClick={() => onToolSelect('highlighter')} />
-              <ToolBtn icon={Zap} active={activeTool === 'laser'} onClick={() => onToolSelect('laser')} />
-              <ToolBtn icon={Eraser} active={activeTool === 'eraser'} onClick={() => onToolSelect('eraser')} />
+              <ToolBtn icon={PenTool} active={activeTool === 'freedraw'} onClick={() => onToolChange('freedraw')} />
+              <ToolBtn icon={Highlighter} active={activeTool === 'highlighter'} onClick={() => onToolChange('highlighter')} />
+              <ToolBtn icon={Zap} active={activeTool === 'laser'} onClick={() => onToolChange('laser')} />
+              <ToolBtn icon={Eraser} active={activeTool === 'eraser'} onClick={() => onToolChange('eraser')} />
             </div>
           </Section>
           {(activeTool === 'freedraw' || activeTool === 'highlighter') && (
@@ -111,7 +141,7 @@ export default function ContextualPanel({
               <Section title="Stroke Width">
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {['s', 'm', 'l', 'xl'].map(size => (
-                    <button key={size} onClick={() => onUpdateStyle('size', size)} style={sizeBtnStyle(activeSize === size)}>{size.toUpperCase()}</button>
+                    <button key={size} onClick={() => onStyleChange('size', size)} style={sizeBtnStyle(activeSize === size)}>{size.toUpperCase()}</button>
                   ))}
                 </div>
               </Section>
@@ -125,7 +155,7 @@ export default function ContextualPanel({
           <Section title="Shape">
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {SHAPES.map(s => (
-                <ToolBtn key={s.id} icon={s.icon} active={activeTool === s.id} onClick={() => onToolSelect(s.id)} />
+                <ToolBtn key={s.id} icon={s.icon} active={activeTool === s.id} onClick={() => onToolChange(s.id)} />
               ))}
             </div>
           </Section>
@@ -138,16 +168,16 @@ export default function ContextualPanel({
           <Section title="Text Color"><ColorPicker /></Section>
           <Section title="Font Family">
             <div style={{ display: 'flex', gap: '4px' }}>
-              <button onClick={() => onUpdateStyle('font', 'sans')} style={fontBtnStyle(activeFont === 'sans', 'sans-serif')}>Sans</button>
-              <button onClick={() => onUpdateStyle('font', 'serif')} style={fontBtnStyle(activeFont === 'serif', 'serif')}>Serif</button>
-              <button onClick={() => onUpdateStyle('font', 'mono')} style={fontBtnStyle(activeFont === 'mono', 'monospace')}>Mono</button>
+              <button onClick={() => onStyleChange('font', 'sans')} style={fontBtnStyle(activeFont === 'sans', 'sans-serif')}>Sans</button>
+              <button onClick={() => onStyleChange('font', 'serif')} style={fontBtnStyle(activeFont === 'serif', 'serif')}>Serif</button>
+              <button onClick={() => onStyleChange('font', 'mono')} style={fontBtnStyle(activeFont === 'mono', 'monospace')}>Mono</button>
             </div>
           </Section>
           <Section title="Alignment">
             <div style={{ display: 'flex', gap: '8px' }}>
-              <ToolBtn icon={AlignLeft} active={activeAlign === 'start'} onClick={() => onUpdateStyle('align', 'start')} />
-              <ToolBtn icon={AlignCenter} active={activeAlign === 'middle'} onClick={() => onUpdateStyle('align', 'middle')} />
-              <ToolBtn icon={AlignRight} active={activeAlign === 'end'} onClick={() => onUpdateStyle('align', 'end')} />
+              <ToolBtn icon={AlignLeft} active={activeAlign === 'start'} onClick={() => onStyleChange('align', 'start')} />
+              <ToolBtn icon={AlignCenter} active={activeAlign === 'middle'} onClick={() => onStyleChange('align', 'middle')} />
+              <ToolBtn icon={AlignRight} active={activeAlign === 'end'} onClick={() => onStyleChange('align', 'end')} />
             </div>
           </Section>
         </>

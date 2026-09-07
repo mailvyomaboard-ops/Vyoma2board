@@ -1,11 +1,9 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-import { convertToExcalidrawElements } from '@excalidraw/excalidraw';
-import { db, storage } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { db } from '../firebase';
+import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 
-import MiniMoodboard from '../MiniMoodboard';
+
 import HostControlPanel from '../components/HostControlPanel';
 import RosterModal from '../components/RosterModal';
 import AttendanceModal from '../components/AttendanceModal';
@@ -17,7 +15,6 @@ import ClassSettingsModal from '../components/ClassSettingsModal';
 import FileViewerModal from '../FileViewerModal';
 import BoardViewerModal from '../BoardViewerModal';
 import FolderViewerModal from '../FolderViewerModal';
-import ChartEditorModal from '../ChartEditorModal';
 import ThemeSettingsModal from '../ThemeSettingsModal';
 import CallManager from '../components/CallManager';
 import { useCallContext } from '../context/CallContext';
@@ -26,44 +23,21 @@ import TemplatesModal from '../components/TemplatesModal';
 import ChoiceFileModal from '../components/ChoiceFileModal';
 import { useYjsStore } from '../useYjsStore';
 import { useParams, useNavigate } from 'react-router-dom';
-import { isTeacherRole, isAssignedTeacher, actingHostId } from '../lib/classMeta';
+import { actingHostId } from '../lib/classMeta';
 import { addRoomToHistory } from '../lib/roomHistory';
-import { sweepHostActions } from '../lib/hostControl';
 import TopBar from '../components/TopBar';
 import ExcalidrawCanvas from '../components/ExcalidrawCanvas';
-
-const dummyEditor = {
-  getCurrentToolId: () => 'select',
-  getSharedStyles: () => ({ getAsKnownValue: () => null }),
-  user: { updateUserPreferences: () => {} },
-  store: { listen: () => () => {}, put: () => {} },
-  on: () => {},
-  off: () => {},
-  setCurrentTool: () => {},
-  deleteShapes: () => {},
-  setStyleForNextShapes: () => {},
-  setStyleForSelectedShapes: () => {},
-  getViewportPageBounds: () => ({ center: { x: 0, y: 0 } }),
-  createShape: () => {},
-  getCurrentPageShapes: () => [],
-  getCamera: () => ({ x: 0, y: 0, z: 1 }),
-  putExternalContent: () => {},
-  getInstanceState: () => ({ isReadonly: false }),
-  getShape: () => null,
-  zoomToShapes: () => {},
-  setCamera: () => {},
-  updateInstanceState: () => {},
-};
+import { ErrorBoundary } from '../ErrorBoundary';
 
 export default function Board() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [excalidrawAPI, setExcalidrawAPI] = useState(null);
+  const excalidrawAPIRef = useRef(null);
   const [activeTool, setActiveTool] = useState('selection');
   
   // Yjs Sync
-  const { status: yjsStatus, doc: ydoc, provider, awareness, elementsMap, customCardsMap, roomConfigMap } = useYjsStore({ roomId: id });
+  const { doc: ydoc, provider, awareness, elementsMap, customCardsMap, roomConfigMap } = useYjsStore({ roomId: id });
   const [customCards, setCustomCards] = useState([]);
 
   useEffect(() => {
@@ -82,7 +56,7 @@ export default function Board() {
 
     // Listen for remote updates
     let timeoutId = null;
-    const observer = (event) => {
+    const observer = () => {
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => loadCards(), 16); // ~60fps throttle
     };
@@ -123,41 +97,9 @@ export default function Board() {
     });
   };
 
-  const customEditor = {
-    ...dummyEditor,
-    getCurrentToolId: () => activeTool,
-    setCurrentTool: (tool) => {
-      setActiveTool(tool);
-      if (excalidrawAPI) {
-        const toolMap = {
-          'select': 'selection',
-          'draw': 'freedraw',
-          'pen': 'freedraw',
-          'eraser': 'eraser',
-          'hand': 'hand',
-          'rectangle': 'rectangle',
-          'ellipse': 'ellipse',
-          'circle': 'ellipse',
-          'diamond': 'diamond',
-          'arrow': 'arrow',
-          'line': 'line',
-          'text': 'text',
-        };
-        const targetTool = toolMap[tool] || 'selection';
-        excalidrawAPI.updateScene({
-          appState: { activeTool: { type: targetTool } }
-        });
-      }
-    },
-    store: {
-      listen: () => () => {},
-      put: () => {}
-    }
-  };
-
   const fileInputRef = useRef(null);
 
-  const [userName, setUserName] = useState(() => localStorage.getItem('userName') || 'Anonymous');
+
   const [accentColor, setAccentColor] = useState(() => {
     const saved = localStorage.getItem('themeAccent');
     return saved ? JSON.parse(saved) : { id: 'periwinkle', hex: '#92a9e1', hover: '#92a9e1' };
@@ -166,15 +108,14 @@ export default function Board() {
 
 
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
-  const [placingTemplate, setPlacingTemplate] = useState(null);
+
   const [activePreviewFile, setActivePreviewFile] = useState(null);
   const [activeFolder, setActiveFolder] = useState(null);
   const [activeBoard, setActiveBoard] = useState(null);
-  const [activeChartEditor, setActiveChartEditor] = useState(null);
   const [roomInfo, setRoomInfo] = useState(null);
-  const [promptConfig, setPromptConfig] = useState(null);
+
   const [showChoiceFileModal, setShowChoiceFileModal] = useState(false);
-  const [pendingFileLinkParentId, setPendingFileLinkParentId] = useState(null);
+
   const [showRoster, setShowRoster] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
   const [examWindow, setExamWindow] = useState(null);
@@ -187,7 +128,7 @@ export default function Board() {
   const [actingHost, setActingHost] = useState(null);
   const [hostLocked, setHostLocked] = useState(false);
   const [perms, setPerms] = useState({ share: true, files: true, mic: true, copyPaste: true });
-  const [quizCount, setQuizCount] = useState(0);
+  const [quizCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const localUserId = localStorage.getItem('userId');
@@ -216,9 +157,13 @@ export default function Board() {
   // Sync Awareness Presence
   useEffect(() => {
     if (!awareness) return;
-    
-    // Announce ourselves
+
+    const userName = localStorage.getItem('userName') || 'Anonymous';
+    const userColor = localStorage.getItem('themeAccent') || '#ff4444';
+
+    // Announce ourselves with full user info for cursor rendering
     awareness.setLocalStateField('userId', localUserId);
+    awareness.setLocalStateField('user', { name: userName, color: userColor });
 
     const updatePresence = () => {
       const states = awareness.getStates();
@@ -257,25 +202,22 @@ export default function Board() {
   }, [id, navigate]);
   
   // Communication States
-  const { isCallActive, isCallHidden, setIsCallHidden, callMode, joinCall, leaveCall, isMicMuted, setIsMicMuted, isVideoOff, setIsVideoOff } = useCallContext();
+  const { isCallActive, isCallHidden, joinCall } = useCallContext();
   
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Theme State
   const [showThemeSettings, setShowThemeSettings] = useState(false);
-  const [mode, setMode] = useState(() => localStorage.getItem('themeMode') || 'dark');
-  const [boardType, setBoardType] = useState(() => localStorage.getItem('themeBoard') || 'pinboard');
+  const [boardType] = useState(() => localStorage.getItem('themeBoard') || 'pinboard');
 
   useEffect(() => {
-    localStorage.setItem('themeMode', mode);
     localStorage.setItem('themeBoard', boardType);
     localStorage.setItem('themeAccent', JSON.stringify(accentColor));
 
-    document.body.setAttribute('data-mode', mode);
     document.body.setAttribute('data-board', boardType);
     document.documentElement.style.setProperty('--accent', accentColor.hex);
     document.documentElement.style.setProperty('--accent-hover', accentColor.hover);
-  }, [mode, boardType, accentColor]);
+  }, [boardType, accentColor]);
 
   useEffect(() => {
     if (id) {
@@ -288,14 +230,27 @@ export default function Board() {
             setRoomInfo(data);
             addRoomToHistory(id, data.name, data.parentId || null, data.kind || 'board');
           } else {
-            console.warn("Room doesn't exist in Firebase, falling back to local mode");
-            setRoomInfo({ name: id, hostId: 'local' });
+            // Create the room if it doesn't exist instead of falling back to local mode
+            console.log("Room doesn't exist, creating new room:", id);
+            const userId = localStorage.getItem('userId') || 'anonymous';
+            const newRoomData = {
+              name: id,
+              hostId: userId,
+              createdAt: serverTimestamp(),
+              kind: 'board',
+              parentId: null,
+              perms: { share: true, files: true, mic: true, copyPaste: true }
+            };
+            await setDoc(roomRef, newRoomData);
+            setRoomInfo(newRoomData);
+            addRoomToHistory(id, id, null, 'board');
           }
         } catch (e) {
-          console.error("Firebase error, falling back to local mode:", e);
-          setRoomInfo({ name: id, hostId: 'local' });
-        } finally {
-          setLoading(false);
+          console.error("Firebase error, retrying...", e);
+          // Retry once after a short delay instead of falling back
+          setTimeout(() => {
+            fetchRoom();
+          }, 1000);
         }
       };
       fetchRoom();
@@ -304,10 +259,14 @@ export default function Board() {
     }
   }, [id, navigate]);
 
-  const isExamRoom = roomInfo?.kind === 'exam';
   const addShape = (type) => {
     if (type === 'milanote-card') {
-      customEditor.setCurrentTool('text');
+      setActiveTool('text');
+      if (excalidrawAPIRef.current) {
+        excalidrawAPIRef.current.updateScene({
+          appState: { activeTool: { type: 'text' } }
+        });
+      }
     } else if (type === 'milanote-file') {
       setShowChoiceFileModal(true);
     } else if (type === 'milanote-board') {
@@ -324,12 +283,12 @@ export default function Board() {
           });
           const boardId = docRef.id;
           
-          if (excalidrawAPI) {
+          if (excalidrawAPIRef.current) {
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
-            const zoom = excalidrawAPI.getAppState().zoom.value;
-            const scrollX = excalidrawAPI.getAppState().scrollX;
-            const scrollY = excalidrawAPI.getAppState().scrollY;
+            const zoom = excalidrawAPIRef.current.getAppState().zoom.value;
+            const scrollX = excalidrawAPIRef.current.getAppState().scrollX;
+            const scrollY = excalidrawAPIRef.current.getAppState().scrollY;
             const canvasX = (centerX / zoom) - scrollX;
             const canvasY = (centerY / zoom) - scrollY;
 
@@ -361,7 +320,35 @@ export default function Board() {
   }
 
   return (
-    <div className="app-container" style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div className="app-container" style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          Array.from(e.dataTransfer.files).forEach((file) => {
+            // Ignore images so Excalidraw handles them natively
+            if (file.type.startsWith('image/')) return;
+            
+            const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
+            const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
+            const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
+            const fileUrl = URL.createObjectURL(file);
+            handleUpdateCustomCards(prev => [...prev, {
+              id: Date.now().toString() + Math.random().toString(36).substring(7),
+              type: file.name.endsWith('.ipynb') ? 'notebook' : 'file',
+              name: file.name,
+              url: fileUrl,
+              x: -scrollX + (Math.random() * 50 / zoom),
+              y: -scrollY + (Math.random() * 50 / zoom)
+            }]);
+          });
+        }
+      }}
+    >
       {/* Top Bar Navigation */}
       <TopBar 
         roomName={id || 'global'} 
@@ -386,63 +373,84 @@ export default function Board() {
           style={{ display: 'none' }} 
           onChange={(e) => {
             if (e.target.files && e.target.files.length > 0) {
-              // Custom handling logic omitted for brevity
+              const file = e.target.files[0];
+              const fileUrl = URL.createObjectURL(file);
+              handleUpdateCustomCards(prev => [...prev, {
+                id: Date.now().toString(),
+                type: 'file',
+                name: file.name,
+                url: fileUrl,
+                x: window.innerWidth / 2 - 100 + (Math.random() * 50),
+                y: window.innerHeight / 2 - 100 + (Math.random() * 50)
+              }]);
             }
           }}
         />
-        <ExcalidrawCanvas 
-          excalidrawAPI={excalidrawAPI}
-          activeTool={activeTool}
-          setActiveTool={setActiveTool}
-          addShape={addShape}
-          themeMode={mode}
-          customCards={customCards}
-          setCustomCards={handleUpdateCustomCards}
-          onCardDelete={(id) => {
-            handleUpdateCustomCards(prev => prev.filter(c => c.id !== id));
-          }}
-          ydoc={ydoc}
-          provider={provider}
-          awareness={awareness}
-          elementsMap={elementsMap}
-          viewModeEnabled={!canEdit}
-          onCustomToolClick={(tool) => {
-            if (tool === 'upload') {
-              setShowChoiceFileModal(true);
-            } else if (tool === 'nested') {
-              addShape('milanote-board');
-            } else if (tool === 'create') {
-              setShowChoiceFileModal(true);
-            } else if (tool === 'call') {
-              // Not implemented yet, leave for phase 13
-            }
-          }}
-          onCardDoubleClick={(card) => {
-            if (card.type === 'file') {
-              setActivePreviewFile({ url: card.url, name: card.name });
-            } else if (card.type === 'nested-board') {
-              setActiveBoard({ boardId: card.boardId, name: card.name, files: [] });
-            }
-          }}
-          onCanvasReady={setExcalidrawAPI}
-          onLinkOpen={(element, event) => {
-            if (element.link && element.link.startsWith('vyoma://')) {
-              event.preventDefault();
-              const url = new URL(element.link);
-              if (url.host === 'file') {
-                setActivePreviewFile({ url: url.pathname.slice(1), name: element.text || 'File' });
-              } else if (url.host === 'board') {
-                setActiveBoard({ boardId: url.pathname.slice(1), name: element.text || 'Board', files: [] });
+        <ErrorBoundary>
+          <ExcalidrawCanvas 
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            customCards={customCards}
+            setCustomCards={handleUpdateCustomCards}
+            onCardDelete={(id) => {
+              handleUpdateCustomCards(prev => prev.filter(c => c.id !== id));
+            }}
+            ydoc={ydoc}
+            provider={provider}
+            awareness={awareness}
+            elementsMap={elementsMap}
+            viewModeEnabled={!canEdit}
+            onCustomToolClick={(tool) => {
+              if (tool === 'upload') {
+                fileInputRef.current?.click();
+              } else if (tool === 'nested') {
+                addShape('milanote-board');
+              } else if (tool === 'create') {
+                const name = prompt('Enter notebook name (e.g. data_analysis.ipynb):');
+                if (name) {
+                  const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
+                  const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
+                  const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
+                  const safeName = name.endsWith('.ipynb') ? name : `${name}.ipynb`;
+                  handleUpdateCustomCards(prev => [...prev, {
+                    id: Date.now().toString(),
+                    type: 'notebook',
+                    name: safeName,
+                    x: -scrollX + (Math.random() * 50 / zoom),
+                    y: -scrollY + (Math.random() * 50 / zoom)
+                  }]);
+                }
+              } else if (tool === 'call') {
+                joinCall('video');
               }
-            }
-          }}
-        />
+            }}
+            onCardDoubleClick={(card) => {
+              if (card.type === 'file') {
+                setActivePreviewFile({ url: card.url, name: card.name });
+              } else if (card.type === 'nested-board') {
+                setActiveBoard({ boardId: card.boardId, name: card.name, files: [] });
+              }
+            }}
+            onCanvasReady={(api) => { excalidrawAPIRef.current = api; }}
+            onLinkOpen={(element, event) => {
+              if (element.link && element.link.startsWith('vyoma://')) {
+                event.preventDefault();
+                const url = new URL(element.link);
+                if (url.host === 'file') {
+                  setActivePreviewFile({ url: url.pathname.slice(1), name: element.text || 'File' });
+                } else if (url.host === 'board') {
+                  setActiveBoard({ boardId: url.pathname.slice(1), name: element.text || 'Board', files: [] });
+                }
+              }
+            }}
+            localClientId={awareness?.clientID}
+          />
+        </ErrorBoundary>
       </div>
 
       {isChatOpen && (
         <ChatPanel
             onClose={() => setIsChatOpen(false)}
-            roomId={id}
             roomInfo={roomInfo}
         />
       )}
@@ -453,10 +461,10 @@ export default function Board() {
           boardName={roomInfo?.name || 'Untitled'}
           folderFiles={[]}
           onClose={() => setActivePreviewFile(null)}
-          editor={customEditor}
           onSaveCloudFile={() => {}}
           onCreateCloudFile={() => {}}
           onOpenFile={() => {}}
+          editor={null}
         />
       )}
 
@@ -465,8 +473,8 @@ export default function Board() {
           onClose={() => setShowChoiceFileModal(false)}
           onFileSelect={(files) => {
             setShowChoiceFileModal(false);
-            if (excalidrawAPI && files && files.length > 0) {
-              const appState = excalidrawAPI.getAppState();
+            if (excalidrawAPIRef.current && files && files.length > 0) {
+              const appState = excalidrawAPIRef.current.getAppState();
               const zoom = appState.zoom.value;
               const scrollX = appState.scrollX;
               const scrollY = appState.scrollY;
@@ -487,8 +495,8 @@ export default function Board() {
           }}
           onFileUpload={(files) => {
             setShowChoiceFileModal(false);
-            if (excalidrawAPI && files && files.length > 0) {
-              const appState = excalidrawAPI.getAppState();
+            if (excalidrawAPIRef.current && files && files.length > 0) {
+              const appState = excalidrawAPIRef.current.getAppState();
               const zoom = appState.zoom.value;
               const scrollX = appState.scrollX;
               const scrollY = appState.scrollY;
@@ -535,16 +543,6 @@ export default function Board() {
         />
       )}
 
-      {activeChartEditor && (
-        <ChartEditorModal
-          shapeId={activeChartEditor.shapeId}
-          initialChartType={activeChartEditor.chartType}
-          initialChartData={activeChartEditor.chartData}
-          initialMermaidCode={activeChartEditor.mermaidCode}
-          onClose={() => setActiveChartEditor(null)}
-          editor={customEditor}
-        />
-      )}
 
       {isCallActive && (
         <CallManager 
@@ -558,10 +556,9 @@ export default function Board() {
       {showThemeSettings && (
         <ThemeSettingsModal 
           onClose={() => setShowThemeSettings(false)}
-          mode={mode} setMode={setMode}
           accentColor={accentColor} setAccentColor={setAccentColor}
           isHost={actingHost === localUserId}
-          editor={customEditor}
+          editor={null}
         />
       )}
 
@@ -591,7 +588,7 @@ export default function Board() {
               setHostLocked(val);
             }
           }}
-          editor={customEditor}
+          api={excalidrawAPIRef.current}
         />
       )}
       {showClassSettings && <ClassSettingsModal roomId={id} onClose={() => setShowClassSettings(false)} />}
@@ -627,7 +624,7 @@ export default function Board() {
 
       {/* Add Question form */}
       {showAddQuestion && (
-        <AddQuestionModal editor={customEditor} onClose={() => setShowAddQuestion(false)} />
+        <AddQuestionModal onClose={() => setShowAddQuestion(false)} />
       )}
 
       {/* Student details form editor */}

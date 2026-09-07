@@ -42,7 +42,7 @@ export default function TopBar({
   }, [roomName]);
 
   return (
-    <div style={{
+    <div className="neo-brutalist-panel" style={{
       position: 'absolute',
       top: '16px',
       left: '50%',

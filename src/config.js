@@ -16,7 +16,12 @@ export const getWsUrl = () => {
     return `${protocol}//${url.host}`;
   }
 
-  // Fallback to current host (for local dev proxy)
+  // Local development: use local y-websocket server
+  if (import.meta.env.DEV) {
+    return 'ws://localhost:1234';
+  }
+
+  // Fallback to current host (for production proxy)
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}`;
 };

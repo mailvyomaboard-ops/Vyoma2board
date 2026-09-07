@@ -32,13 +32,17 @@ export default function FileCard({
   const Icon = getIcon();
   const iconBg = card.type === 'nested-board' ? 'var(--accent-orange)' : 'var(--accent-pink)';
 
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
   const handlePointerDown = (e) => {
     e.stopPropagation();
+    if (e.target.setPointerCapture) e.target.setPointerCapture(e.pointerId);
     setIsDragging(true);
     setStartPos({
       x: e.clientX,
       y: e.clientY
     });
+    setDragOffset({ x: 0, y: 0 });
   };
 
   useEffect(() => {
@@ -47,14 +51,19 @@ export default function FileCard({
       
       const dx = (e.clientX - startPos.x) / zoom;
       const dy = (e.clientY - startPos.y) / zoom;
-
-      onUpdatePosition(card.id, card.x + dx, card.y + dy);
-
-      setStartPos({ x: e.clientX, y: e.clientY });
+      setDragOffset({ x: dx, y: dy });
     };
 
-    const handlePointerUp = () => {
-      setIsDragging(false);
+    const handlePointerUp = (e) => {
+      if (isDragging) {
+        setIsDragging(false);
+        const dx = (e.clientX - startPos.x) / zoom;
+        const dy = (e.clientY - startPos.y) / zoom;
+        if (dx !== 0 || dy !== 0) {
+          onUpdatePosition(card.id, card.x + dx, card.y + dy);
+        }
+        setDragOffset({ x: 0, y: 0 });
+      }
     };
 
     if (isDragging) {
@@ -80,9 +89,8 @@ export default function FileCard({
       }}
       style={{
         position: 'absolute',
-        // Center the card on its x/y coordinate for easier math
-        left: `calc(50% + ${(card.x + scrollX) * zoom}px)`,
-        top: `calc(50% + ${(card.y + scrollY) * zoom}px)`,
+        left: `calc(50% + ${(card.x + dragOffset.x + scrollX) * zoom}px)`,
+        top: `calc(50% + ${(card.y + dragOffset.y + scrollY) * zoom}px)`,
         transform: `translate(-50%, -50%) scale(${zoom})`,
         width: '120px',
         height: '140px',

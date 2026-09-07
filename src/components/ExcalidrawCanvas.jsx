@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import BottomToolbar from './BottomToolbar';
 import ContextualPanel from './ContextualPanel';
 import FileCard from './FileCard';
+import CustomCursorOverlay from './CustomCursorOverlay';
 import '../index.css';
 
 const NOTE_COLORS = {
@@ -18,12 +19,29 @@ const NOTE_COLORS = {
 
 
 
+/**
+ * @param {{
+ *   activeTool: string,
+ *   setActiveTool: (tool: string) => void,
+
+ *   customCards?: any[],
+ *   setCustomCards: (updater: any) => void,
+ *   onCardDoubleClick: (card: any) => void,
+ *   onCardDelete: (id: string) => void,
+ *   onCustomToolClick: (tool: string) => void,
+ *   onCanvasReady: (api: any) => void,
+ *   onLinkOpen: (element: any, event: any) => void,
+ *   ydoc: any,
+ *   provider?: any,
+ *   awareness: any,
+ *   elementsMap: any,
+ *   viewModeEnabled: boolean
+ * }} props
+ */
 export default function ExcalidrawCanvas({
-  excalidrawAPI: externalApi,
   activeTool,
   setActiveTool,
-  addShape,
-  themeMode,
+
   customCards = [],
   setCustomCards,
   onCardDoubleClick,
@@ -32,10 +50,10 @@ export default function ExcalidrawCanvas({
   onCanvasReady,
   onLinkOpen,
   ydoc,
-  provider,
   awareness,
   elementsMap,
-  viewModeEnabled
+  viewModeEnabled,
+  localClientId
 }) {
   const [internalApi, setInternalApi] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
@@ -45,26 +63,62 @@ export default function ExcalidrawCanvas({
   const [activeSize, setActiveSize] = useState('m');
   const [activeFont, setActiveFont] = useState('sans');
   const [activeAlign, setActiveAlign] = useState('middle');
-  const [showStylePanel, setShowStylePanel] = useState(true);
   const [selectedElements, setSelectedElements] = useState([]);
   const elementsRef = useRef([]);
+  const lastSyncedVersionsRef = useRef(new Map());
   const [zoom, setZoom] = useState(1);
   const [scrollX, setScrollX] = useState(0);
   const [scrollY, setScrollY] = useState(0);
-  const api = externalApi || internalApi;
+  const api = internalApi;
 
-  const excalidrawRef = useRef(null);
+  // Stable refs for mutable values used in callbacks — avoids recreating
+  // handleOnChange/handlePointerUpdate on every render (which would cause
+  // Excalidraw's Jotai subscriptions to re-subscribe → infinite loop)
+  const apiRef = useRef(null);
+  const awarenessRef = useRef(null);
+  const elementsMapRef = useRef(null);
+  const ydocRef = useRef(null);
+  const onCustomToolClickRef = useRef(null);
+  const isApplyingRemoteRef = useRef(false);
+  const collaboratorsUpdateTimerRef = useRef(null);
+  const pendingCollaboratorsRef = useRef(new Map());
+  apiRef.current = api;
+  awarenessRef.current = awareness;
+  elementsMapRef.current = elementsMap;
+  ydocRef.current = ydoc;
+  onCustomToolClickRef.current = onCustomToolClick;
 
-  useEffect(() => {
-    if (externalApi) {
-      setInternalApi(externalApi);
+  // Stable memoized props — new objects every render cause Excalidraw to
+  // re-run internal effects via tunnel-rat / Jotai → infinite update loop
+  const excalidrawUIOptions = useMemo(() => ({
+    canvasActions: {
+      loadScene: false, export: /** @type {any} */ (false), saveAsImage: false,
+      clearCanvas: false, saveToActiveFile: false,
+      toggleTheme: false, changeViewBackgroundColor: false
+    },
+    toolbar: { tooltips: false },
+    animations: false,
+  }), []);
+
+  const excalidrawInitialData = useMemo(() => ({
+    appState: {
+      theme: 'light',
+      viewBackgroundColor: 'transparent',
     }
-  }, [externalApi]);
+  }), []); // intentionally run once — initialData is only read on mount by Excalidraw
+
+
+  const onCanvasReadyRef = useRef(onCanvasReady);
+  useEffect(() => {
+    onCanvasReadyRef.current = onCanvasReady;
+  }, [onCanvasReady]);
 
   const handleApiReady = useCallback((api) => {
     setInternalApi(api);
-    onCanvasReady?.(api);
-  }, [onCanvasReady]);
+    if (onCanvasReadyRef.current) {
+      onCanvasReadyRef.current(api);
+    }
+  }, []);
 
   const updateStyle = useCallback((key, value) => {
     if (!api) return;
@@ -145,6 +199,8 @@ export default function ExcalidrawCanvas({
     const observer = (event, transaction) => {
       if (transaction.local) return; // Ignore local updates
       
+      isApplyingRemoteRef.current = true;
+      
       const localElements = api.getSceneElements();
       const localMap = new Map(localElements.map(e => [e.id, e]));
       
@@ -169,6 +225,9 @@ export default function ExcalidrawCanvas({
       });
 
       api.updateScene({ elements: Array.from(newElementsMap.values()) });
+      
+      // Reset flag after React flushes
+      setTimeout(() => { isApplyingRemoteRef.current = false; }, 0);
     };
 
     elementsMap.observe(observer);
@@ -177,7 +236,7 @@ export default function ExcalidrawCanvas({
     };
   }, [elementsMap, api]);
 
-  // Handle Remote Awareness (Cursors)
+  // Handle Remote Awareness (Cursors) - debounced to prevent excessive updates
   useEffect(() => {
     if (!awareness || !api) return;
 
@@ -198,24 +257,46 @@ export default function ExcalidrawCanvas({
         }
       });
 
-      api.updateScene({ collaborators });
+      // Debounce collaborator updates to prevent excessive api.updateScene calls
+      pendingCollaboratorsRef.current = collaborators;
+      if (collaboratorsUpdateTimerRef.current) {
+        clearTimeout(collaboratorsUpdateTimerRef.current);
+      }
+      collaboratorsUpdateTimerRef.current = setTimeout(() => {
+        if (apiRef.current) {
+          apiRef.current.updateScene({ collaborators: pendingCollaboratorsRef.current });
+        }
+      }, 16); // ~60fps
     };
 
     awareness.on('change', handleAwarenessUpdate);
-    return () => awareness.off('change', handleAwarenessUpdate);
+    return () => {
+      awareness.off('change', handleAwarenessUpdate);
+      if (collaboratorsUpdateTimerRef.current) {
+        clearTimeout(collaboratorsUpdateTimerRef.current);
+      }
+    };
   }, [awareness, api]);
 
   const handleToolClick = useCallback((tool, e) => {
     if (e) e.stopPropagation();
     setActiveTool(tool);
-    
-    if (api) {
+
+    // Tools that don't need Excalidraw API — open modals immediately
+    const noApiTools = ['upload', 'create', 'nested', 'call'];
+    if (noApiTools.includes(tool)) {
+      onCustomToolClickRef.current?.(tool);
+      return;
+    }
+
+    // Tools that require Excalidraw API
+    if (apiRef.current) {
       const toolMap = {
         'selection': 'selection',
         'hand': 'hand',
         'freedraw': 'freedraw',
-        'highlighter': 'freedraw', // Will handle opacity in style updates
-        'laser': 'laser', // Or fallback to selection if laser unsupported
+        'highlighter': 'freedraw',
+        'laser': 'laser',
         'eraser': 'eraser',
         'shape': 'rectangle',
         'rectangle': 'rectangle',
@@ -228,40 +309,49 @@ export default function ExcalidrawCanvas({
       };
       const targetTool = toolMap[tool];
       if (targetTool) {
-        api.updateScene({
+        apiRef.current.updateScene({
           appState: { activeTool: { type: targetTool } }
         });
-        
-        // If highlighter, automatically set opacity low
+
         if (tool === 'highlighter') {
-           updateStyle('size', 'xl');
-           updateStyle('color', 'yellow'); // Trigger a style update with yellow default
+          updateStyle('size', 'xl');
+          updateStyle('color', 'yellow');
         } else if (tool === 'freedraw') {
-           updateStyle('size', 'm');
-           updateStyle('color', 'black');
-        }
-      } else {
-        // Handle Call, Upload, Create, Nested clicks here or via props
-        if (onCustomToolClick) {
-          onCustomToolClick(tool);
+          updateStyle('size', 'm');
+          updateStyle('color', 'black');
         }
       }
     }
-  }, [api, setActiveTool]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setActiveTool, updateStyle]);
 
 
   const handleOnChange = useCallback((elements, appState) => {
+    // Skip Yjs sync if we're currently applying remote updates (prevents loop)
+    if (isApplyingRemoteRef.current) {
+      elementsRef.current = elements;
+      return;
+    }
+    
     // 1. Track selection for ContextualPanel
     const selectedIds = appState.selectedElementIds;
     const selected = elements.filter(el => selectedIds[el.id]);
-    setSelectedElements(selected);
+    setSelectedElements(prev => {
+      if (prev.length === selected.length && prev.every((el, i) => el.id === selected[i].id && el.version === selected[i].version)) {
+        return prev;
+      }
+      return selected;
+    });
     setZoom(appState.zoom.value);
     setScrollX(appState.scrollX);
     setScrollY(appState.scrollY);
 
-    // Sync selection to awareness
-    if (awareness) {
-      awareness.setLocalStateField('selectedElementIds', selectedIds);
+    // Sync selection to awareness efficiently
+    if (awarenessRef.current) {
+      const currentSelected = awarenessRef.current.getLocalState()?.selectedElementIds;
+      if (JSON.stringify(currentSelected) !== JSON.stringify(selectedIds)) {
+        awarenessRef.current.setLocalStateField('selectedElementIds', selectedIds);
+      }
     }
 
     // 2. Custom Eraser Logic: Restore any non-freedraw element that was just deleted
@@ -270,7 +360,6 @@ export default function ExcalidrawCanvas({
       const restoredElements = elements.map(el => {
         const isProtectedType = ['milanote-card', 'milanote-chart', 'file', 'nested-board', 'image'].includes(el.type);
         if (el.isDeleted && isProtectedType) {
-          // Check if it was alive in our last ref
           const oldEl = elementsRef.current.find(e => e.id === el.id);
           if (oldEl && !oldEl.isDeleted) {
             shouldRestore = true;
@@ -280,15 +369,14 @@ export default function ExcalidrawCanvas({
         return el;
       });
 
-      if (shouldRestore && api) {
-        api.updateScene({ elements: restoredElements });
+      if (shouldRestore && apiRef.current) {
+        apiRef.current.updateScene({ elements: restoredElements });
       }
     }
     
-    // Sync to Yjs Map efficiently using a known versions map to avoid O(N) map lookups
-    if (elementsMap && ydoc) {
-      ydoc.transact(() => {
-        // Collect batch of updates
+    // Sync to Yjs Map efficiently
+    if (elementsMapRef.current && ydocRef.current) {
+      ydocRef.current.transact(() => {
         const updates = [];
         elements.forEach(el => {
           const lastKnownVersion = lastSyncedVersionsRef.current.get(el.id) || 0;
@@ -297,53 +385,76 @@ export default function ExcalidrawCanvas({
             lastSyncedVersionsRef.current.set(el.id, el.version);
           }
         });
-
-        // Apply batch
         updates.forEach(el => {
-          elementsMap.set(el.id, el);
+          elementsMapRef.current.set(el.id, el);
         });
       }, 'local');
     }
 
     elementsRef.current = elements;
-  }, [api, elementsMap, ydoc, awareness]);
+  // Empty dep array: all mutable values accessed via refs — this callback
+  // is intentionally stable for the lifetime of the component.
+  }, []);
+
+  const lastUserRef = useRef(null);
 
   const handlePointerUpdate = useCallback((payload) => {
-    if (awareness) {
-      awareness.setLocalStateField('pointer', payload.pointer);
-      awareness.setLocalStateField('button', payload.button);
-      awareness.setLocalStateField('user', {
-        name: localStorage.getItem('userName') || 'Anonymous',
-        color: localStorage.getItem('themeAccent') || '#ff4444'
-      });
+    if (awarenessRef.current) {
+      awarenessRef.current.setLocalStateField('pointer', payload.pointer);
+      awarenessRef.current.setLocalStateField('button', payload.button);
+      
+      const userName = localStorage.getItem('userName') || 'Anonymous';
+      const userColor = localStorage.getItem('themeAccent') || '#ff4444';
+      
+      const currentUser = lastUserRef.current;
+      if (!currentUser || currentUser.name !== userName || currentUser.color !== userColor) {
+        const newUser = { name: userName, color: userColor };
+        awarenessRef.current.setLocalStateField('user', newUser);
+        lastUserRef.current = newUser;
+      }
     }
-  }, [awareness]);
+  }, []);
+
+  const excalidrawStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
+  
+  const onLinkOpenRef = useRef(onLinkOpen);
+  useEffect(() => {
+    onLinkOpenRef.current = onLinkOpen;
+  }, [onLinkOpen]);
+  
+  const handleLinkOpen = useCallback((element, event) => {
+    if (onLinkOpenRef.current) {
+      onLinkOpenRef.current(element, event);
+    }
+  }, []);
+
+  const excalidrawElement = useMemo(() => (
+    <Excalidraw
+      excalidrawAPI={handleApiReady}
+      onChange={handleOnChange}
+      onPointerUpdate={handlePointerUpdate}
+      viewModeEnabled={viewModeEnabled}
+      UIOptions={excalidrawUIOptions}
+      initialData={excalidrawInitialData}
+      theme='light'
+      gridModeEnabled={true}
+      style={excalidrawStyle}
+      onLinkOpen={handleLinkOpen}
+    />
+  ), [
+    handleApiReady, handleOnChange, handlePointerUpdate, viewModeEnabled,
+    excalidrawUIOptions, excalidrawInitialData, excalidrawStyle, handleLinkOpen
+  ]);
 
   return (
-    <div className="pinhole-bg" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-      <Excalidraw
-        ref={excalidrawRef}
-        excalidrawAPI={handleApiReady}
-        onChange={handleOnChange}
-        onPointerUpdate={handlePointerUpdate}
-        zenModeEnabled={true}
-        viewModeEnabled={viewModeEnabled}
-        UIOptions={{
-          canvasActions: { 
-            loadScene: false, export: false, saveAsImage: false, clearCanvas: false, saveToActiveFile: false, toggleTheme: false, changeViewBackgroundColor: false
-          },
-          toolbar: { tooltips: false },
-          animations: false,
-        }}
-        initialData={{ 
-          appState: { 
-            theme: themeMode === 'dark' ? 'dark' : 'light',
-            viewBackgroundColor: 'transparent',
-          } 
-        }}
-        theme={themeMode === 'dark' ? 'dark' : 'light'}
-        style={{ width: '100%', height: '100%' }}
-        onLinkOpen={onLinkOpen}
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+      {excalidrawElement}
+
+      {/* Custom Cursor Overlay - Figma-style remote cursors */}
+      <CustomCursorOverlay
+        awareness={awareness}
+        localClientId={localClientId}
+        enabled={!!awareness}
       />
 
       {/* Cards Overlay */}
@@ -371,7 +482,7 @@ export default function ExcalidrawCanvas({
       </div>
 
       {/* Zoom indicator */}
-      <div style={{
+      <div className="neo-brutalist-panel" style={{
         position: 'absolute',
         bottom: '24px',
         right: '24px',
@@ -402,8 +513,9 @@ export default function ExcalidrawCanvas({
         />
       )}
 
-      {selectedElements.length > 0 && !viewModeEnabled && (
+      {!viewModeEnabled && (
         <ContextualPanel
+          activeTool={activeTool}
           selectedElements={selectedElements}
           onStyleChange={updateStyle}
           activeColor={activeColor}
@@ -412,6 +524,7 @@ export default function ExcalidrawCanvas({
           activeSize={activeSize}
           activeFont={activeFont}
           activeAlign={activeAlign}
+          onToolChange={(tool) => handleToolClick(tool)}
           onDelete={() => {
             const newElements = api.getSceneElements().filter(
               (el) => !selectedElements.find((sel) => sel.id === el.id)

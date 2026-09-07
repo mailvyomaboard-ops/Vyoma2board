@@ -35,22 +35,6 @@
   --tool-btn-hover-bg: var(--accent-yellow);
 }
 
-body[data-mode="dark"] {
-  --bg-color: #2a2a2a;
-  --surface-color: #333333;
-  --text-main: #eeeeee;
-  --text-muted: #cccccc;
-  --border-color: #000000;
-  --shadow-color: #000000;
---board-bg: #222222;
-  --sidebar-bg: #2a2a2a;
-  --tool-btn-bg: #2a2a2a;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 body {
@@ -231,9 +215,7 @@ body[data-board="pinboard"]::before {
   pointer-events: none;
   z-index: -1;
 }
-body[data-mode="dark"][data-board="pinboard"]::before {
-  opacity: 0.12;
-}
+
 
 /* Root App container */
 #root {
@@ -501,10 +483,16 @@ font-family: 'Fira Code', monospace;
   background-size: 24px 24px !important;
 }
 
-body[data-mode='dark'] .pinhole-bg {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1.5px, transparent 1.5px) !important;
-}
-
-body[data-mode='light'] .pinhole-bg {
+.pinhole-bg {
   background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1.5px, transparent 1.5px) !important;
 }
+
+/* Custom Excalidraw Overrides */
+.excalidraw .layer-ui__wrapper { display: none !important; }
+.excalidraw-cursor { display: none !important; }
+.excalidraw-container { cursor: crosshair !important; }
+
+
+/* Brutalist UI Panel Overrides */
+.neo-brutalist-panel { border: 3px solid #000 !important; box-shadow: 4px 4px 0 #000 !important; }
+

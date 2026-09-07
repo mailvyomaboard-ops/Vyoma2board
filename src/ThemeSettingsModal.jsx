@@ -13,7 +13,6 @@ const ACCENTS = [
 
 export default function ThemeSettingsModal({
   onClose,
-  mode, setMode,
   accentColor, setAccentColor,
   isHost, editor
 }) {
@@ -69,41 +68,6 @@ export default function ThemeSettingsModal({
           </div>
 
           <div style={{ height: '3px', background: 'var(--border-color)', width: '100%' }}></div>
-
-          {/* Mode Selection */}
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '8px', textTransform: 'uppercase' }}>
-              Color Mode
-            </label>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <button
-                onClick={() => setMode('light')}
-                className="neo-btn"
-                style={{
-                  flex: 1, 
-                  background: mode === 'light' ? 'var(--accent-yellow)' : 'var(--bg-color)',
-                  boxShadow: mode === 'light' ? '2px 2px 0px var(--shadow-color)' : '4px 4px 0px var(--shadow-color)',
-                  transform: mode === 'light' ? 'translate(2px, 2px)' : 'none',
-                  color: mode === 'light' ? '#000' : 'var(--text-main)'
-                }}
-              >
-                Light
-              </button>
-              <button
-                onClick={() => setMode('dark')}
-                className="neo-btn"
-                style={{
-                  flex: 1, 
-                  background: mode === 'dark' ? 'var(--accent-yellow)' : 'var(--bg-color)',
-                  boxShadow: mode === 'dark' ? '2px 2px 0px var(--shadow-color)' : '4px 4px 0px var(--shadow-color)',
-                  transform: mode === 'dark' ? 'translate(2px, 2px)' : 'none',
-                  color: mode === 'dark' ? '#000' : 'var(--text-main)'
-                }}
-              >
-                Dark
-              </button>
-            </div>
-          </div>
 
           {/* Accent Color Selection */}
           <div>

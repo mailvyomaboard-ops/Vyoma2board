@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, X, MessageSquare, Search, ChevronLeft, User as UserIcon } from 'lucide-react';
+import { Send, X, MessageSquare, Search, ChevronLeft } from 'lucide-react';
 import { useCallContext } from '../context/CallContext';
 import '../index.css';
 
@@ -67,7 +67,7 @@ export default function ChatPanel({ onClose, roomInfo }) {
   };
 
   return (
-    <div className="neo-window" style={{
+    <div className="neo-window neo-brutalist-panel" style={{
       position: 'absolute',
       right: 16,
       top: 16,
