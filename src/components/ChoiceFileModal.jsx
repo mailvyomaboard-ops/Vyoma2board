@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { UploadCloud, FileJson, FileCode2, FileType2, X } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { getApiUrl } from '../config';
 import '../index.css';
 
 export default function ChoiceFileModal({ onClose, onFileSelect, onFileUpload }) {
+  const apiUrl = getApiUrl();
   const [selectedRecent, setSelectedRecent] = useState([]);
   const [recentFiles, setRecentFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,14 +39,40 @@ export default function ChoiceFileModal({ onClose, onFileSelect, onFileUpload })
     fetchRecentFiles();
   }, []);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onFileUpload(e.dataTransfer.files);
+      await uploadFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleFileSelect = async (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      await uploadFiles(e.target.files);
+    }
+  };
+
+  const uploadFiles = async (files) => {
+    const fileArray = Array.from(files);
+    for (const file of fileArray) {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      try {
+        const token = localStorage.getItem('token') || '';
+        const response = await fetch(`${apiUrl}/api/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+          // Notify parent that file was uploaded
+          onFileUpload?.([{ url: data.url, name: data.name, size: data.size, fileId: data.fileId }]);
+        }
+      } catch (err) {
+        console.error('Upload failed:', err);
+      }
     }
   };
 
@@ -104,9 +132,7 @@ export default function ChoiceFileModal({ onClose, onFileSelect, onFileUpload })
               const input = document.createElement('input');
               input.type = 'file';
               input.multiple = true;
-              input.onchange = (e) => {
-                if (e.target.files) onFileUpload(e.target.files);
-              };
+              input.onchange = handleFileSelect;
               input.click();
             }}
           >

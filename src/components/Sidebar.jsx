@@ -43,10 +43,22 @@ export default function Sidebar({
           <FileCode size={20} />
           <span>Create File</span>
         </button>
-        <button className="tool-btn" onClick={() => onUploadFile && onUploadFile()}>
+        <button className="tool-btn" onClick={() => document.getElementById('sidebar-file-upload').click()}>
           <ImageIcon size={20} />
           <span>Upload File</span>
         </button>
+        <input 
+          type="file" 
+          id="sidebar-file-upload" 
+          style={{ display: 'none' }} 
+          multiple
+          onChange={(e) => {
+            if (e.target.files && onUploadFile) {
+              onUploadFile(e.target.files);
+              e.target.value = ''; // Reset input
+            }
+          }} 
+        />
         <button className="tool-btn" onClick={() => onShowTemplates && onShowTemplates()}>
           <Layout size={20} />
           <span>Templates</span>

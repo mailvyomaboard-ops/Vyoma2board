@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
+import { convertToExcalidrawElements } from '@excalidraw/excalidraw';
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -102,6 +103,59 @@ export default function Board() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
+
+  const handleFileUpload = async (files) => {
+    const fileArray = Array.from(files);
+    for (const file of fileArray) {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      try {
+        const token = localStorage.getItem('token') || '';
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        const data = await response.json();
+        if (data.success && excalidrawAPI) {
+          // Add image to canvas
+          const img = new Image();
+          img.src = data.url;
+          img.onload = () => {
+            excalidrawAPI.addFiles([{ 
+              file: file, 
+              x: 0, 
+              y: 0, 
+              width: Math.min(img.width, 800), 
+              height: Math.min(img.height, 600) 
+            }]);
+          };
+          img.onerror = () => {
+            // It's not an image! Create a file card instead.
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            const elements = convertToExcalidrawElements([{
+              type: 'text',
+              x: centerX - 100,
+              y: centerY - 50,
+              text: `📄 ${file.name}\n(Double-click link to open)`,
+              fontSize: 20,
+              textAlign: 'center',
+              backgroundColor: '#C7CEEA', // pastel purple
+              link: `vyoma://file/${data.url}`,
+            }]);
+
+            const currentElements = excalidrawAPI.getSceneElements();
+            excalidrawAPI.updateScene({ elements: [...currentElements, ...elements] });
+          };
+        }
+      } catch (err) {
+        console.error('Upload failed:', err);
+      }
+    }
+  };
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [placingTemplate, setPlacingTemplate] = useState(null);
   const [activePreviewFile, setActivePreviewFile] = useState(null);
@@ -190,7 +244,49 @@ export default function Board() {
   }, [id, navigate]);
 
   const isExamRoom = roomInfo?.kind === 'exam';
-  const addShape = () => {};
+  const addShape = (type) => {
+    if (type === 'milanote-card') {
+      customEditor.setCurrentTool('text');
+    } else if (type === 'milanote-file') {
+      setShowChoiceFileModal(true);
+    } else if (type === 'milanote-board') {
+      const name = prompt("Enter a name for the new Nested Board:");
+      if (!name) return;
+      
+      const createBoard = async () => {
+        try {
+          const docRef = await addDoc(collection(db, 'rooms'), {
+            name: name,
+            createdAt: serverTimestamp(),
+            parentId: id || null,
+            kind: 'board'
+          });
+          const boardId = docRef.id;
+          
+          if (excalidrawAPI) {
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            const elements = convertToExcalidrawElements([{
+              type: 'text',
+              x: centerX - 100,
+              y: centerY - 50,
+              text: `📂 ${name}\n(Double-click link to open)`,
+              fontSize: 20,
+              textAlign: 'center',
+              backgroundColor: '#FFD3B6',
+              link: `vyoma://board/${boardId}`,
+            }]);
+            const currentElements = excalidrawAPI.getSceneElements();
+            excalidrawAPI.updateScene({ elements: [...currentElements, ...elements] });
+          }
+        } catch (e) {
+          console.error("Failed to create nested board", e);
+          alert("Failed to create nested board.");
+        }
+      };
+      createBoard();
+    }
+  };
 
   if (loading) {
     return (
@@ -219,7 +315,7 @@ export default function Board() {
         onOpenClassSettings={() => setShowClassSettings(true)}
       />
 
-      <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+      <div style={{ display: 'flex', flex: 1, position: 'relative', minHeight: 0 }}>
         
         {!isExamRoom && (
         <Sidebar 
@@ -231,11 +327,11 @@ export default function Board() {
           isCallHidden={isCallHidden} setIsCallHidden={setIsCallHidden}
           isMicMuted={isMicMuted} setIsMicMuted={setIsMicMuted}
           isVideoOff={isVideoOff} setIsVideoOff={setIsVideoOff}
-          onUploadFile={() => {}}
+          onUploadFile={handleFileUpload}
         />
       )}
 
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
         <ExcalidrawCanvas 
           excalidrawAPI={excalidrawAPI}
           activeTool={activeTool}
@@ -243,15 +339,27 @@ export default function Board() {
           addShape={addShape}
           themeMode={mode}
           onCanvasReady={setExcalidrawAPI}
+          onLinkOpen={(element, event) => {
+            if (element.link && element.link.startsWith('vyoma://')) {
+              event.preventDefault();
+              const url = new URL(element.link);
+              if (url.host === 'file') {
+                setActivePreviewFile({ url: url.pathname.slice(1), name: element.text || 'File' });
+              } else if (url.host === 'board') {
+                setActiveBoard({ boardId: url.pathname.slice(1), name: element.text || 'Board', files: [] });
+              }
+            }
+          }}
         />
       </div>
 
-      <ChatPanel
-          isOpen={isChatOpen}
-          setIsOpen={setIsChatOpen}
-          roomId={id}
-          userName={userName}
-      />
+      {isChatOpen && (
+        <ChatPanel
+            onClose={() => setIsChatOpen(false)}
+            roomId={id}
+            roomInfo={roomInfo}
+        />
+      )}
       
       {activePreviewFile && (
         <FileViewerModal 
@@ -269,8 +377,40 @@ export default function Board() {
       {showChoiceFileModal && (
         <ChoiceFileModal 
           onClose={() => setShowChoiceFileModal(false)}
-          onFileSelect={() => setShowChoiceFileModal(false)}
-          onFileUpload={() => setShowChoiceFileModal(false)}
+          onFileSelect={(files) => {
+            setShowChoiceFileModal(false);
+            if (excalidrawAPI && files && files.length > 0) {
+              const elements = files.map((f, idx) => ({
+                type: 'text',
+                x: (window.innerWidth / 2) - 100 + (idx * 20),
+                y: (window.innerHeight / 2) - 50 + (idx * 20),
+                text: `📄 ${f.name}\n(Double-click link to open)`,
+                fontSize: 20,
+                textAlign: 'center',
+                backgroundColor: '#C7CEEA',
+                link: `vyoma://file/${f.fileId || f.url || f.id}`,
+              }));
+              const currentElements = excalidrawAPI.getSceneElements();
+              excalidrawAPI.updateScene({ elements: [...currentElements, ...convertToExcalidrawElements(elements)] });
+            }
+          }}
+          onFileUpload={(files) => {
+            setShowChoiceFileModal(false);
+            if (excalidrawAPI && files && files.length > 0) {
+              const elements = files.map((f, idx) => ({
+                type: 'text',
+                x: (window.innerWidth / 2) - 100 + (idx * 20),
+                y: (window.innerHeight / 2) - 50 + (idx * 20),
+                text: `📄 ${f.name}\n(Double-click link to open)`,
+                fontSize: 20,
+                textAlign: 'center',
+                backgroundColor: '#C7CEEA',
+                link: `vyoma://file/${f.url}`,
+              }));
+              const currentElements = excalidrawAPI.getSceneElements();
+              excalidrawAPI.updateScene({ elements: [...currentElements, ...convertToExcalidrawElements(elements)] });
+            }
+          }}
         />
       )}
 

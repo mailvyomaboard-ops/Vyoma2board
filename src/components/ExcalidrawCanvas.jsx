@@ -39,6 +39,7 @@ export default function ExcalidrawCanvas({
   addShape,
   themeMode,
   onCanvasReady,
+  onLinkOpen,
 }) {
   const [internalApi, setInternalApi] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
@@ -215,7 +216,7 @@ export default function ExcalidrawCanvas({
   const showPanel = ['selection', 'rectangle', 'ellipse', 'triangle', 'diamond', 'hexagon', 'cloud', 'heart', 'arrow', 'line', 'text', 'draw', 'freedraw', 'eraser'].includes(activeTool);
 
   return (
-    <div style={{ flex: 1, position: 'relative', background: 'var(--board-bg)' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--board-bg)' }}>
       <Excalidraw
         ref={excalidrawRef}
         excalidrawAPI={handleApiReady}
@@ -235,6 +236,8 @@ export default function ExcalidrawCanvas({
           } 
         }}
         theme={themeMode === 'dark' ? 'dark' : 'light'}
+        style={{ width: '100%', height: '100%' }}
+        onLinkOpen={onLinkOpen}
       />
 
       {/* Bottom Toolbar - Integrated */}
