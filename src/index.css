@@ -35,6 +35,10 @@
   --tool-btn-hover-bg: var(--accent-yellow);
 }
 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
