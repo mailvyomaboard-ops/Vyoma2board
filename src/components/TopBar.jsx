@@ -87,23 +87,12 @@ export default function TopBar({
 
       <div style={{ width: '3px', height: '24px', background: 'var(--border-color)', opacity: 0.5 }}></div>
 
-      {/* Breadcrumbs */}
+      {/* Breadcrumbs / Room Code */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '800', color: 'var(--text-main)', fontSize: '14px' }}>
-        {breadcrumbs.length > 0 ? (
-          breadcrumbs.map((crumb, idx) => (
-            <React.Fragment key={crumb.id}>
-              <span 
-                onClick={() => navigate(`/board/${crumb.id}`)}
-                style={{ cursor: 'pointer', textDecoration: idx === breadcrumbs.length - 1 ? 'none' : 'underline' }}
-              >
-                {crumb.name}
-              </span>
-              {idx < breadcrumbs.length - 1 && <span>/</span>}
-            </React.Fragment>
-          ))
-        ) : (
-          `Board`
-        )}
+        <span style={{ color: 'var(--text-muted)' }}>Room Code:</span>
+        <span className="neo-badge" style={{ background: 'var(--accent-periwinkle)', color: '#000', fontSize: '12px', padding: '4px 8px', userSelect: 'all', cursor: 'pointer' }} onClick={() => navigator.clipboard.writeText(roomName)}>
+          {roomName}
+        </span>
       </div>
 
       <div style={{ width: '3px', height: '24px', background: 'var(--border-color)', opacity: 0.5 }}></div>
@@ -129,7 +118,7 @@ export default function TopBar({
         </button>
       )}
 
-      {/* Roster Button */}
+      {/* Teach Button (replaces Roster) */}
       {canUseTeacherTools && (
         <button
           onClick={onOpenRoster}
@@ -145,27 +134,9 @@ export default function TopBar({
             boxShadow: 'var(--shadow-sm)'
           }}
         >
-          <Users size={16} /> Roster
+          <Users size={16} /> Teach
         </button>
       )}
-
-      {/* Chat Button */}
-      <button
-        onClick={onToggleChat}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          background: 'var(--accent-blue)', color: 'var(--text-main)',
-          border: 'var(--border-width) solid var(--border-color)',
-          borderRadius: '4px',
-          padding: '6px 12px',
-          fontSize: '13px',
-          fontWeight: '800',
-          cursor: 'pointer',
-          boxShadow: 'var(--shadow-sm)'
-        }}
-      >
-        <MessageSquare size={16} /> Chat
-      </button>
 
     </div>
   );

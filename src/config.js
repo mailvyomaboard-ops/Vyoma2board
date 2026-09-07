@@ -21,7 +21,6 @@ export const getWsUrl = () => {
     return 'ws://localhost:1234';
   }
 
-  // Fallback to current host (for production proxy)
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.host}`;
+  // Fallback to public Yjs server for production if no backend URL is provided
+  return 'wss://demos.yjs.dev/ws';
 };
