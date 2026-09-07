@@ -34,7 +34,8 @@ export default function ExcalidrawCanvas({
   ydoc,
   provider,
   awareness,
-  elementsMap
+  elementsMap,
+  viewModeEnabled
 }) {
   const [internalApi, setInternalApi] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
@@ -303,6 +304,7 @@ export default function ExcalidrawCanvas({
         onChange={handleOnChange}
         onPointerUpdate={handlePointerUpdate}
         zenModeEnabled={true}
+        viewModeEnabled={viewModeEnabled}
         UIOptions={{
           canvasActions: { 
             loadScene: false, export: false, saveAsImage: false, clearCanvas: false, saveToActiveFile: false, toggleTheme: false, changeViewBackgroundColor: false
@@ -333,10 +335,14 @@ export default function ExcalidrawCanvas({
             scrollX={scrollX}
             scrollY={scrollY}
             onUpdatePosition={(id, x, y) => {
-              setCustomCards(prev => prev.map(c => c.id === id ? { ...c, x, y } : c));
+              // Only allow dragging if we have edit permissions
+              if (!viewModeEnabled) {
+                setCustomCards(prev => prev.map(c => c.id === id ? { ...c, x, y } : c));
+              }
             }}
             onDoubleClick={onCardDoubleClick}
             onDelete={onCardDelete}
+            canEdit={!viewModeEnabled}
           />
         ))}
       </div>
@@ -360,21 +366,39 @@ export default function ExcalidrawCanvas({
         {Math.round(zoom * 100)}%
       </div>
 
-      <BottomToolbar 
-        activeTool={activeTool}
-        onToolSelect={(tool) => handleToolClick(tool)}
-      />
+      {!viewModeEnabled && (
+        <BottomToolbar
+          activeTool={activeTool}
+          onToolSelect={handleToolClick}
+          onMenuToggle={setOpenMenu}
+          openMenu={openMenu}
+          canUndo={false}
+          canRedo={false}
+          onUndo={() => {}}
+          onRedo={() => {}}
+        />
+      )}
 
-      <ContextualPanel 
-        activeTool={activeTool}
-        selectedElements={selectedElements}
-        activeColor={activeColor}
-        activeSize={activeSize}
-        activeFont={activeFont}
-        activeAlign={activeAlign}
-        onUpdateStyle={updateStyle}
-        onToolSelect={(tool) => handleToolClick(tool)}
-      />
+      {selectedElements.length > 0 && !viewModeEnabled && (
+        <ContextualPanel
+          selectedElements={selectedElements}
+          onStyleChange={updateStyle}
+          activeColor={activeColor}
+          activeFill={activeFill}
+          activeDash={activeDash}
+          activeSize={activeSize}
+          activeFont={activeFont}
+          activeAlign={activeAlign}
+          onDelete={() => {
+            const newElements = api.getSceneElements().filter(
+              (el) => !selectedElements.find((sel) => sel.id === el.id)
+            );
+            api.updateScene({ elements: newElements });
+          }}
+          onBringForward={() => {}}
+          onSendBackward={() => {}}
+        />
+      )}
     </div>
   );
 }

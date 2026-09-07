@@ -12,7 +12,8 @@ export function useYjsStore({ roomId }) {
     provider: null,
     awareness: null,
     elementsMap: null,
-    customCardsMap: null
+    customCardsMap: null,
+    roomConfigMap: null
   });
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export function useYjsStore({ roomId }) {
     const doc = new Y.Doc();
     const elementsMap = doc.getMap('excalidraw-elements');
     const customCardsMap = doc.getMap('custom-cards');
+    const roomConfigMap = doc.getMap('room-config');
 
     // Room ID is prefixed to prevent collisions on public servers
     const provider = new WebsocketProvider(WS_URL, `vyoma2board-${roomId}`, doc);
@@ -41,7 +43,8 @@ export function useYjsStore({ roomId }) {
       provider,
       awareness: provider.awareness,
       elementsMap,
-      customCardsMap
+      customCardsMap,
+      roomConfigMap
     });
 
     return () => {

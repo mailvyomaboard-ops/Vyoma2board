@@ -9,7 +9,8 @@ export default function FileCard({
   scrollY, 
   onUpdatePosition, 
   onDoubleClick,
-  onDelete
+  onDelete,
+  canEdit = true
 }) {
   const cardRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -126,7 +127,7 @@ export default function FileCard({
         {card.name}
       </div>
 
-      {isHovered && onDelete && (
+      {isHovered && onDelete && canEdit && (
         <button
           onClick={(e) => {
             e.stopPropagation();

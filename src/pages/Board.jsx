@@ -63,7 +63,7 @@ export default function Board() {
   const [activeTool, setActiveTool] = useState('selection');
   
   // Yjs Sync
-  const { status: yjsStatus, doc: ydoc, provider, awareness, elementsMap, customCardsMap } = useYjsStore({ roomId: id });
+  const { status: yjsStatus, doc: ydoc, provider, awareness, elementsMap, customCardsMap, roomConfigMap } = useYjsStore({ roomId: id });
   const [customCards, setCustomCards] = useState([]);
 
   useEffect(() => {
@@ -242,12 +242,54 @@ export default function Board() {
   const [loading, setLoading] = useState(true);
 
   const localUserId = localStorage.getItem('userId');
+  const isHost = actingHost === localUserId;
+  const canEdit = isHost || !hostLocked;
+
+  // Sync Room Config
+  useEffect(() => {
+    if (!roomConfigMap) return;
+
+    const loadConfig = () => {
+      setHostLocked(roomConfigMap.get('hostLocked') || false);
+      const remotePerms = roomConfigMap.get('perms');
+      if (remotePerms) {
+        setPerms(remotePerms);
+      }
+    };
+
+    loadConfig();
+    const observer = () => loadConfig();
+    roomConfigMap.observe(observer);
+
+    return () => roomConfigMap.unobserve(observer);
+  }, [roomConfigMap]);
+
+  // Sync Awareness Presence
+  useEffect(() => {
+    if (!awareness) return;
+    
+    // Announce ourselves
+    awareness.setLocalStateField('userId', localUserId);
+
+    const updatePresence = () => {
+      const states = awareness.getStates();
+      const users = new Set();
+      states.forEach(state => {
+        if (state.userId) users.add(state.userId);
+      });
+      setPresentUserIds(Array.from(users));
+    };
+
+    updatePresence();
+    awareness.on('change', updatePresence);
+    return () => awareness.off('change', updatePresence);
+  }, [awareness, localUserId]);
 
   useEffect(() => {
     if (roomInfo) {
-      setActingHost(actingHostId(roomInfo, [localUserId]));
+      setActingHost(actingHostId(roomInfo, presentUserIds.length > 0 ? presentUserIds : [localUserId]));
     }
-  }, [roomInfo, localUserId]);
+  }, [roomInfo, localUserId, presentUserIds]);
 
   // Auth guard — boards opened via share link must go through auth first.
   useEffect(() => {
@@ -420,6 +462,7 @@ export default function Board() {
           provider={provider}
           awareness={awareness}
           elementsMap={elementsMap}
+          viewModeEnabled={!canEdit}
           onCustomToolClick={(tool) => {
             if (tool === 'upload') {
               fileInputRef.current?.click();
@@ -573,12 +616,28 @@ export default function Board() {
       {showHostControls && (
         <HostControlPanel
           onClose={() => setShowHostControls(false)}
-          provider={null}
-          localClientId={null}
+          provider={provider}
+          localClientId={awareness?.clientID}
           perms={perms}
-          setPerms={(val) => setPerms(val)}
+          setPerms={(val) => {
+            if (roomConfigMap) {
+              ydoc.transact(() => {
+                roomConfigMap.set('perms', val);
+              });
+            } else {
+              setPerms(val);
+            }
+          }}
           hostLocked={hostLocked}
-          setHostLocked={(val) => setHostLocked(val)}
+          setHostLocked={(val) => {
+            if (roomConfigMap) {
+              ydoc.transact(() => {
+                roomConfigMap.set('hostLocked', val);
+              });
+            } else {
+              setHostLocked(val);
+            }
+          }}
           editor={customEditor}
         />
       )}
