@@ -1,5 +1,6 @@
-import { lazy } from 'react';
-import { useParams } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import { CallProvider } from './components/CallManager.jsx';
 
 // Lazy load the heavy pages so the main bundle is tiny
 const Home = lazy(() => import('./pages/Home.jsx'));
