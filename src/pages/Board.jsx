@@ -92,29 +92,31 @@ export default function Board() {
     };
   }, [customCardsMap]);
 
-  // Wrapper to update both local state and Yjs map
+  // Wrapper to update Yjs map (local state will sync via observer)
   const handleUpdateCustomCards = (updater) => {
-    setCustomCards(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      if (customCardsMap) {
-        // Sync to Yjs
-        ydoc.transact(() => {
-          const nextIds = new Set(next.map(c => c.id));
-          
-          // Delete removed cards
-          prev.forEach(card => {
-            if (!nextIds.has(card.id)) {
-              customCardsMap.delete(card.id);
-            }
-          });
+    if (!customCardsMap || !ydoc) {
+      // Fallback for purely local before connection
+      setCustomCards(prev => typeof updater === 'function' ? updater(prev) : updater);
+      return;
+    }
 
-          // Set updated or new cards
-          next.forEach(card => {
-            customCardsMap.set(card.id, card);
-          });
-        });
-      }
-      return next;
+    const prev = Array.from(customCardsMap.values());
+    const next = typeof updater === 'function' ? updater(prev) : updater;
+    
+    ydoc.transact(() => {
+      const nextIds = new Set(next.map(c => c.id));
+      
+      // Delete removed cards
+      prev.forEach(card => {
+        if (!nextIds.has(card.id)) {
+          customCardsMap.delete(card.id);
+        }
+      });
+
+      // Set updated or new cards
+      next.forEach(card => {
+        customCardsMap.set(card.id, card);
+      });
     });
   };
 
