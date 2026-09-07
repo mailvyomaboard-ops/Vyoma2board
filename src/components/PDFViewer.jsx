@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import { ChevronLeft, ChevronRight, X, Cloud, Loader2 } from 'lucide-react';
 import { storage } from '../firebase';
 import { ref, uploadBytes, uploadString, getDownloadURL } from 'firebase/storage';
 

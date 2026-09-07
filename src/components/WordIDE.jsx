@@ -1,10 +1,5 @@
-import React, { useState } from 'react';
-import { 
-  FileText, ArrowLeft, MessageSquare, Share2, 
-  Undo, Redo, Bold, Italic, Underline, Strikethrough,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, ChevronDown, Image as ImageIcon, Table, Highlighter
-} from 'lucide-react';
+import { useState } from 'react';
+
 import DOMPurify from 'dompurify';
 
 export default function WordIDE({

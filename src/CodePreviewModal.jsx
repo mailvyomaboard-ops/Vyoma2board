@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { X, Download, Code, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 
 const overlayStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100000, position: 'fixed', inset: 0 };
 const contentStyle = { width: '80%', maxWidth: '900px', height: '80vh', background: '#1e1e1e', borderRadius: '8px', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', overflow: 'hidden', marginTop: '10vh' };

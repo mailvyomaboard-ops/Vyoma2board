@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { X, Save, GraduationCap } from 'lucide-react';
 import { YEARS, DOMAINS, DIVISIONS, CLASS_TYPES, isLabLike } from '../lib/classMeta';
 
 export default function ClassSettingsModal({ roomId, onClose }) {

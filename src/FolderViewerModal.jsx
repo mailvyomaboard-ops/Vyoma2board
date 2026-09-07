@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Folder, FileCode, FileText, Plus, Save } from 'lucide-react';
+import { useState } from 'react';
 
-import FileViewerModal from './FileViewerModal';
 
 export default function FolderViewerModal({ folderId, initialName, initialFiles, onClose }) {
   

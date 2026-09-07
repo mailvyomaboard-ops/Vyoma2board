@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { X, GraduationCap, PencilRuler, ClipboardCheck, ShieldCheck, UserX, Table2 } from 'lucide-react';
 import { loadProfile, profileComplete } from '../lib/examProfile';
-import ProfileSetupModal from './ProfileSetupModal';
 
 export default function ExamWindowModal({ roomId, examName, onClose, onEdit }) {
   const navigate = useNavigate();

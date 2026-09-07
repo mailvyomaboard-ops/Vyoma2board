@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Editor from '@monaco-editor/react';
-import { Play, Plus, Trash2, ChevronUp, ChevronDown, Code, Type, Loader2, Upload, X, Eraser, FileText, Eye } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import { getApiUrl } from '../config';
 

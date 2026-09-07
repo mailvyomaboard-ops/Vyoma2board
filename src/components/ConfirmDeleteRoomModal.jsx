@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 export default function ConfirmDeleteRoomModal({ room, onConfirm, onCancel }) {
   const [typed, setTyped] = useState('');

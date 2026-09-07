@@ -1,5 +1,3 @@
-import React from 'react';
-import { Mic, MicOff, Lock, Unlock, MonitorUp, FileCode, Shield, X, MonitorOff, PencilOff, Pencil, FileX, Trash2, Crosshair, Users } from 'lucide-react';
 import { sendHostAction } from '../lib/hostControl';
 import '../index.css';
 

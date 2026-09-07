@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import {
-  FileSpreadsheet, Undo, Redo, Bold, Italic, Underline, ChevronDown
-} from 'lucide-react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+
 import '../index.css';
 
 const ROW_HEIGHT = 28;

@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import { FileText, FileSpreadsheet, Presentation, File, Image } from 'lucide-react';
+import { Position } from 'reactflow';
 
 const getIconForType = (name) => {
   const ext = (name || '').split('.').pop().toLowerCase();

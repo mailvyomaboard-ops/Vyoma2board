@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { X, Layout, MessageSquare, Lightbulb, Grid, Wrench } from 'lucide-react';
+import { useState } from 'react';
 import { TEMPLATE_CATEGORIES } from '../templates.jsx';
 import '../index.css';
 

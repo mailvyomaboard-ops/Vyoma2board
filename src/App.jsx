@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import { lazy } from 'react';
+import { useParams } from 'react-router-dom';
 
 // Lazy load the heavy pages so the main bundle is tiny
 const Home = lazy(() => import('./pages/Home.jsx'));
@@ -19,7 +19,6 @@ const PageLoader = () => (
   </div>
 );
 
-import { CallProvider } from './context/CallContext';
 
 function RootRedirect() {
   return <Home />;

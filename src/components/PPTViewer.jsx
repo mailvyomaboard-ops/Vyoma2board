@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Cloud, Loader2 } from 'lucide-react';
 import { storage } from '../firebase';
 import { ref, uploadBytes, uploadString, getDownloadURL } from 'firebase/storage';
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { X, UserPlus, Trash2, CheckCircle2, Clock, Download, Upload, ChevronRight, FileSpreadsheet } from 'lucide-react';
 
 export default function RosterModal({ roomId, onClose }) {
   const [roster, setRoster] = useState([]);

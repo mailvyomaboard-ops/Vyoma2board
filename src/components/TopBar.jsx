@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Layout, Settings, Users, MessageSquare } from 'lucide-react';
 import { isTeacherRole } from '../lib/classMeta';
 import '../index.css';
 

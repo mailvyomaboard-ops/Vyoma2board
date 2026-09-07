@@ -1,6 +1,4 @@
-import React from 'react';
 import { NOTE_COLORS } from '../shapes/ShapeColors';
-import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 
 export default function StylePanel({ 
   activeColor, 

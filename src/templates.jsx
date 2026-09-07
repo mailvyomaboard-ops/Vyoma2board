@@ -11,7 +11,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Brand Guidelines',
         description: 'Wireframe and define your brand colors, fonts, and assets dynamically.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'brand-guidelines',
           x: center.x - 600,
           y: center.y - 700,
@@ -24,7 +24,7 @@ export const TEMPLATE_CATEGORIES = [
         description: 'Kanban-style grid to plan product design, development, marketing and sales over quarters.',
         icon: 'Layout',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'product-design',
           x: center.x - 900,
           y: center.y - 600,
@@ -43,7 +43,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Vision Board',
         description: 'Map out your goals across health, wealth, and personal development.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'vision-board',
           x: center.x - 700,
           y: center.y - 500,
@@ -55,7 +55,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Weekly Planner',
         description: 'Track chores, meals, and habits throughout the week.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'weekly-planner',
           x: center.x - 700,
           y: center.y - 500,
@@ -74,7 +74,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Business Model Canvas',
         description: 'Interactive 9-box grid to map out your business strategy.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'business-model-canvas',
           x: center.x - 700,
           y: center.y - 500,
@@ -86,7 +86,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Project Timeline',
         description: 'Dynamic timeline that stretches as you add milestones.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'timeline',
           x: center.x - 700,
           y: center.y - 400,
@@ -98,7 +98,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Eisenhower Matrix',
         description: 'Prioritize tasks by urgency and importance with smart auto-spawning notes.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'eisenhower-matrix',
           x: center.x - 700,
           y: center.y - 500,
@@ -110,7 +110,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Ideation Empathy Map',
         description: "A structured workshop layout to step into your user's shoes.",
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'empathy-map',
           x: center.x - 700,
           y: center.y - 500,
@@ -122,7 +122,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Brain Dump Area',
         description: 'A massive chaotic zone for sticky notes, files, and wild ideas.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'brain-dump',
           x: center.x - 800,
           y: center.y - 600,
@@ -134,7 +134,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'User Storymap',
         description: 'Map out user personas, activities, tasks, and stories across releases.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'user-storymap',
           x: center.x - 800,
           y: center.y - 600,
@@ -146,7 +146,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Customer Journey Map',
         description: 'Map touchpoints, pain points, and gain points across customer stages.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'customer-journey',
           x: center.x - 800,
           y: center.y - 400,
@@ -158,7 +158,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Retrospective',
         description: '2x2 grid for team retrospectives (Continue, Stop, Invent, Act).',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'retrospective',
           x: center.x - 800,
           y: center.y - 800,
@@ -177,7 +177,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Mind Map Generator',
         description: 'A smart root node that automatically connects new ideas as you brainstorm.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'mind-map-node',
           x: center.x - 100,
           y: center.y - 50,
@@ -196,7 +196,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Neo-brutalist Calculator',
         description: 'Interactive calculator with basic and scientific modes.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'calculator',
           x: center.x - 160,
           y: center.y - 230,
@@ -208,7 +208,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Connecting Line / Arrow',
         description: 'Standard connecting line or arrow.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'arrow',
           x: center.x - 50,
           y: center.y - 50,
@@ -220,7 +220,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'MCQ Quiz Widget',
         description: 'Interactive multiple choice question block.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'quiz-mcq',
           x: center.x - 200,
           y: center.y - 150,
@@ -232,7 +232,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Written Response Quiz',
         description: 'Interactive text response block.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'quiz-written',
           x: center.x - 200,
           y: center.y - 150,
@@ -244,7 +244,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Bar Chart',
         description: 'Interactive data bar chart.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'milanote-chart',
           x: center.x - 300,
           y: center.y - 200,
@@ -256,7 +256,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Line Chart',
         description: 'Interactive data line chart.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'milanote-chart',
           x: center.x - 300,
           y: center.y - 200,
@@ -268,7 +268,7 @@ export const TEMPLATE_CATEGORIES = [
         name: 'Pie Chart',
         description: 'Interactive data pie chart.',
         createShapes: (center) => [{
-          id: createShapeId(),
+          id: Math.random().toString(36).slice(2, 10),
           type: 'milanote-chart',
           x: center.x - 300,
           y: center.y - 200,

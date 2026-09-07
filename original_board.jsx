@@ -1,23 +1,8 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { 
-  Tldraw, 
-  createTLStore, 
-  defaultShapeUtils, 
   createShapeId,
-  DefaultToolbar,
-  ToolbarItem,
   useEditor,
   AssetRecordType,
-  TldrawUiPopover,
-  TldrawUiPopoverTrigger,
-  TldrawUiPopoverContent,
-  DefaultContextMenu,
-  DefaultContextMenuContent,
-  TldrawUiMenuGroup,
-  TldrawUiMenuItem,
-  TldrawUiMenuSubmenu,
-  useActions,
-  useValue,
   DefaultColorStyle,
   DefaultSizeStyle,
   DefaultFillStyle,
@@ -27,7 +12,6 @@ import {
   GeoShapeGeoStyle
 } from 'tldraw';
 import 'tldraw/tldraw.css';
-import { Loader2, Type, CheckSquare, Image as ImageIcon, Layout, Terminal, Settings, Folder, FileCode, Phone, MessageSquare, Mic, Video, VideoOff, MicOff, Pin, PieChart, Sparkles, Pen, Square } from 'lucide-react';
 import { NOTE_COLORS } from '../shapes/ShapeColors';
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
@@ -62,34 +46,13 @@ import { ExamFileShapeUtil } from '../shapes/ExamFileShapeUtil';
 import { QuizCodeShapeUtil } from '../shapes/QuizCodeShapeUtil';
 import { HtmlPreviewShapeUtil } from '../shapes/HtmlPreviewShapeUtil';
 
-import MiniMoodboard from '../MiniMoodboard';
-import HostControlPanel from '../components/HostControlPanel';
-import RosterModal from '../components/RosterModal';
-import AttendanceModal from '../components/AttendanceModal';
-import ExamWindowModal from '../components/ExamWindowModal';
-import AddQuestionModal from '../components/AddQuestionModal';
-import AuthFieldsEditorModal from '../components/AuthFieldsEditorModal';
-import ClassSettingsModal from '../components/ClassSettingsModal';
 
-import FileViewerModal from '../FileViewerModal';
-import BoardViewerModal from '../BoardViewerModal';
-import FolderViewerModal from '../FolderViewerModal';
-import ChartEditorModal from '../ChartEditorModal';
-import ThemeSettingsModal from '../ThemeSettingsModal';
-import CallManager from '../components/CallManager';
 import { useCallContext } from '../context/CallContext';
-import ChatPanel from '../components/ChatPanel';
-import TemplatesModal from '../components/TemplatesModal';
-import ChoiceFileModal from '../components/ChoiceFileModal';
-import Sidebar from '../components/Sidebar';
-import BottomToolbar from '../components/BottomToolbar';
-import StylePanel from '../components/StylePanel';
 import { useYjsStore } from '../useYjsStore';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isTeacherRole, isAssignedTeacher, actingHostId } from '../lib/classMeta';
 import { addRoomToHistory } from '../lib/roomHistory';
 import { sweepHostActions } from '../lib/hostControl';
-import TopBar from '../components/TopBar';
 
 const customShapeUtils = [
   CardShapeUtil, ListShapeUtil, FileShapeUtil, FolderShapeUtil, ChartShapeUtil, BoardShapeUtil,
@@ -1845,7 +1808,7 @@ export default function Board() {
             }
 
             files.forEach((file, index) => {
-              // eslint-disable-next-line no-undef
+               
               const newShapeId = editor.createShapeId ? editor.createShapeId() : `shape:${Math.random().toString(36).substr(2, 9)}`;
               
               let x = center.x - 125 + (index * 20);

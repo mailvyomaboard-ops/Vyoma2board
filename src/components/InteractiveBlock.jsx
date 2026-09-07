@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 export const InteractiveBlock = ({ id, label, shape, editor, showUI }) => {
   const blocks = shape.props.blocks || {};

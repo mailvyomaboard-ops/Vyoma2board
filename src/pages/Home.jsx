@@ -1,6 +1,4 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Users, FileCode, PenTool, ArrowRight } from 'lucide-react';
 import '../index.css';
 
 export default function Home() {

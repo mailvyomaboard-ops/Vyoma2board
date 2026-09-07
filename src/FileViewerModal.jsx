@@ -1,20 +1,12 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { X, Download, Code, Loader2, Folder, File, ChevronLeft, Image as ImageIcon, FileText, FileCode, FileSpreadsheet, Presentation, Edit2, Save, PenTool, Eye, EyeOff, Trash2, MousePointer2, Eraser, Bold, Italic, Underline, Type, Play, ChevronDown, Maximize, Zap, Music } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import * as mammoth from 'mammoth/mammoth.browser.js';
 import * as XLSX from 'xlsx';
-import DOMPurify from 'dompurify';
 import { storage } from './firebase';
 import { ref, uploadString, uploadBytes } from 'firebase/storage';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
-import SpreadsheetIDE from './components/SpreadsheetIDE';
-import WordIDE from './components/WordIDE';
-import PPTViewer from './components/PPTViewer';
-import NotebookIDE from './components/NotebookIDE';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import PDFViewer from './components/PDFViewer';
-import { ErrorBoundary } from './ErrorBoundary';
 import { getApiUrl, getWsUrl } from './config';
 
 export default function FileViewerModal({ fileData, folderFiles = [], onClose, onSaveCloudFile, onCreateCloudFile, onOpenFile, editor, boardName }) {

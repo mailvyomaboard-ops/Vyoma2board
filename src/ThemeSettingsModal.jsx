@@ -1,5 +1,4 @@
 import React from 'react';
-import { X, User, Trash2 } from 'lucide-react';
 import './index.css';
 
 const ACCENTS = [

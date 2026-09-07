@@ -1,8 +1,6 @@
-import React from 'react';
 import { 
   PenTool, Highlighter, Zap, Eraser,
-  Square, Circle, Triangle, Diamond, Hexagon, Cloud, Heart, ArrowRight, Minus, 
-  Type, AlignLeft, AlignCenter, AlignRight
+  Square, Circle, Triangle, Diamond, ArrowRight, Minus, AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import '../index.css';
 

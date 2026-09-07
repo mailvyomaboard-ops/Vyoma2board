@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, X, MessageSquare, Search, ChevronLeft, User as UserIcon } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { useCallContext } from '../context/CallContext';
 import '../index.css';
 

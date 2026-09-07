@@ -1,36 +1,15 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { convertToExcalidrawElements } from '@excalidraw/excalidraw';
 import { db, storage } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
-import MiniMoodboard from '../MiniMoodboard';
-import HostControlPanel from '../components/HostControlPanel';
-import RosterModal from '../components/RosterModal';
-import AttendanceModal from '../components/AttendanceModal';
-import ExamWindowModal from '../components/ExamWindowModal';
-import AddQuestionModal from '../components/AddQuestionModal';
-import AuthFieldsEditorModal from '../components/AuthFieldsEditorModal';
-import ClassSettingsModal from '../components/ClassSettingsModal';
 
-import FileViewerModal from '../FileViewerModal';
-import BoardViewerModal from '../BoardViewerModal';
-import FolderViewerModal from '../FolderViewerModal';
-import ChartEditorModal from '../ChartEditorModal';
-import ThemeSettingsModal from '../ThemeSettingsModal';
-import CallManager from '../components/CallManager';
 import { useCallContext } from '../context/CallContext';
-import ChatPanel from '../components/ChatPanel';
-import TemplatesModal from '../components/TemplatesModal';
-import ChoiceFileModal from '../components/ChoiceFileModal';
 import { useYjsStore } from '../useYjsStore';
 import { useParams, useNavigate } from 'react-router-dom';
-import { isTeacherRole, isAssignedTeacher, actingHostId } from '../lib/classMeta';
+import { actingHostId } from '../lib/classMeta';
 import { addRoomToHistory } from '../lib/roomHistory';
-import { sweepHostActions } from '../lib/hostControl';
-import TopBar from '../components/TopBar';
-import ExcalidrawCanvas from '../components/ExcalidrawCanvas';
 
 const dummyEditor = {
   getCurrentToolId: () => 'select',

@@ -1,7 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { MicOff, Mic, Pin, Users, PhoneOff, VideoOff, Video, MonitorUp, MessageSquare, Phone } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { useCallContext } from '../context/CallContext';
-import ChatPanel from './ChatPanel';
 
 function DraggableWindow({ user, onUnpin, isMicMuted, isVideoOff }) {
   const [position, setPosition] = useState({ x: window.innerWidth - 320, y: 40 });

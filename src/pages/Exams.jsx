@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, setDoc, serverTimestamp, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import { ArrowLeft, Plus, CalendarClock, Play, PencilRuler, Table2, BarChart3, X, GraduationCap } from 'lucide-react';
+import { CalendarClock, Play, PencilRuler, Table2, BarChart3 } from 'lucide-react';
 import { loadRoomHistory, addRoomToHistory } from '../lib/roomHistory';
 import { loadProfile, loadCustomFields } from '../lib/examProfile';
 import { classMetaLabel, isLabLike, isTeacherRole, isAssignedTeacher } from '../lib/classMeta';
 import { YEARS, DOMAINS, DIVISIONS, CLASS_TYPES } from '../lib/classMeta';
-import ExamScheduleModal from '../components/ExamScheduleModal';
 import '../index.css';
 
 const userId = () => localStorage.getItem('userId') || '';
