@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import BottomToolbar from './BottomToolbar';
+import ContextualPanel from './ContextualPanel';
 import '../index.css';
 
 const NOTE_COLORS = {
@@ -34,6 +35,8 @@ export default function ExcalidrawCanvas({
   const [activeFont, setActiveFont] = useState('sans');
   const [activeAlign, setActiveAlign] = useState('middle');
   const [showStylePanel, setShowStylePanel] = useState(true);
+  const [selectedElements, setSelectedElements] = useState([]);
+  const elementsRef = useRef([]);
   const [zoom, setZoom] = useState(1);
   const api = externalApi || internalApi;
 
@@ -101,6 +104,11 @@ export default function ExcalidrawCanvas({
     const elements = api.getSceneElements();
     const appState = api.getAppState();
     
+    const isHighlighter = api.getAppState().activeTool?.type === 'freedraw' && activeTool === 'highlighter';
+    const finalOpacity = isHighlighter ? 30 : 100;
+    stateUpdates.currentItemOpacity = finalOpacity;
+    elementUpdates.opacity = finalOpacity;
+
     let updatedElements = false;
     const newElements = elements.map(el => {
       if (appState.selectedElementIds[el.id]) {
@@ -126,7 +134,16 @@ export default function ExcalidrawCanvas({
         'selection': 'selection',
         'hand': 'hand',
         'freedraw': 'freedraw',
+        'highlighter': 'freedraw', // Will handle opacity in style updates
+        'laser': 'laser', // Or fallback to selection if laser unsupported
+        'eraser': 'eraser',
         'shape': 'rectangle',
+        'rectangle': 'rectangle',
+        'ellipse': 'ellipse',
+        'diamond': 'diamond',
+        'triangle': 'triangle',
+        'arrow': 'arrow',
+        'line': 'line',
         'text': 'text',
       };
       const targetTool = toolMap[tool];
@@ -134,6 +151,15 @@ export default function ExcalidrawCanvas({
         api.updateScene({
           appState: { activeTool: { type: targetTool } }
         });
+        
+        // If highlighter, automatically set opacity low
+        if (tool === 'highlighter') {
+           updateStyle('size', 'xl');
+           updateStyle('color', 'yellow'); // Trigger a style update with yellow default
+        } else if (tool === 'freedraw') {
+           updateStyle('size', 'm');
+           updateStyle('color', 'black');
+        }
       } else {
         // Handle Call, Upload, Create, Nested clicks here or via props
         console.log("Custom tool clicked:", tool);
@@ -142,11 +168,41 @@ export default function ExcalidrawCanvas({
   }, [api, setActiveTool]);
 
 
+  const handleOnChange = useCallback((elements, appState) => {
+    // 1. Track selection for ContextualPanel
+    const selectedIds = appState.selectedElementIds;
+    const selected = elements.filter(el => selectedIds[el.id]);
+    setSelectedElements(selected);
+
+    // 2. Custom Eraser Logic: Restore any non-freedraw element that was just deleted
+    if (appState.activeTool.type === 'eraser') {
+      let shouldRestore = false;
+      const restoredElements = elements.map(el => {
+        if (el.isDeleted && el.type !== 'freedraw') {
+          // Check if it was alive in our last ref
+          const oldEl = elementsRef.current.find(e => e.id === el.id);
+          if (oldEl && !oldEl.isDeleted) {
+            shouldRestore = true;
+            return { ...el, isDeleted: false };
+          }
+        }
+        return el;
+      });
+
+      if (shouldRestore && api) {
+        api.updateScene({ elements: restoredElements });
+      }
+    }
+    
+    elementsRef.current = elements;
+  }, [api]);
+
   return (
     <div className="pinhole-bg" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
       <Excalidraw
         ref={excalidrawRef}
         excalidrawAPI={handleApiReady}
+        onChange={handleOnChange}
         zenModeEnabled={true}
         UIOptions={{
           canvasActions: { 
@@ -187,6 +243,17 @@ export default function ExcalidrawCanvas({
 
       <BottomToolbar 
         activeTool={activeTool}
+        onToolSelect={(tool) => handleToolClick(tool)}
+      />
+
+      <ContextualPanel 
+        activeTool={activeTool}
+        selectedElements={selectedElements}
+        activeColor={activeColor}
+        activeSize={activeSize}
+        activeFont={activeFont}
+        activeAlign={activeAlign}
+        onUpdateStyle={updateStyle}
         onToolSelect={(tool) => handleToolClick(tool)}
       />
     </div>
