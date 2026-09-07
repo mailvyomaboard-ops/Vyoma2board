@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, X, MessageSquare, Maximize, Minimize } from 'lucide-react';
 import { getWsUrl } from '../config';
 import { useParams } from 'react-router-dom';
 import '../index.css';

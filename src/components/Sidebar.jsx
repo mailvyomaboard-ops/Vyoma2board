@@ -1,4 +1,8 @@
-
+import React, { useState } from 'react';
+import { 
+  Type, CheckSquare, Grid, Folder, Video, MonitorUp, FileCode, ImageIcon, 
+  Layout, Settings, MessageSquare, Phone, MicOff, Mic, VideoOff 
+} from 'lucide-react';
 import '../index.css'; // Assume neo-brutalist styles are here
 
 export default function Sidebar({ 

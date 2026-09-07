@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Type, Hash, AtSign, List } from 'lucide-react';
+import { X, Plus, Trash2, UserRound, Type, Hash, AtSign, List, ChevronDown } from 'lucide-react';
 
 const FIELD_TYPES = [
   { id: 'text', label: 'Text Box', icon: Type },

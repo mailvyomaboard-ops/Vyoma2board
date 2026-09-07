@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-
-
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  FileText, Undo, Redo, Bold, Italic, Underline, Strikethrough,
+  AlignLeft, AlignCenter, AlignRight, List, ListOrdered, ChevronDown, Highlighter
+} from 'lucide-react';
 import '../index.css';
 
 export default function DocumentIDE({

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { X, CalendarClock } from 'lucide-react';
 
 export default function ExamScheduleModal({ roomId, onClose }) {
   const [title, setTitle] = useState('');

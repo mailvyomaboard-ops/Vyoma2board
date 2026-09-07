@@ -1,4 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Excalidraw } from '@excalidraw/excalidraw';
+import BottomToolbar from './BottomToolbar';
+import ContextualPanel from './ContextualPanel';
+import FileCard from './FileCard';
 import '../index.css';
 
 const NOTE_COLORS = {

@@ -1,5 +1,10 @@
-import { useEffect } from 'react';
-import {
+import React, { useEffect } from 'react';
+import { 
+  SandpackProvider, 
+  SandpackLayout, 
+  SandpackCodeEditor, 
+  SandpackPreview, 
+  SandpackFileExplorer,
   useSandpack,
   useActiveCode
 } from "@codesandbox/sandpack-react";

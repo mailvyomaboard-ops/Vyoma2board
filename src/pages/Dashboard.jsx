@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Layout, Plus, LogIn, Settings, Hash, Search, Trash, LogOut, GraduationCap } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { doc, setDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import '../index.css';
+import ConfirmDeleteRoomModal from '../components/ConfirmDeleteRoomModal';
 import { isTeacherCreatedRoom, isAssignedTeacher } from '../lib/classMeta';
 import { loadRoomHistory, saveRoomHistory, addRoomToHistory } from '../lib/roomHistory';
 

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Loader2, KeyRound } from 'lucide-react';
 import '../index.css';
 
 const ROLES = ['Casual', 'Student', 'Teacher', 'Interviewer', 'Interviewee', 'Employee', 'Manager'];

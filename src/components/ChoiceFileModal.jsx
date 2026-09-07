@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { UploadCloud, FileJson, FileCode2, FileType2, X } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { getApiUrl } from '../config';

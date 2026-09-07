@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { X, Save, User, ChevronDown } from 'lucide-react';
 import { DESIGNATIONS, DOMAINS, YEARS, DIVISIONS, loadProfile, saveProfile, saveCustomFieldsMeta } from '../lib/examProfile';
 
 export default function ProfileSetupModal({ onClose, onSaved, authFields = [], roomId = '' }) {

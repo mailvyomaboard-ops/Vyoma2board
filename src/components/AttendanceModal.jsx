@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import { X, UserCheck, Clock } from 'lucide-react';
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 

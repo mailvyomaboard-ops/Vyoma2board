@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Excalidraw } from '@excalidraw/excalidraw';
+import { Download, X, FileText, Loader2 } from 'lucide-react';
 
 export default function MiniMoodboard({ fileData, onClose }) {
   const [status, setStatus] = useState('processing');

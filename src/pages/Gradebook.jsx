@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { ArrowLeft, Download, Trash2, CheckCircle2, Clock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import * as XLSX from 'xlsx';
 import { buildMasterRows } from '../lib/examProfile';

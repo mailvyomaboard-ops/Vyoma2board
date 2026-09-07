@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ArrowLeft, Save, Plus, Trash2, GripVertical, Settings } from 'lucide-react';
 import '../index.css';
 
 const ID = () => Math.random().toString(36).substring(2, 10);

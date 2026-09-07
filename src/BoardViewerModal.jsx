@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { X, Grid, FileCode, FileText, Plus, Save } from 'lucide-react';
 // import { useEditor } from 'tldraw';
+import FileViewerModal from './FileViewerModal';
 
 export default function BoardViewerModal({ boardId, initialName, initialFiles, onClose }) {
   // const editor = useEditor();

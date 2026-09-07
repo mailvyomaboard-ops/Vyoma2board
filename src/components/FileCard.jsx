@@ -1,5 +1,5 @@
-import { useRef, useState, useEffect } from 'react';
-import { File, FileCode, FileSpreadsheet, FileText, Image as ImageIcon, Music, Play, Folder } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { File, FileCode, FileSpreadsheet, FileText, Image as ImageIcon, Music, Play, Folder, Trash2 } from 'lucide-react';
 import '../index.css';
 
 export default function FileCard({ 

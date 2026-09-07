@@ -1,5 +1,5 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { FileText, FolderOpen, LayoutGrid, ClipboardList, Type } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Search, FileText, Users, X, MapPin, FolderOpen, LayoutGrid, ClipboardList, Type } from 'lucide-react';
 import '../index.css';
 
 const ICONS = { 'milanote-file': FileText, 'milanote-folder': FolderOpen, 'milanote-board': LayoutGrid, 'exam-file': ClipboardList, 'milanote-card': Type };

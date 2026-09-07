@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { X, Save } from 'lucide-react';
 
 const overlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' };
 const contentStyle = { width: '600px', maxWidth: '90%', background: '#1e1e1e', borderRadius: '12px', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', overflow: 'hidden' };

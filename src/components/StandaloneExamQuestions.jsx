@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { Lightbulb, Play, Loader2 } from 'lucide-react';
 import { getExamAnswer, setExamAnswer } from '../lib/examSession';
+import Editor from '@monaco-editor/react';
 
 // MCQ Component
 export const StandaloneMcq = ({ shape }) => {
