@@ -39,6 +39,10 @@ export default function ChoiceFileModal({ onClose, onFileSelect, onFileUpload })
     fetchRecentFiles();
   }, []);
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
   const handleDrop = async (e) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
