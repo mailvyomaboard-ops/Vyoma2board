@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { File, FileCode, FileSpreadsheet, FileText, Image as ImageIcon, Music, Play } from 'lucide-react';
+import { File, FileCode, FileSpreadsheet, FileText, Image as ImageIcon, Music, Play, Folder } from 'lucide-react';
 import '../index.css';
 
 export default function FileCard({ 
@@ -15,6 +15,7 @@ export default function FileCard({
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
   const getIcon = () => {
+    if (card.type === 'nested-board') return Folder;
     const ext = card.name.split('.').pop().toLowerCase();
     if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return ImageIcon;
     if (['js', 'py', 'html', 'css', 'json', 'cpp'].includes(ext)) return FileCode;
@@ -26,6 +27,7 @@ export default function FileCard({
   };
 
   const Icon = getIcon();
+  const iconBg = card.type === 'nested-board' ? 'var(--accent-orange)' : 'var(--accent-pink)';
 
   const handlePointerDown = (e) => {
     e.stopPropagation();
@@ -96,7 +98,7 @@ export default function FileCard({
       }}
     >
       <div style={{
-        background: 'var(--accent-pink)',
+        background: iconBg,
         padding: '12px',
         borderRadius: '8px',
         border: '2px solid var(--border-color)',

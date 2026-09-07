@@ -159,6 +159,8 @@ export default function Board() {
     }
   };
 
+  const fileInputRef = useRef(null);
+
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [placingTemplate, setPlacingTemplate] = useState(null);
   const [activePreviewFile, setActivePreviewFile] = useState(null);
@@ -337,6 +339,17 @@ export default function Board() {
             <Loader2 className="spin" size={16} /> Uploading...
           </div>
         )}
+        <input 
+          type="file" 
+          multiple 
+          ref={fileInputRef} 
+          style={{ display: 'none' }} 
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleFileUpload(e.target.files);
+            }
+          }}
+        />
         <ExcalidrawCanvas 
           excalidrawAPI={excalidrawAPI}
           activeTool={activeTool}
@@ -345,6 +358,17 @@ export default function Board() {
           themeMode={mode}
           customCards={customCards}
           setCustomCards={setCustomCards}
+          onCustomToolClick={(tool) => {
+            if (tool === 'upload') {
+              fileInputRef.current?.click();
+            } else if (tool === 'nested') {
+              addShape('milanote-board');
+            } else if (tool === 'create') {
+              addShape('milanote-file');
+            } else if (tool === 'call') {
+              // Not implemented yet, leave for phase 13
+            }
+          }}
           onCardDoubleClick={(card) => {
             if (card.type === 'file') {
               setActivePreviewFile({ url: card.url, name: card.name });

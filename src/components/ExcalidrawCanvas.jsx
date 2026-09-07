@@ -27,6 +27,7 @@ export default function ExcalidrawCanvas({
   customCards = [],
   setCustomCards,
   onCardDoubleClick,
+  onCustomToolClick,
   onCanvasReady,
   onLinkOpen,
 }) {
@@ -168,7 +169,9 @@ export default function ExcalidrawCanvas({
         }
       } else {
         // Handle Call, Upload, Create, Nested clicks here or via props
-        console.log("Custom tool clicked:", tool);
+        if (onCustomToolClick) {
+          onCustomToolClick(tool);
+        }
       }
     }
   }, [api, setActiveTool]);
