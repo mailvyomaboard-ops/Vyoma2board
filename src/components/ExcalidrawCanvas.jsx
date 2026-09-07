@@ -434,6 +434,7 @@ export default function ExcalidrawCanvas({
       onChange={handleOnChange}
       onPointerUpdate={handlePointerUpdate}
       viewModeEnabled={viewModeEnabled}
+      zenModeEnabled={true}
       UIOptions={excalidrawUIOptions}
       initialData={excalidrawInitialData}
       theme='light'
