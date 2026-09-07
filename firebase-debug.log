@@ -1,0 +1,241 @@
+[debug] [2026-09-07T04:54:41.123Z] ----------------------------------------------------------------------
+[debug] [2026-09-07T04:54:41.126Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Krrish\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-09-07T04:54:41.126Z] CLI Version:   15.29.0
+[debug] [2026-09-07T04:54:41.126Z] Platform:      win32
+[debug] [2026-09-07T04:54:41.126Z] Node Version:  v24.11.1
+[debug] [2026-09-07T04:54:41.126Z] Detected Agent: antigravity
+[debug] [2026-09-07T04:54:41.126Z] Time:          Mon Sep 07 2026 10:24:41 GMT+0530 (India Standard Time)
+[debug] [2026-09-07T04:54:41.127Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-09-07T04:54:43.381Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-07T04:54:43.382Z] > authorizing via signed-in user (mail.vyomaboard@gmail.com)
+[debug] [2026-09-07T04:54:43.382Z] [iam] checking project vyoma2board for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-09-07T04:54:43.393Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:43.394Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:43.395Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/vyoma2board:testIamPermissions [none]
+[debug] [2026-09-07T04:54:43.395Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/vyoma2board:testIamPermissions  x-goog-user-project=vyoma2board
+[debug] [2026-09-07T04:54:43.395Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/vyoma2board:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-09-07T04:54:45.142Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/vyoma2board:testIamPermissions 200
+[debug] [2026-09-07T04:54:45.142Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/vyoma2board:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-09-07T04:54:45.142Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:45.143Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:45.143Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/vyoma2board [none]
+[debug] [2026-09-07T04:54:45.772Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/vyoma2board 200
+[debug] [2026-09-07T04:54:45.772Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/vyoma2board {"projectId":"vyoma2board","projectNumber":"617996920667","displayName":"Vyoma2board","name":"projects/vyoma2board","resources":{"hostingSite":"vyoma2board"},"state":"ACTIVE","labels":{"firebase":"enabled"},"etag":"1_5d7638d0-f58f-46f4-811a-44f9435f62d7"}
+[info] 
+[info] === Deploying to 'vyoma2board'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2026-09-07T04:54:45.775Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:45.775Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:45.775Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/vyoma2board/sites/vyoma2board [none]
+[debug] [2026-09-07T04:54:47.210Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/vyoma2board/sites/vyoma2board 200
+[debug] [2026-09-07T04:54:47.210Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/vyoma2board/sites/vyoma2board {"name":"projects/vyoma2board/sites/vyoma2board","defaultUrl":"https://vyoma2board.web.app","appId":"1:617996920667:web:fc730fde17a22698a95c7e","type":"DEFAULT_SITE"}
+[debug] [2026-09-07T04:54:47.219Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:47.219Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:47.221Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/vyoma2board/versions [none]
+[debug] [2026-09-07T04:54:47.222Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/vyoma2board/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-09-07T04:54:48.342Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/vyoma2board/versions 200
+[debug] [2026-09-07T04:54:48.342Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/vyoma2board/versions {"name":"projects/617996920667/sites/vyoma2board/versions/c3aba8cc57f28013","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[vyoma2board]: beginning deploy... 
+[info] i  hosting[vyoma2board]: found 37 files in dist 
+[debug] [2026-09-07T04:54:48.367Z] [hosting] uploading with 200 concurrency
+[debug] [2026-09-07T04:54:48.563Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:48.564Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:48.566Z] [hosting] hash cache [ZGlzdA] stored for 37 files
+[debug] [2026-09-07T04:54:48.566Z] [hosting][hash queue][FINAL] {"max":185,"min":17,"avg":29.864864864864863,"active":0,"complete":37,"success":37,"errored":0,"retried":0,"total":37,"elapsed":195}
+[debug] [2026-09-07T04:54:48.567Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/617996920667/sites/vyoma2board/versions/c3aba8cc57f28013:populateFiles [none]
+[debug] [2026-09-07T04:54:48.567Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/617996920667/sites/vyoma2board/versions/c3aba8cc57f28013:populateFiles {"files":{"/assets/trash-2-BoJjHyWO.js":"73458485d8a17b62cfca40c877bd08f8487bc2ac997d8d18002398ea9261b9bf","/assets/users-C-qxlHCe.js":"40c9978674bd6c4a733a929ddea77e085220adcbb5f23759430243bfd65c737f","/assets/table-2-i-RcjL2z.js":"d7dba2845013116e5db4dbbc280ae568d0e3733966f42701cacbba2879dae9f8","/assets/tiny-invariant-BCXflckp.js":"41e83ab98cd1fb30d580c93fc01ebf1f071d75bce1a4dc45be4fbba067161636","/assets/search-CFj9D5TW.js":"a2fdda31f3e05ef642cae9c6468fb0bcb012b6b020f86ff2cbe587b9788a4949","/assets/roomHistory-C0FBN0j4.js":"7df1048de0f51192f1ce756384641bc0a9be72c0b9c0ee9e07e334f2dd67ae34","/assets/save-BfsiS6Lj.js":"a3401cd47d3dfdc5a6146d54009f88d883b89c3147f175a58a96a5a86c065991","/assets/plus-DMyVfKIs.js":"b27397498f9410fa345564e4d965e74666e9526eeec5c5019152886ab9251d6b","/assets/panels-top-left-weQI6l2n.js":"5881b527c7c6f5ee12807ff65c238b964b20b78a2e6b0f8944c0f0a368db2512","/assets/pen-tool-CJvp0T-D.js":"301eefe97eb1010be320a24d6936ffcdda766997b915689a875f3973959a9f46","/assets/loader-circle-DsSySkIH.js":"05cad56182ca03f14f37e727be9460c619dbb67a33863d37143ad1b09c2e0d03","/assets/purify.es-BnINGy_Y.js":"1d366d3270344323d74ccc77296bc670c851f0cc5fa00759f05fd5408280699b","/assets/Home-DFzVo_wl.js":"fb399a006863b1a78d629c67212032f22a1f8f35859c4ded37e8f2ad9a77fe87","/assets/Gradebook-BBCOnmUn.js":"6c6123a7f871683234dfd2d06c6e06ded987f9d82a7327dda5fcfd36866cc291","/assets/examProfile-Ckcn5FKX.js":"3daa3adaca3d39d1ea458d905d21887abdc5b372c948687831d6cefe8132d250","/assets/ExamPortal-CSxRPO1x.js":"eb850c0b0a103d29c5324f39bcc14651917ee5ba029e848ec2e79d1c6f7cda67","/assets/createLucideIcon-CYFgEPqI.js":"62cb92eee4cc5dcc4aee680e7483320f02ea05351ef5b0bb169a36390b36d932","/assets/Exams-YLKchehD.js":"6a2158fbf8446851ece44813d96e58c28c486c442145dc98b84f34c68106c98d","/assets/circle-check-BJshc3it.js":"f89e5401ec8d99162bb6eb3f93e1bbeb171142aac45180a989ce7e5fe3ec07c2","/assets/ExamEditor-D1pfhqxA.js":"c0a4c3d10f92133bf8179d33be28a10d1ccda9d7ef6e187fec3ac24283ec8266","/assets/Dashboard-CG8OT_Tt.js":"8b7ac2b297dc1a9cbf70b985a4e0996c7094c512d66f11c423e8b17c07f1e44d","/index.html":"d6ac91f7f3628ddd642972b6b2382a335970c38fb51824a3f6617652fb378ca6","/assets/bar-chart-3-D28wva2y.js":"66f4b5cf3e3a740c324992c53e71167d8951e204201b78bd924671d6b6f8180c","/assets/Auth-Dbbw-BO9.js":"95d814882f3002019c84231d957bbc132109b158a083afd7e3828d763f4e466d","/assets/arrow-left-BWeUcl-a.js":"e367c2e28ca2edfed237e1c6de158474a5356626d7b5cfa9e55764f4d8509cf8","/assets/index-CggaVe_6.css":"7d350ef3ede8960c9681563b03788625423d228c6b5cf18a0322f858560cbdbb","/assets/arrow-right-D6PEsArh.js":"aa41de265ce83e4b246e089efa60c972a3c1d8d22f192b26d02fb742f5fae489","/assets/Board-CbDDFlJq.css":"e0b74f23ed68331dc5e73106cad433b94a808652752c5e56e6579557f640a228","/assets/index.es-C40GqfAw.js":"c1565bd2b01d6607c8560bda911fe762dd244d1e87682971e17952dfe0d15368","/assets/index-Ogs0cGoi.js":"088c2de2736e5b3b0eab74abfeb4edca6fb270ed1a9d180396eaf900f9ef6358","/assets/html2canvas.esm-CBrSDip1.js":"ded7ecd5734581383939d1afccae5caec1522d744916c1a8238850e3728709cb","/assets/Analytics-DuRVBqqP.js":"7bf94e6eb7ea0e73297c852440b70df196fe31c6bcde093531d0f66b1dbe781f","/assets/index-B331a4p6.js":"67c7059fae7716b522d5f42af68a72b1eae40b8f60565c1ace05df41def5d91e","/assets/firebase-C9GlBFxe.js":"dff4948b6b5a00176dd4ad3bec4e98a5179de20086b41cb3f36ff235e812691c","/assets/jspdf.es.min-BJqIBeBK.js":"b2a6d0ae37b9e4f29935822d0993e11187282c2ce890d681713fd752f59787d7","/assets/pdf.worker.min-qwK7q_zL.mjs":"0c965033f3173d05c32fc7d6fc8a4a475b92a2f003476da18588c91e8930f6c2","/assets/Board-MSsZtSZ1.js":"6144bdf30a58c93713a3844955582ba0c102a578f93d2e1f9769f0d0f049238d"}}
+[debug] [2026-09-07T04:54:49.514Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/617996920667/sites/vyoma2board/versions/c3aba8cc57f28013:populateFiles 200
+[debug] [2026-09-07T04:54:49.514Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/617996920667/sites/vyoma2board/versions/c3aba8cc57f28013:populateFiles {"uploadRequiredHashes":["c1565bd2b01d6607c8560bda911fe762dd244d1e87682971e17952dfe0d15368","6144bdf30a58c93713a3844955582ba0c102a578f93d2e1f9769f0d0f049238d","b27397498f9410fa345564e4d965e74666e9526eeec5c5019152886ab9251d6b","d6ac91f7f3628ddd642972b6b2382a335970c38fb51824a3f6617652fb378ca6","e367c2e28ca2edfed237e1c6de158474a5356626d7b5cfa9e55764f4d8509cf8","301eefe97eb1010be320a24d6936ffcdda766997b915689a875f3973959a9f46","62cb92eee4cc5dcc4aee680e7483320f02ea05351ef5b0bb169a36390b36d932","7df1048de0f51192f1ce756384641bc0a9be72c0b9c0ee9e07e334f2dd67ae34","6c6123a7f871683234dfd2d06c6e06ded987f9d82a7327dda5fcfd36866cc291","66f4b5cf3e3a740c324992c53e71167d8951e204201b78bd924671d6b6f8180c","088c2de2736e5b3b0eab74abfeb4edca6fb270ed1a9d180396eaf900f9ef6358","7bf94e6eb7ea0e73297c852440b70df196fe31c6bcde093531d0f66b1dbe781f","c0a4c3d10f92133bf8179d33be28a10d1ccda9d7ef6e187fec3ac24283ec8266","b2a6d0ae37b9e4f29935822d0993e11187282c2ce890d681713fd752f59787d7","05cad56182ca03f14f37e727be9460c619dbb67a33863d37143ad1b09c2e0d03","f89e5401ec8d99162bb6eb3f93e1bbeb171142aac45180a989ce7e5fe3ec07c2","fb399a006863b1a78d629c67212032f22a1f8f35859c4ded37e8f2ad9a77fe87","95d814882f3002019c84231d957bbc132109b158a083afd7e3828d763f4e466d","aa41de265ce83e4b246e089efa60c972a3c1d8d22f192b26d02fb742f5fae489","40c9978674bd6c4a733a929ddea77e085220adcbb5f23759430243bfd65c737f","d7dba2845013116e5db4dbbc280ae568d0e3733966f42701cacbba2879dae9f8","a2fdda31f3e05ef642cae9c6468fb0bcb012b6b020f86ff2cbe587b9788a4949","8b7ac2b297dc1a9cbf70b985a4e0996c7094c512d66f11c423e8b17c07f1e44d","5881b527c7c6f5ee12807ff65c238b964b20b78a2e6b0f8944c0f0a368db2512","a3401cd47d3dfdc5a6146d54009f88d883b89c3147f175a58a96a5a86c065991","6a2158fbf8446851ece44813d96e58c28c486c442145dc98b84f34c68106c98d","73458485d8a17b62cfca40c877bd08f8487bc2ac997d8d18002398ea9261b9bf"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files"}
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.515Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.516Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.517Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.518Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.518Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.518Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.518Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.518Z] Checked if tokens are valid: true, expires at: 1788758412077
+[debug] [2026-09-07T04:54:49.518Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/c1565bd2b01d6607c8560bda911fe762dd244d1e87682971e17952dfe0d15368 [none]
+[debug] [2026-09-07T04:54:49.518Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/c1565bd2b01d6607c8560bda911fe762dd244d1e87682971e17952dfe0d15368 [stream]
+[debug] [2026-09-07T04:54:49.519Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/6144bdf30a58c93713a3844955582ba0c102a578f93d2e1f9769f0d0f049238d [none]
+[debug] [2026-09-07T04:54:49.519Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/6144bdf30a58c93713a3844955582ba0c102a578f93d2e1f9769f0d0f049238d [stream]
+[debug] [2026-09-07T04:54:49.520Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/b27397498f9410fa345564e4d965e74666e9526eeec5c5019152886ab9251d6b [none]
+[debug] [2026-09-07T04:54:49.520Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/b27397498f9410fa345564e4d965e74666e9526eeec5c5019152886ab9251d6b [stream]
+[debug] [2026-09-07T04:54:49.520Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/d6ac91f7f3628ddd642972b6b2382a335970c38fb51824a3f6617652fb378ca6 [none]
+[debug] [2026-09-07T04:54:49.520Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/d6ac91f7f3628ddd642972b6b2382a335970c38fb51824a3f6617652fb378ca6 [stream]
+[debug] [2026-09-07T04:54:49.521Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/e367c2e28ca2edfed237e1c6de158474a5356626d7b5cfa9e55764f4d8509cf8 [none]
+[debug] [2026-09-07T04:54:49.521Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/e367c2e28ca2edfed237e1c6de158474a5356626d7b5cfa9e55764f4d8509cf8 [stream]
+[debug] [2026-09-07T04:54:49.521Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/301eefe97eb1010be320a24d6936ffcdda766997b915689a875f3973959a9f46 [none]
+[debug] [2026-09-07T04:54:49.521Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/301eefe97eb1010be320a24d6936ffcdda766997b915689a875f3973959a9f46 [stream]
+[debug] [2026-09-07T04:54:49.521Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/62cb92eee4cc5dcc4aee680e7483320f02ea05351ef5b0bb169a36390b36d932 [none]
+[debug] [2026-09-07T04:54:49.521Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/62cb92eee4cc5dcc4aee680e7483320f02ea05351ef5b0bb169a36390b36d932 [stream]
+[debug] [2026-09-07T04:54:49.521Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/7df1048de0f51192f1ce756384641bc0a9be72c0b9c0ee9e07e334f2dd67ae34 [none]
+[debug] [2026-09-07T04:54:49.521Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/7df1048de0f51192f1ce756384641bc0a9be72c0b9c0ee9e07e334f2dd67ae34 [stream]
+[debug] [2026-09-07T04:54:49.522Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/6c6123a7f871683234dfd2d06c6e06ded987f9d82a7327dda5fcfd36866cc291 [none]
+[debug] [2026-09-07T04:54:49.522Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/6c6123a7f871683234dfd2d06c6e06ded987f9d82a7327dda5fcfd36866cc291 [stream]
+[debug] [2026-09-07T04:54:49.522Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/66f4b5cf3e3a740c324992c53e71167d8951e204201b78bd924671d6b6f8180c [none]
+[debug] [2026-09-07T04:54:49.522Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/66f4b5cf3e3a740c324992c53e71167d8951e204201b78bd924671d6b6f8180c [stream]
+[debug] [2026-09-07T04:54:49.522Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/088c2de2736e5b3b0eab74abfeb4edca6fb270ed1a9d180396eaf900f9ef6358 [none]
+[debug] [2026-09-07T04:54:49.522Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/088c2de2736e5b3b0eab74abfeb4edca6fb270ed1a9d180396eaf900f9ef6358 [stream]
+[debug] [2026-09-07T04:54:49.523Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/7bf94e6eb7ea0e73297c852440b70df196fe31c6bcde093531d0f66b1dbe781f [none]
+[debug] [2026-09-07T04:54:49.523Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/7bf94e6eb7ea0e73297c852440b70df196fe31c6bcde093531d0f66b1dbe781f [stream]
+[debug] [2026-09-07T04:54:49.523Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/c0a4c3d10f92133bf8179d33be28a10d1ccda9d7ef6e187fec3ac24283ec8266 [none]
+[debug] [2026-09-07T04:54:49.523Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/c0a4c3d10f92133bf8179d33be28a10d1ccda9d7ef6e187fec3ac24283ec8266 [stream]
+[debug] [2026-09-07T04:54:49.523Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/b2a6d0ae37b9e4f29935822d0993e11187282c2ce890d681713fd752f59787d7 [none]
+[debug] [2026-09-07T04:54:49.523Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/b2a6d0ae37b9e4f29935822d0993e11187282c2ce890d681713fd752f59787d7 [stream]
+[debug] [2026-09-07T04:54:49.523Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/05cad56182ca03f14f37e727be9460c619dbb67a33863d37143ad1b09c2e0d03 [none]
+[debug] [2026-09-07T04:54:49.523Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/05cad56182ca03f14f37e727be9460c619dbb67a33863d37143ad1b09c2e0d03 [stream]
+[debug] [2026-09-07T04:54:49.524Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/f89e5401ec8d99162bb6eb3f93e1bbeb171142aac45180a989ce7e5fe3ec07c2 [none]
+[debug] [2026-09-07T04:54:49.524Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/f89e5401ec8d99162bb6eb3f93e1bbeb171142aac45180a989ce7e5fe3ec07c2 [stream]
+[debug] [2026-09-07T04:54:49.524Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/fb399a006863b1a78d629c67212032f22a1f8f35859c4ded37e8f2ad9a77fe87 [none]
+[debug] [2026-09-07T04:54:49.524Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/fb399a006863b1a78d629c67212032f22a1f8f35859c4ded37e8f2ad9a77fe87 [stream]
+[debug] [2026-09-07T04:54:49.524Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/95d814882f3002019c84231d957bbc132109b158a083afd7e3828d763f4e466d [none]
+[debug] [2026-09-07T04:54:49.524Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/95d814882f3002019c84231d957bbc132109b158a083afd7e3828d763f4e466d [stream]
+[debug] [2026-09-07T04:54:49.524Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/aa41de265ce83e4b246e089efa60c972a3c1d8d22f192b26d02fb742f5fae489 [none]
+[debug] [2026-09-07T04:54:49.524Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/aa41de265ce83e4b246e089efa60c972a3c1d8d22f192b26d02fb742f5fae489 [stream]
+[debug] [2026-09-07T04:54:49.525Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/40c9978674bd6c4a733a929ddea77e085220adcbb5f23759430243bfd65c737f [none]
+[debug] [2026-09-07T04:54:49.525Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/40c9978674bd6c4a733a929ddea77e085220adcbb5f23759430243bfd65c737f [stream]
+[debug] [2026-09-07T04:54:49.525Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/d7dba2845013116e5db4dbbc280ae568d0e3733966f42701cacbba2879dae9f8 [none]
+[debug] [2026-09-07T04:54:49.525Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/d7dba2845013116e5db4dbbc280ae568d0e3733966f42701cacbba2879dae9f8 [stream]
+[debug] [2026-09-07T04:54:49.525Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/a2fdda31f3e05ef642cae9c6468fb0bcb012b6b020f86ff2cbe587b9788a4949 [none]
+[debug] [2026-09-07T04:54:49.525Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/a2fdda31f3e05ef642cae9c6468fb0bcb012b6b020f86ff2cbe587b9788a4949 [stream]
+[debug] [2026-09-07T04:54:49.526Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/8b7ac2b297dc1a9cbf70b985a4e0996c7094c512d66f11c423e8b17c07f1e44d [none]
+[debug] [2026-09-07T04:54:49.526Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/8b7ac2b297dc1a9cbf70b985a4e0996c7094c512d66f11c423e8b17c07f1e44d [stream]
+[debug] [2026-09-07T04:54:49.526Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/5881b527c7c6f5ee12807ff65c238b964b20b78a2e6b0f8944c0f0a368db2512 [none]
+[debug] [2026-09-07T04:54:49.526Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/5881b527c7c6f5ee12807ff65c238b964b20b78a2e6b0f8944c0f0a368db2512 [stream]
+[debug] [2026-09-07T04:54:49.526Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/a3401cd47d3dfdc5a6146d54009f88d883b89c3147f175a58a96a5a86c065991 [none]
+[debug] [2026-09-07T04:54:49.526Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/a3401cd47d3dfdc5a6146d54009f88d883b89c3147f175a58a96a5a86c065991 [stream]
+[debug] [2026-09-07T04:54:49.526Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/6a2158fbf8446851ece44813d96e58c28c486c442145dc98b84f34c68106c98d [none]
+[debug] [2026-09-07T04:54:49.526Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/6a2158fbf8446851ece44813d96e58c28c486c442145dc98b84f34c68106c98d [stream]
+[debug] [2026-09-07T04:54:49.527Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/73458485d8a17b62cfca40c877bd08f8487bc2ac997d8d18002398ea9261b9bf [none]
+[debug] [2026-09-07T04:54:49.527Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/vyoma2board/versions/c3aba8cc57f28013/files/73458485d8a17b62cfca40c877bd08f8487bc2ac997d8d18002398ea9261b9bf [stream]
+[debug] [2026-09-07T04:54:49.541Z] [hosting][populate queue][FINAL] {"max":955,"min":955,"avg":955,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":978}
+[debug] [2026-09-07T04:54:49.541Z] [hosting] uploads queued: 27
+[debug] [2026-09-07T04:54:49.546Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\Board-MSsZtSZ1.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.546Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\index.es-C40GqfAw.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.547Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\index.html'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.547Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\plus-DMyVfKIs.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.548Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\arrow-left-BWeUcl-a.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.548Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\pen-tool-CJvp0T-D.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.549Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\roomHistory-C0FBN0j4.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.549Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\createLucideIcon-CYFgEPqI.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.549Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\Gradebook-BBCOnmUn.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.549Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\bar-chart-3-D28wva2y.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.550Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\index-Ogs0cGoi.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.550Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\Analytics-DuRVBqqP.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.550Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\ExamEditor-D1pfhqxA.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.550Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\jspdf.es.min-BJqIBeBK.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.550Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\loader-circle-DsSySkIH.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.551Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\circle-check-BJshc3it.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.551Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\Auth-Dbbw-BO9.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.551Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\Home-DFzVo_wl.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.551Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\arrow-right-D6PEsArh.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.551Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\table-2-i-RcjL2z.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.551Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\users-C-qxlHCe.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.551Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\panels-top-left-weQI6l2n.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.552Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\search-CFj9D5TW.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.552Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\Dashboard-CG8OT_Tt.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.552Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\Exams-YLKchehD.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.552Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\save-BfsiS6Lj.js'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-09-07T04:54:49.552Z] Error: ENOENT: no such file or directory, open 'C:\Users\Krrish\Downloads\Vyomaboard-main (3)\Vyomaboard-main\dist\assets\trash-2-BoJjHyWO.js'
+[error] 
+[error] Error: An unexpected error has occurred.

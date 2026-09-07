@@ -277,7 +277,15 @@ export default function Board() {
       states.forEach(state => {
         if (state.userId) users.add(state.userId);
       });
-      setPresentUserIds(Array.from(users));
+      const newUsers = Array.from(users).sort();
+      setPresentUserIds(prev => {
+        if (prev.length !== newUsers.length) return newUsers;
+        const sortedPrev = [...prev].sort();
+        for (let i = 0; i < newUsers.length; i++) {
+          if (newUsers[i] !== sortedPrev[i]) return newUsers;
+        }
+        return prev; // No change
+      });
     };
 
     updatePresence();
