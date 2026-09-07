@@ -155,6 +155,8 @@ export default function Board() {
     }
   };
 
+  const fileInputRef = useRef(null);
+
   const [userName, setUserName] = useState(() => localStorage.getItem('userName') || 'Anonymous');
   const [accentColor, setAccentColor] = useState(() => {
     const saved = localStorage.getItem('themeAccent');
