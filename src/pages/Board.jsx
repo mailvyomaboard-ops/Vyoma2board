@@ -61,6 +61,7 @@ export default function Board() {
 
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
   const [activeTool, setActiveTool] = useState('selection');
+  const [customCards, setCustomCards] = useState([]);
 
   const customEditor = {
     ...dummyEditor,
@@ -103,58 +104,61 @@ export default function Board() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
 
-  const handleFileUpload = async (files) => {
+  const handleFileUpload = async (files, e) => {
+    let dropX = window.innerWidth / 2;
+    let dropY = window.innerHeight / 2;
+
+    if (e) {
+      dropX = e.clientX;
+      dropY = e.clientY;
+    }
+
     const fileArray = Array.from(files);
     for (const file of fileArray) {
-      const formData = new FormData();
-      formData.append('file', file);
-      
+      setIsUploading(true);
       try {
-        const token = localStorage.getItem('token') || '';
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/upload`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
-        const data = await response.json();
-        if (data.success && excalidrawAPI) {
-          // Add image to canvas
-          const img = new Image();
-          img.src = data.url;
-          img.onload = () => {
-            excalidrawAPI.addFiles([{ 
-              file: file, 
-              x: 0, 
-              y: 0, 
-              width: Math.min(img.width, 800), 
-              height: Math.min(img.height, 600) 
-            }]);
-          };
-          img.onerror = () => {
-            // It's not an image! Create a file card instead.
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-            
-            const elements = convertToExcalidrawElements([{
-              type: 'text',
-              x: centerX - 100,
-              y: centerY - 50,
-              text: `📄 ${file.name}\n(Double-click link to open)`,
-              fontSize: 20,
-              textAlign: 'center',
-              backgroundColor: '#C7CEEA', // pastel purple
-              link: `vyoma://file/${data.url}`,
-            }]);
+        const fileRef = ref(storage, `uploads/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytesResumable(fileRef, file);
+        const url = await getDownloadURL(snapshot.ref);
 
-            const currentElements = excalidrawAPI.getSceneElements();
-            excalidrawAPI.updateScene({ elements: [...currentElements, ...elements] });
-          };
+        if (excalidrawAPI) {
+          const appState = excalidrawAPI.getAppState();
+          const zoom = appState.zoom.value;
+          const scrollX = appState.scrollX;
+          const scrollY = appState.scrollY;
+
+          // Convert screen coordinates to canvas coordinates
+          const canvasX = (dropX / zoom) - scrollX;
+          const canvasY = (dropY / zoom) - scrollY;
+
+          setCustomCards(prev => [...prev, {
+            id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: file.name,
+            url: url,
+            x: canvasX,
+            y: canvasY,
+            type: 'file'
+          }]);
         }
       } catch (err) {
         console.error('Upload failed:', err);
+      } finally {
+        setIsUploading(false);
       }
     }
   };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileUpload(e.dataTransfer.files, e);
+    }
+  };
+
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [placingTemplate, setPlacingTemplate] = useState(null);
   const [activePreviewFile, setActivePreviewFile] = useState(null);
@@ -270,18 +274,20 @@ export default function Board() {
           if (excalidrawAPI) {
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
-            const elements = convertToExcalidrawElements([{
-              type: 'text',
-              x: centerX - 100,
-              y: centerY - 50,
-              text: `📂 ${name}\n(Double-click link to open)`,
-              fontSize: 20,
-              textAlign: 'center',
-              backgroundColor: '#FFD3B6',
-              link: `vyoma://board/${boardId}`,
+            const zoom = excalidrawAPI.getAppState().zoom.value;
+            const scrollX = excalidrawAPI.getAppState().scrollX;
+            const scrollY = excalidrawAPI.getAppState().scrollY;
+            const canvasX = (centerX / zoom) - scrollX;
+            const canvasY = (centerY / zoom) - scrollY;
+
+            setCustomCards(prev => [...prev, {
+              id: `card_${Date.now()}_${boardId}`,
+              name: `📂 ${name}`,
+              boardId: boardId,
+              x: canvasX,
+              y: canvasY,
+              type: 'nested-board'
             }]);
-            const currentElements = excalidrawAPI.getSceneElements();
-            excalidrawAPI.updateScene({ elements: [...currentElements, ...elements] });
           }
         } catch (e) {
           console.error("Failed to create nested board", e);
@@ -317,13 +323,35 @@ export default function Board() {
       <div style={{ display: 'flex', flex: 1, position: 'relative', minHeight: 0 }}>
 
 
-      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+      <div 
+        style={{ flex: 1, position: 'relative', minHeight: 0 }}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        {isUploading && (
+          <div style={{
+            position: 'absolute', top: '16px', left: '50%', transform: 'translateX(-50%)',
+            background: 'var(--accent-yellow)', border: '2px solid #000', padding: '8px 16px',
+            borderRadius: '8px', zIndex: 10000, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px'
+          }}>
+            <Loader2 className="spin" size={16} /> Uploading...
+          </div>
+        )}
         <ExcalidrawCanvas 
           excalidrawAPI={excalidrawAPI}
           activeTool={activeTool}
           setActiveTool={setActiveTool}
           addShape={addShape}
           themeMode={mode}
+          customCards={customCards}
+          setCustomCards={setCustomCards}
+          onCardDoubleClick={(card) => {
+            if (card.type === 'file') {
+              setActivePreviewFile({ url: card.url, name: card.name });
+            } else if (card.type === 'nested-board') {
+              setActiveBoard({ boardId: card.boardId, name: card.name, files: [] });
+            }
+          }}
           onCanvasReady={setExcalidrawAPI}
           onLinkOpen={(element, event) => {
             if (element.link && element.link.startsWith('vyoma://')) {

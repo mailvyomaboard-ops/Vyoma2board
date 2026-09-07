@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import BottomToolbar from './BottomToolbar';
 import ContextualPanel from './ContextualPanel';
+import FileCard from './FileCard';
 import '../index.css';
 
 const NOTE_COLORS = {
@@ -23,6 +24,9 @@ export default function ExcalidrawCanvas({
   setActiveTool,
   addShape,
   themeMode,
+  customCards = [],
+  setCustomCards,
+  onCardDoubleClick,
   onCanvasReady,
   onLinkOpen,
 }) {
@@ -38,6 +42,8 @@ export default function ExcalidrawCanvas({
   const [selectedElements, setSelectedElements] = useState([]);
   const elementsRef = useRef([]);
   const [zoom, setZoom] = useState(1);
+  const [scrollX, setScrollX] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
   const api = externalApi || internalApi;
 
   const excalidrawRef = useRef(null);
@@ -173,12 +179,16 @@ export default function ExcalidrawCanvas({
     const selectedIds = appState.selectedElementIds;
     const selected = elements.filter(el => selectedIds[el.id]);
     setSelectedElements(selected);
+    setZoom(appState.zoom.value);
+    setScrollX(appState.scrollX);
+    setScrollY(appState.scrollY);
 
     // 2. Custom Eraser Logic: Restore any non-freedraw element that was just deleted
     if (appState.activeTool.type === 'eraser') {
       let shouldRestore = false;
       const restoredElements = elements.map(el => {
-        if (el.isDeleted && el.type !== 'freedraw') {
+        const isProtectedType = ['milanote-card', 'milanote-chart', 'file', 'nested-board', 'image'].includes(el.type);
+        if (el.isDeleted && isProtectedType) {
           // Check if it was alive in our last ref
           const oldEl = elementsRef.current.find(e => e.id === el.id);
           if (oldEl && !oldEl.isDeleted) {
@@ -221,6 +231,25 @@ export default function ExcalidrawCanvas({
         style={{ width: '100%', height: '100%' }}
         onLinkOpen={onLinkOpen}
       />
+
+      {/* Cards Overlay */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 10
+      }}>
+        {customCards.map(card => (
+          <FileCard
+            key={card.id}
+            card={card}
+            zoom={zoom}
+            scrollX={scrollX}
+            scrollY={scrollY}
+            onUpdatePosition={(id, x, y) => {
+              setCustomCards(prev => prev.map(c => c.id === id ? { ...c, x, y } : c));
+            }}
+            onDoubleClick={onCardDoubleClick}
+          />
+        ))}
+      </div>
 
       {/* Zoom indicator */}
       <div style={{
