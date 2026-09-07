@@ -196,43 +196,47 @@ export default function ExcalidrawCanvas({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: isActive ? 'var(--accent-yellow)' : 'var(--sidebar-bg)',
-    border: '3px solid var(--border-color)',
-    color: '#000',
-    borderRadius: '0',
+    background: isActive ? 'rgba(5, 217, 232, 0.2)' : 'var(--tool-btn-bg)',
+    border: `1px solid ${isActive ? '#00ffff' : 'var(--tool-btn-border)'}`,
+    color: isActive ? '#fff' : 'var(--text-main)',
+    borderRadius: '6px',
     cursor: 'pointer',
-    boxShadow: isActive ? '0px 0px 0px var(--shadow-color)' : '3px 3px 0px var(--shadow-color)',
-    transform: isActive ? 'translate(3px, 3px)' : 'none',
-    transition: 'all 0.1s',
+    boxShadow: isActive ? '0 0 10px rgba(5, 217, 232, 0.4)' : '0 0 5px rgba(0,0,0,0.5)',
+    transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)',
+    textShadow: isActive ? '0 0 5px #fff' : 'none',
   });
 
   const menuStyle = {
     position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: '16px',
-    background: 'var(--sidebar-bg)', backdropFilter: 'none', padding: '8px', borderRadius: '0', 
-    border: '4px solid var(--border-color)', boxShadow: '6px 6px 0px var(--shadow-color)',
+    background: 'var(--sidebar-bg)', backdropFilter: 'blur(16px)', padding: '8px', borderRadius: '8px', 
+    border: '1px solid var(--border-color)', boxShadow: '0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(5, 217, 232, 0.05)',
     display: 'flex', gap: '8px', zIndex: 1001,
   };
 
   const showPanel = ['selection', 'rectangle', 'ellipse', 'triangle', 'diamond', 'hexagon', 'cloud', 'heart', 'arrow', 'line', 'text', 'draw', 'freedraw', 'eraser'].includes(activeTool);
 
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--board-bg)' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+      backgroundColor: 'var(--board-bg)',
+      backgroundImage: 'radial-gradient(circle, var(--dot-color, rgba(255,255,255,0.1)) 1.5px, transparent 1.5px)',
+      backgroundSize: '24px 24px'
+    }}>
       <Excalidraw
         ref={excalidrawRef}
         excalidrawAPI={handleApiReady}
         zenModeEnabled={true}
+        gridModeEnabled={false}
         UIOptions={{
           canvasActions: { 
             loadScene: false, export: false, saveAsImage: false, clearCanvas: false, saveToActiveFile: false, toggleTheme: false, changeViewBackgroundColor: false
           },
           toolbar: { tooltips: false },
-          animations: false,
+          animations: true,
         }}
         initialData={{ 
           appState: { 
             theme: themeMode === 'dark' ? 'dark' : 'light',
-            viewBackgroundColor: themeMode === 'dark' ? '#222222' : '#f4f4f0',
-            gridSize: 20,
+            viewBackgroundColor: 'transparent',
           } 
         }}
         theme={themeMode === 'dark' ? 'dark' : 'light'}
@@ -249,11 +253,11 @@ export default function ExcalidrawCanvas({
         display: 'flex',
         gap: '8px',
         background: 'var(--sidebar-bg)',
-        backdropFilter: 'none',
+        backdropFilter: 'blur(16px)',
         padding: '8px 12px',
-        borderRadius: '0',
-        border: '4px solid var(--border-color)',
-        boxShadow: '6px 6px 0px var(--shadow-color)',
+        borderRadius: '8px',
+        border: '1px solid var(--border-color)',
+        boxShadow: '0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(5, 217, 232, 0.05)',
         zIndex: 1000,
         pointerEvents: 'all',
       }}>

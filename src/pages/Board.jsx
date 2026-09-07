@@ -223,6 +223,7 @@ export default function Board() {
             const data = roomSnap.data();
             setRoomInfo(data);
             window['currentRoomHostId'] = data.hostId;
+            setActingHost(data.hostId);
             addRoomToHistory(id, data.name, data.parentId || null, data.kind || 'board');
           } else {
             console.warn("Room doesn't exist in Firebase, falling back to local mode");
