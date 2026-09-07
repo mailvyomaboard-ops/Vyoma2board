@@ -196,42 +196,37 @@ export default function ExcalidrawCanvas({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: isActive ? 'rgba(5, 217, 232, 0.2)' : 'var(--tool-btn-bg)',
-    border: `1px solid ${isActive ? '#00ffff' : 'var(--tool-btn-border)'}`,
-    color: isActive ? '#fff' : 'var(--text-main)',
-    borderRadius: '6px',
+    background: isActive ? 'var(--accent-yellow)' : 'var(--sidebar-bg)',
+    border: '3px solid var(--border-color)',
+    color: '#000',
+    borderRadius: '0',
     cursor: 'pointer',
-    boxShadow: isActive ? '0 0 10px rgba(5, 217, 232, 0.4)' : '0 0 5px rgba(0,0,0,0.5)',
-    transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)',
-    textShadow: isActive ? '0 0 5px #fff' : 'none',
+    boxShadow: isActive ? '0px 0px 0px var(--shadow-color)' : '3px 3px 0px var(--shadow-color)',
+    transform: isActive ? 'translate(3px, 3px)' : 'none',
+    transition: 'all 0.1s',
   });
 
   const menuStyle = {
     position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: '16px',
-    background: 'var(--sidebar-bg)', backdropFilter: 'blur(16px)', padding: '8px', borderRadius: '8px', 
-    border: '1px solid var(--border-color)', boxShadow: '0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(5, 217, 232, 0.05)',
+    background: 'var(--sidebar-bg)', backdropFilter: 'none', padding: '8px', borderRadius: '0', 
+    border: '4px solid var(--border-color)', boxShadow: '6px 6px 0px var(--shadow-color)',
     display: 'flex', gap: '8px', zIndex: 1001,
   };
 
   const showPanel = ['selection', 'rectangle', 'ellipse', 'triangle', 'diamond', 'hexagon', 'cloud', 'heart', 'arrow', 'line', 'text', 'draw', 'freedraw', 'eraser'].includes(activeTool);
 
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
-      backgroundColor: 'var(--board-bg)',
-      backgroundImage: 'radial-gradient(circle, var(--dot-color, rgba(255,255,255,0.1)) 1.5px, transparent 1.5px)',
-      backgroundSize: '24px 24px'
-    }}>
+    <div className="pinhole-bg" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
       <Excalidraw
         ref={excalidrawRef}
         excalidrawAPI={handleApiReady}
         zenModeEnabled={true}
-        gridModeEnabled={false}
         UIOptions={{
           canvasActions: { 
             loadScene: false, export: false, saveAsImage: false, clearCanvas: false, saveToActiveFile: false, toggleTheme: false, changeViewBackgroundColor: false
           },
           toolbar: { tooltips: false },
-          animations: true,
+          animations: false,
         }}
         initialData={{ 
           appState: { 
@@ -243,326 +238,6 @@ export default function ExcalidrawCanvas({
         style={{ width: '100%', height: '100%' }}
         onLinkOpen={onLinkOpen}
       />
-
-      {/* Bottom Toolbar - Integrated */}
-      <div style={{
-        position: 'absolute',
-        bottom: '24px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        gap: '8px',
-        background: 'var(--sidebar-bg)',
-        backdropFilter: 'blur(16px)',
-        padding: '8px 12px',
-        borderRadius: '8px',
-        border: '1px solid var(--border-color)',
-        boxShadow: '0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(5, 217, 232, 0.05)',
-        zIndex: 1000,
-        pointerEvents: 'all',
-      }}>
-        {TOOLS.map((tool) => {
-          const isActive = activeTool === tool.id || (tool.sub && tool.sub.includes(activeTool));
-          const Icon = tool.icon;
-          
-          if (tool.sub) {
-            return (
-              <div key={tool.id} style={{ position: 'relative' }}>
-                <button 
-                  style={btnStyle(isActive)} 
-                  onPointerDown={(e) => toggleMenu(tool.id, e)} 
-                  title={tool.label}
-                >
-                  {activeTool === 'highlight' ? <span style={{fontWeight: 800, fontSize: 12}}>HL</span> :
-                   activeTool === 'laser' ? <span style={{fontWeight: 800, fontSize: 12}}>LS</span> :
-                   activeTool === 'eraser' ? <span style={{fontWeight: 800, fontSize: 12}}>ER</span> :
-                   activeTool === 'ellipse' ? <Circle size={20} /> :
-                   activeTool === 'triangle' ? <Triangle size={20} /> :
-                   activeTool === 'diamond' ? <Diamond size={20} /> :
-                   activeTool === 'hexagon' ? <Hexagon size={20} /> :
-                   activeTool === 'cloud' ? <Cloud size={20} /> :
-                   activeTool === 'heart' ? <Heart size={20} /> :
-                   <Icon size={20} />}
-                </button>
-                {openMenu === tool.id && (
-                  <div style={menuStyle}>
-                    {tool.sub.map((subTool) => {
-                      const SubIcon = DRAW_SUB_ICONS[subTool] || SHAPE_ICONS[subTool];
-                      const isSubActive = activeTool === subTool;
-                      return (
-                        <button 
-                          key={subTool} 
-                          style={btnStyle(isSubActive)} 
-                          onPointerDown={(e) => handleAction(subTool, e)} 
-                          title={subTool}
-                        >
-                          <SubIcon size={20} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-          
-          return (
-            <button 
-              key={tool.id}
-              style={btnStyle(isActive)} 
-              onPointerDown={(e) => handleToolClick(tool.id, e)} 
-              title={tool.label}
-            >
-              <Icon size={20} />
-            </button>
-          );
-        })}
-        
-        <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
-        
-        {/* Quick Actions */}
-        <button 
-          style={btnStyle(false)} 
-          onPointerDown={(e) => handleAction('Cards Menu', e)} 
-          title="Add Card"
-        >
-          <LayoutTemplate size={20} />
-        </button>
-        
-        <button 
-          style={btnStyle(false)} 
-          onPointerDown={(e) => handleAction('Charts Menu', e)} 
-          title="Add Chart"
-        >
-          <PieChart size={20} />
-        </button>
-        
-        <button 
-          style={btnStyle(false)} 
-          onPointerDown={(e) => handleAction('delete', e)} 
-          title="Delete Selected"
-        >
-          <Trash2 size={20} />
-        </button>
-      </div>
-
-      {/* Right Style Panel - Integrated */}
-      {showPanel && showStylePanel && api && (
-        <div style={{
-          position: 'absolute',
-          right: '24px',
-          top: '80px',
-          background: 'var(--sidebar-bg)',
-          backdropFilter: 'none',
-          border: '4px solid var(--border-color)',
-          borderRadius: '0',
-          boxShadow: '6px 6px 0px var(--shadow-color)',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          width: '200px',
-          pointerEvents: 'all',
-          zIndex: 1000,
-          color: '#000',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '4px solid var(--border-color)', paddingBottom: '8px' }}>
-            <span style={{ fontWeight: '800', fontSize: '14px', color: 'var(--text-main)', textTransform: 'uppercase' }}>
-              Style
-            </span>
-            <button 
-              onClick={() => setShowStylePanel(false)}
-              style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: '4px' }}
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Colors */}
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Color
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-              {Object.entries(NOTE_COLORS).map(([colorName, colorValues]) => (
-                <button
-                  key={colorName}
-                  onClick={() => updateStyle('color', colorName)}
-                  style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '0',
-                    background: colorValues.bg,
-                    border: activeColor === colorName ? '4px solid var(--border-color)' : '2px solid var(--border-color)',
-                    cursor: 'pointer',
-                    boxShadow: activeColor === colorName ? '0px 0px 0px var(--shadow-color)' : '3px 3px 0px var(--shadow-color)',
-                    transform: activeColor === colorName ? 'translate(3px, 3px)' : 'none',
-                    transition: 'all 0.1s',
-                  }}
-                  title={colorName}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Fill */}
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Fill
-            </div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {['none', 'semi', 'solid', 'pattern'].map((fill) => (
-                <button 
-                  key={fill} 
-                  onClick={() => updateStyle('fill', fill)} 
-                  style={{
-                    flex: '1 0 40%',
-                    padding: '6px',
-                    background: activeFill === fill ? 'var(--accent-yellow)' : 'var(--sidebar-bg)',
-                    border: '3px solid var(--border-color)',
-                    color: '#000',
-                    borderRadius: '0',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    boxShadow: activeFill === fill ? '0px 0px 0px var(--shadow-color)' : '3px 3px 0px var(--shadow-color)',
-                    transform: activeFill === fill ? 'translate(3px, 3px)' : 'none',
-                    transition: 'all 0.1s',
-                  }}
-                >
-                  {fill}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Dash */}
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Stroke
-            </div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {['draw', 'solid', 'dashed', 'dotted'].map((dash) => (
-                <button 
-                  key={dash} 
-                  onClick={() => updateStyle('dash', dash)} 
-                  style={{
-                    flex: '1 0 40%',
-                    padding: '6px',
-                    background: activeDash === dash ? 'var(--accent-yellow)' : 'var(--sidebar-bg)',
-                    border: '3px solid var(--border-color)',
-                    color: '#000',
-                    borderRadius: '0',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    boxShadow: activeDash === dash ? '0px 0px 0px var(--shadow-color)' : '3px 3px 0px var(--shadow-color)',
-                    transform: activeDash === dash ? 'translate(3px, 3px)' : 'none',
-                    transition: 'all 0.1s',
-                  }}
-                >
-                  {dash}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Sizes */}
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Size
-            </div>
-            <input 
-              type="range" 
-              min="0" 
-              max="3" 
-              step="1"
-              value={['s', 'm', 'l', 'xl'].indexOf(activeSize)}
-              onChange={(e) => updateStyle('size', ['s', 'm', 'l', 'xl'][e.target.value])}
-              style={{ width: '100%', cursor: 'pointer', accentColor: '#00ffcc' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888' }}>
-              <span>S</span><span>M</span><span>L</span><span>XL</span>
-            </div>
-          </div>
-
-          {/* Font (Only for text tool) */}
-          {['text', 'selection'].includes(activeTool) && (
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Font
-              </div>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {['draw', 'sans', 'serif', 'mono'].map((font) => (
-                  <button 
-                    key={font} 
-                    onClick={() => updateStyle('font', font)} 
-                    style={{
-                      flex: '1 0 40%',
-                      padding: '6px',
-                      background: activeFont === font ? 'var(--accent-yellow)' : 'var(--sidebar-bg)',
-                      border: '3px solid var(--border-color)',
-                      color: '#000',
-                      borderRadius: '0',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      boxShadow: activeFont === font ? '0px 0px 0px var(--shadow-color)' : '3px 3px 0px var(--shadow-color)',
-                      transform: activeFont === font ? 'translate(3px, 3px)' : 'none',
-                      transition: 'all 0.1s',
-                    }}
-                  >
-                    {font}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Align (Only for text tool) */}
-          {['text', 'selection'].includes(activeTool) && (
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Align
-              </div>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {[
-                  { id: 'start', icon: <AlignLeft size={16} /> },
-                  { id: 'middle', icon: <AlignCenter size={16} /> },
-                  { id: 'end', icon: <AlignRight size={16} /> }
-                ].map((align) => (
-                  <button 
-                    key={align.id} 
-                    onClick={() => updateStyle('align', align.id)} 
-                    style={{
-                      ...({
-                        flex: '1 0 40%',
-                        padding: '6px',
-                        background: activeAlign === align.id ? 'var(--accent-yellow)' : 'var(--sidebar-bg)',
-                        border: '3px solid var(--border-color)',
-                        color: '#000',
-                        borderRadius: '0',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        boxShadow: activeAlign === align.id ? '0px 0px 0px var(--shadow-color)' : '3px 3px 0px var(--shadow-color)',
-                        transform: activeAlign === align.id ? 'translate(3px, 3px)' : 'none',
-                        transition: 'all 0.1s',
-                      }),
-                      flex: 1,
-                      display: 'flex',
-                      justifyContent: 'center',
-                    }} 
-                    title={align.id}
-                  >
-                    {align.icon}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Zoom indicator */}
       <div style={{

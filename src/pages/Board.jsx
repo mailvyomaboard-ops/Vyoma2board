@@ -24,7 +24,6 @@ import { useCallContext } from '../context/CallContext';
 import ChatPanel from '../components/ChatPanel';
 import TemplatesModal from '../components/TemplatesModal';
 import ChoiceFileModal from '../components/ChoiceFileModal';
-import Sidebar from '../components/Sidebar';
 import { useYjsStore } from '../useYjsStore';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isTeacherRole, isAssignedTeacher, actingHostId } from '../lib/classMeta';
@@ -163,7 +162,6 @@ export default function Board() {
   const [activeBoard, setActiveBoard] = useState(null);
   const [activeChartEditor, setActiveChartEditor] = useState(null);
   const [roomInfo, setRoomInfo] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [promptConfig, setPromptConfig] = useState(null);
   const [showChoiceFileModal, setShowChoiceFileModal] = useState(false);
   const [pendingFileLinkParentId, setPendingFileLinkParentId] = useState(null);
@@ -183,6 +181,12 @@ export default function Board() {
   const [loading, setLoading] = useState(true);
 
   const localUserId = localStorage.getItem('userId');
+
+  useEffect(() => {
+    if (roomInfo) {
+      setActingHost(actingHostId(roomInfo, [localUserId]));
+    }
+  }, [roomInfo, localUserId]);
 
   // Auth guard — boards opened via share link must go through auth first.
   useEffect(() => {
@@ -223,7 +227,6 @@ export default function Board() {
             const data = roomSnap.data();
             setRoomInfo(data);
             window['currentRoomHostId'] = data.hostId;
-            setActingHost(data.hostId);
             addRoomToHistory(id, data.name, data.parentId || null, data.kind || 'board');
           } else {
             console.warn("Room doesn't exist in Firebase, falling back to local mode");
@@ -300,37 +303,19 @@ export default function Board() {
 
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      {/* Top Bar Navigation (Top left corner) */}
+      {/* Top Bar Navigation */}
       <TopBar 
-        editor={customEditor} 
-        provider={null} 
         roomName={id || 'global'} 
         roomInfo={roomInfo}
         localUserId={localUserId}
         actingHost={actingHost}
-        onToggleUnsorted={() => {}}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onOpenHostControls={() => setShowHostControls(true)}
         onOpenRoster={() => setShowRoster(true)}
-        onOpenAttendance={() => setShowAttendance(true)}
-        onOpenClassSettings={() => setShowClassSettings(true)}
+        onToggleChat={() => setIsChatOpen(!isChatOpen)}
       />
 
       <div style={{ display: 'flex', flex: 1, position: 'relative', minHeight: 0 }}>
-        
-        {!isExamRoom && (
-        <Sidebar 
-          isOpen={isSidebarOpen}
-          onAddShape={addShape}
-          onShowTemplates={() => setShowTemplatesModal(true)}
-          onShowThemeSettings={() => setShowThemeSettings(true)}
-          isCallActive={isCallActive} setIsCallActive={(v) => v ? joinCall('video') : leaveCall()}
-          isCallHidden={isCallHidden} setIsCallHidden={setIsCallHidden}
-          isMicMuted={isMicMuted} setIsMicMuted={setIsMicMuted}
-          isVideoOff={isVideoOff} setIsVideoOff={setIsVideoOff}
-          onUploadFile={handleFileUpload}
-        />
-      )}
+
 
       <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
         <ExcalidrawCanvas 
