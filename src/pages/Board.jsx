@@ -222,15 +222,26 @@ export default function Board() {
   useEffect(() => {
     if (id) {
       const fetchRoom = async () => {
+        let isResolved = false;
+        const fallbackTimer = setTimeout(() => {
+          if (!isResolved) {
+            console.warn("Firebase fetchRoom timed out. Falling back to local mode.");
+            isResolved = true;
+            setLoading(false);
+          }
+        }, 5000); // 5s timeout
+
         try {
           const roomRef = doc(db, 'rooms', id);
           const roomSnap = await getDoc(roomRef);
+          
+          if (isResolved) return; // Ignore if timed out
+          
           if (roomSnap.exists()) {
             const data = roomSnap.data();
             setRoomInfo(data);
             addRoomToHistory(id, data.name, data.parentId || null, data.kind || 'board');
           } else {
-            // Create the room if it doesn't exist instead of falling back to local mode
             console.log("Room doesn't exist, creating new room:", id);
             const userId = localStorage.getItem('userId') || 'anonymous';
             const newRoomData = {
@@ -242,15 +253,23 @@ export default function Board() {
               perms: { share: true, files: true, mic: true, copyPaste: true }
             };
             await setDoc(roomRef, newRoomData);
-            setRoomInfo(newRoomData);
-            addRoomToHistory(id, id, null, 'board');
+            if (!isResolved) {
+              setRoomInfo(newRoomData);
+              addRoomToHistory(id, id, null, 'board');
+            }
+          }
+          if (!isResolved) {
+            isResolved = true;
+            clearTimeout(fallbackTimer);
+            setLoading(false);
           }
         } catch (e) {
-          console.error("Firebase error, retrying...", e);
-          // Retry once after a short delay instead of falling back
-          setTimeout(() => {
-            fetchRoom();
-          }, 1000);
+          if (!isResolved) {
+            isResolved = true;
+            clearTimeout(fallbackTimer);
+            console.error("Firebase error during fetchRoom:", e);
+            setLoading(false); // Fallback to local mode
+          }
         }
       };
       fetchRoom();
