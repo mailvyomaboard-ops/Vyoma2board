@@ -50,11 +50,11 @@ export default function TopBar({
       display: 'flex',
       alignItems: 'center',
       gap: '12px',
-      background: 'var(--sidebar-bg)',
+      background: 'var(--surface-color)',
       padding: '8px 16px',
-      borderRadius: '24px',
-      border: '4px solid var(--border-color)',
-      boxShadow: '6px 6px 0px var(--shadow-color)',
+      borderRadius: '8px',
+      border: 'var(--border-width) solid var(--border-color)',
+      boxShadow: 'var(--shadow-md)',
       zIndex: 1000,
       pointerEvents: 'all'
     }}>
@@ -68,16 +68,16 @@ export default function TopBar({
         }}
         style={{
           background: 'var(--accent-yellow)',
-          border: '3px solid var(--border-color)',
-          borderRadius: '50%',
+          border: 'var(--border-width) solid var(--border-color)',
+          borderRadius: '4px',
           width: '36px',
           height: '36px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          color: '#000',
-          boxShadow: '2px 2px 0px var(--shadow-color)',
+          color: 'var(--text-main)',
+          boxShadow: 'var(--shadow-sm)',
           transition: 'all 0.1s'
         }}
         title="Dashboard"
@@ -114,14 +114,14 @@ export default function TopBar({
           onClick={onOpenHostControls}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
-            background: 'var(--accent-pink)', color: '#000',
-            border: '3px solid var(--border-color)',
-            borderRadius: '16px',
+            background: 'var(--accent-pink)', color: 'var(--text-main)',
+            border: 'var(--border-width) solid var(--border-color)',
+            borderRadius: '4px',
             padding: '6px 12px',
             fontSize: '13px',
             fontWeight: '800',
             cursor: 'pointer',
-            boxShadow: '2px 2px 0px var(--shadow-color)'
+            boxShadow: 'var(--shadow-sm)'
           }}
           title="Host controls"
         >
@@ -135,14 +135,14 @@ export default function TopBar({
           onClick={onOpenRoster}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
-            background: 'var(--accent-green)', color: '#000',
-            border: '3px solid var(--border-color)',
-            borderRadius: '16px',
+            background: 'var(--accent-green)', color: 'var(--text-main)',
+            border: 'var(--border-width) solid var(--border-color)',
+            borderRadius: '4px',
             padding: '6px 12px',
             fontSize: '13px',
             fontWeight: '800',
             cursor: 'pointer',
-            boxShadow: '2px 2px 0px var(--shadow-color)'
+            boxShadow: 'var(--shadow-sm)'
           }}
         >
           <Users size={16} /> Roster
@@ -154,14 +154,14 @@ export default function TopBar({
         onClick={onToggleChat}
         style={{
           display: 'flex', alignItems: 'center', gap: '6px',
-          background: 'var(--accent-blue)', color: '#000',
-          border: '3px solid var(--border-color)',
-          borderRadius: '16px',
+          background: 'var(--accent-blue)', color: 'var(--text-main)',
+          border: 'var(--border-width) solid var(--border-color)',
+          borderRadius: '4px',
           padding: '6px 12px',
           fontSize: '13px',
           fontWeight: '800',
           cursor: 'pointer',
-          boxShadow: '2px 2px 0px var(--shadow-color)'
+          boxShadow: 'var(--shadow-sm)'
         }}
       >
         <MessageSquare size={16} /> Chat
