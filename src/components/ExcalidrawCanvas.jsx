@@ -33,6 +33,7 @@ export default function ExcalidrawCanvas({
   onLinkOpen,
   ydoc,
   provider,
+  awareness,
   elementsMap
 }) {
   const [internalApi, setInternalApi] = useState(null);
@@ -159,6 +160,34 @@ export default function ExcalidrawCanvas({
     };
   }, [elementsMap, api]);
 
+  // Handle Remote Awareness (Cursors)
+  useEffect(() => {
+    if (!awareness || !api) return;
+
+    const handleAwarenessUpdate = () => {
+      const states = awareness.getStates();
+      const collaborators = new Map();
+      const clientId = awareness.clientID;
+
+      states.forEach((state, client) => {
+        if (client !== clientId && state.pointer && state.user) {
+          collaborators.set(client, {
+            pointer: state.pointer,
+            button: state.button || 'up',
+            selectedElementIds: state.selectedElementIds || {},
+            username: state.user.name || 'Anonymous',
+            color: { background: state.user.color || '#ff4444', stroke: '#000000' }
+          });
+        }
+      });
+
+      api.updateScene({ collaborators });
+    };
+
+    awareness.on('change', handleAwarenessUpdate);
+    return () => awareness.off('change', handleAwarenessUpdate);
+  }, [awareness, api]);
+
   const handleToolClick = useCallback((tool, e) => {
     if (e) e.stopPropagation();
     setActiveTool(tool);
@@ -213,6 +242,11 @@ export default function ExcalidrawCanvas({
     setScrollX(appState.scrollX);
     setScrollY(appState.scrollY);
 
+    // Sync selection to awareness
+    if (awareness) {
+      awareness.setLocalStateField('selectedElementIds', selectedIds);
+    }
+
     // 2. Custom Eraser Logic: Restore any non-freedraw element that was just deleted
     if (appState.activeTool.type === 'eraser') {
       let shouldRestore = false;
@@ -248,7 +282,18 @@ export default function ExcalidrawCanvas({
     }
 
     elementsRef.current = elements;
-  }, [api, elementsMap, ydoc]);
+  }, [api, elementsMap, ydoc, awareness]);
+
+  const handlePointerUpdate = useCallback((payload) => {
+    if (awareness) {
+      awareness.setLocalStateField('pointer', payload.pointer);
+      awareness.setLocalStateField('button', payload.button);
+      awareness.setLocalStateField('user', {
+        name: localStorage.getItem('userName') || 'Anonymous',
+        color: localStorage.getItem('themeAccent') || '#ff4444'
+      });
+    }
+  }, [awareness]);
 
   return (
     <div className="pinhole-bg" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -256,6 +301,7 @@ export default function ExcalidrawCanvas({
         ref={excalidrawRef}
         excalidrawAPI={handleApiReady}
         onChange={handleOnChange}
+        onPointerUpdate={handlePointerUpdate}
         zenModeEnabled={true}
         UIOptions={{
           canvasActions: { 

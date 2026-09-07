@@ -10,6 +10,7 @@ export function useYjsStore({ roomId }) {
     status: 'loading',
     doc: null,
     provider: null,
+    awareness: null,
     elementsMap: null,
     customCardsMap: null
   });
@@ -38,6 +39,7 @@ export function useYjsStore({ roomId }) {
       status: 'connecting',
       doc,
       provider,
+      awareness: provider.awareness,
       elementsMap,
       customCardsMap
     });

@@ -63,7 +63,7 @@ export default function Board() {
   const [activeTool, setActiveTool] = useState('selection');
   
   // Yjs Sync
-  const { status: yjsStatus, doc: ydoc, provider, elementsMap, customCardsMap } = useYjsStore({ roomId: id });
+  const { status: yjsStatus, doc: ydoc, provider, awareness, elementsMap, customCardsMap } = useYjsStore({ roomId: id });
   const [customCards, setCustomCards] = useState([]);
 
   useEffect(() => {
@@ -418,6 +418,7 @@ export default function Board() {
           }}
           ydoc={ydoc}
           provider={provider}
+          awareness={awareness}
           elementsMap={elementsMap}
           onCustomToolClick={(tool) => {
             if (tool === 'upload') {
