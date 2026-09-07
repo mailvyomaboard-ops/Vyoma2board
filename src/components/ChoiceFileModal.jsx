@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { UploadCloud, FileJson, FileCode2, FileType2, X } from 'lucide-react';
-import { db } from '../firebase';
+import { db, storage } from '../firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { getApiUrl } from '../config';
 import '../index.css';
 
@@ -10,6 +11,8 @@ export default function ChoiceFileModal({ onClose, onFileSelect, onFileUpload })
   const [selectedRecent, setSelectedRecent] = useState([]);
   const [recentFiles, setRecentFiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     const fetchRecentFiles = async () => {
@@ -58,25 +61,19 @@ export default function ChoiceFileModal({ onClose, onFileSelect, onFileUpload })
 
   const uploadFiles = async (files) => {
     const fileArray = Array.from(files);
-    for (const file of fileArray) {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      try {
-        const token = localStorage.getItem('token') || '';
-        const response = await fetch(`${apiUrl}/api/upload`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
-        const data = await response.json();
-        if (data.success) {
-          // Notify parent that file was uploaded
-          onFileUpload?.([{ url: data.url, name: data.name, size: data.size, fileId: data.fileId }]);
-        }
-      } catch (err) {
-        console.error('Upload failed:', err);
+    setIsUploading(true);
+    try {
+      for (const file of fileArray) {
+        const fileRef = ref(storage, `uploads/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytesResumable(fileRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        
+        onFileUpload?.([{ url: url, name: file.name, size: file.size, fileId: snapshot.ref.fullPath }]);
       }
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -132,22 +129,25 @@ export default function ChoiceFileModal({ onClose, onFileSelect, onFileUpload })
               cursor: 'pointer',
               marginBottom: '24px'
             }}
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.multiple = true;
-              input.onchange = handleFileSelect;
-              input.click();
-            }}
+            onClick={() => fileInputRef.current?.click()}
           >
+            <input 
+              type="file" 
+              multiple 
+              onChange={handleFileSelect} 
+              style={{ display: 'none' }} 
+              ref={fileInputRef} 
+            />
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
               <UploadCloud size={48} color="#6366F1" />
             </div>
-            <p style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#374151', fontWeight: '500' }}>Drag and Drop file</p>
+            <p style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#374151', fontWeight: '500' }}>
+              {isUploading ? 'Uploading...' : 'Drag and Drop file'}
+            </p>
             <button style={{
               background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: '6px',
               padding: '6px 16px', fontSize: '13px', fontWeight: '500', color: '#4B5563', cursor: 'pointer'
-            }}>Browse</button>
+            }} disabled={isUploading}>{isUploading ? 'Uploading...' : 'Browse'}</button>
           </div>
 
           {/* Recent Files */}

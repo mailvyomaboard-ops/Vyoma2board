@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Excalidraw } from '@excalidraw/excalidraw';
+import React, { useEffect, useState } from 'react';
 import { Download, X, FileText, Loader2 } from 'lucide-react';
 
 export default function MiniMoodboard({ fileData, onClose }) {
   const [status, setStatus] = useState('processing');
   const [pages, setPages] = useState([]);
   
-  // Polling for processing status
   useEffect(() => {
     let intervalId;
     const checkStatus = async () => {
@@ -76,31 +74,25 @@ export default function MiniMoodboard({ fileData, onClose }) {
           </div>
         )}
         
-        {/* The drawing canvas layer (Transparent background so we can see the images behind it) */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10 }}>
-          <Tldraw 
-            persistenceKey={`tldraw-${fileData.id}`} 
-            components={{ Background: () => null }} 
-          />
-        </div>
-
-        {/* The images layer (Safely placed behind the canvas, cannot crash tldraw) */}
         {status === 'completed' && pages.length > 0 && (
-           <div style={{
-             position: 'absolute',
-             top: 20, left: '50%', transform: 'translateX(-50%)',
-             display: 'flex', flexDirection: 'column', gap: '40px',
-             zIndex: 1, // Behind the canvas which is zIndex: 10
-           }}>
-              {pages.map((page) => (
-                <img 
-                  key={page.pageNum} 
-                  src={page.url} 
-                  alt={`Page ${page.pageNum}`} 
-                  style={{ width: '800px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #ddd', background: 'white' }} 
-                />
-              ))}
-           </div>
+          <div style={{
+            position: 'absolute',
+            top: 20, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', gap: '40px',
+            width: '100%', maxWidth: '900px',
+            padding: '20px',
+            overflowY: 'auto',
+            height: '100%'
+          }}>
+             {pages.map((page) => (
+               <img 
+                 key={page.pageNum} 
+                 src={page.url} 
+                 alt={`Page ${page.pageNum}`} 
+                 style={{ width: '100%', maxWidth: '800px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #ddd', background: 'white', margin: '0 auto' }} 
+               />
+             ))}
+          </div>
         )}
       </div>
     </div>

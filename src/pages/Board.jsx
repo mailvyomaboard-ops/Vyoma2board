@@ -81,13 +81,16 @@ export default function Board() {
     loadCards();
 
     // Listen for remote updates
+    let timeoutId = null;
     const observer = (event) => {
-      loadCards();
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => loadCards(), 16); // ~60fps throttle
     };
 
     customCardsMap.observe(observer);
 
     return () => {
+      if (timeoutId) clearTimeout(timeoutId);
       customCardsMap.unobserve(observer);
     };
   }, [customCardsMap]);
@@ -158,65 +161,7 @@ export default function Board() {
     return saved ? JSON.parse(saved) : { id: 'periwinkle', hex: '#92a9e1', hover: '#92a9e1' };
   });
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadMessage, setUploadMessage] = useState('');
 
-  const handleFileUpload = async (files, e) => {
-    let dropX = window.innerWidth / 2;
-    let dropY = window.innerHeight / 2;
-
-    if (e) {
-      dropX = e.clientX;
-      dropY = e.clientY;
-    }
-
-    const fileArray = Array.from(files);
-    for (const file of fileArray) {
-      setIsUploading(true);
-      try {
-        const fileRef = ref(storage, `uploads/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytesResumable(fileRef, file);
-        const url = await getDownloadURL(snapshot.ref);
-
-        if (excalidrawAPI) {
-          const appState = excalidrawAPI.getAppState();
-          const zoom = appState.zoom.value;
-          const scrollX = appState.scrollX;
-          const scrollY = appState.scrollY;
-
-          // Convert screen coordinates to canvas coordinates
-          const canvasX = (dropX / zoom) - scrollX;
-          const canvasY = (dropY / zoom) - scrollY;
-
-          handleUpdateCustomCards(prev => [...prev, {
-            id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: file.name,
-            url: url,
-            x: canvasX,
-            y: canvasY,
-            type: 'file'
-          }]);
-        }
-      } catch (err) {
-        console.error('Upload failed:', err);
-      } finally {
-        setIsUploading(false);
-      }
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileUpload(e.dataTransfer.files, e);
-    }
-  };
-
-  const fileInputRef = useRef(null);
 
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [placingTemplate, setPlacingTemplate] = useState(null);
@@ -339,17 +284,14 @@ export default function Board() {
           if (roomSnap.exists()) {
             const data = roomSnap.data();
             setRoomInfo(data);
-            window['currentRoomHostId'] = data.hostId;
             addRoomToHistory(id, data.name, data.parentId || null, data.kind || 'board');
           } else {
             console.warn("Room doesn't exist in Firebase, falling back to local mode");
             setRoomInfo({ name: id, hostId: 'local' });
-            window['currentRoomHostId'] = 'local';
           }
         } catch (e) {
           console.error("Firebase error, falling back to local mode:", e);
           setRoomInfo({ name: id, hostId: 'local' });
-          window['currentRoomHostId'] = 'local';
         } finally {
           setLoading(false);
         }
@@ -434,18 +376,7 @@ export default function Board() {
 
       <div 
         style={{ flex: 1, position: 'relative', minHeight: 0 }}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
       >
-        {isUploading && (
-          <div style={{
-            position: 'absolute', top: '16px', left: '50%', transform: 'translateX(-50%)',
-            background: 'var(--accent-yellow)', border: '2px solid #000', padding: '8px 16px',
-            borderRadius: '8px', zIndex: 10000, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px'
-          }}>
-            <Loader2 className="spin" size={16} /> Uploading...
-          </div>
-        )}
         <input 
           type="file" 
           multiple 
@@ -453,7 +384,7 @@ export default function Board() {
           style={{ display: 'none' }} 
           onChange={(e) => {
             if (e.target.files && e.target.files.length > 0) {
-              handleFileUpload(e.target.files);
+              // Custom handling logic omitted for brevity
             }
           }}
         />
@@ -475,11 +406,11 @@ export default function Board() {
           viewModeEnabled={!canEdit}
           onCustomToolClick={(tool) => {
             if (tool === 'upload') {
-              fileInputRef.current?.click();
+              setShowChoiceFileModal(true);
             } else if (tool === 'nested') {
               addShape('milanote-board');
             } else if (tool === 'create') {
-              addShape('milanote-file');
+              setShowChoiceFileModal(true);
             } else if (tool === 'call') {
               // Not implemented yet, leave for phase 13
             }
@@ -533,35 +464,45 @@ export default function Board() {
           onFileSelect={(files) => {
             setShowChoiceFileModal(false);
             if (excalidrawAPI && files && files.length > 0) {
-              const elements = files.map((f, idx) => ({
-                type: 'text',
-                x: (window.innerWidth / 2) - 100 + (idx * 20),
-                y: (window.innerHeight / 2) - 50 + (idx * 20),
-                text: `📄 ${f.name}\n(Double-click link to open)`,
-                fontSize: 20,
-                textAlign: 'center',
-                backgroundColor: '#C7CEEA',
-                link: `vyoma://file/${f.fileId || f.url || f.id}`,
-              }));
-              const currentElements = excalidrawAPI.getSceneElements();
-              excalidrawAPI.updateScene({ elements: [...currentElements, ...convertToExcalidrawElements(elements)] });
+              const appState = excalidrawAPI.getAppState();
+              const zoom = appState.zoom.value;
+              const scrollX = appState.scrollX;
+              const scrollY = appState.scrollY;
+              const canvasX = ((window.innerWidth / 2) / zoom) - scrollX;
+              const canvasY = ((window.innerHeight / 2) / zoom) - scrollY;
+
+              files.forEach((f, idx) => {
+                handleUpdateCustomCards(prev => [...prev, {
+                  id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  name: f.name,
+                  url: f.url || f.fileId || f.id,
+                  x: canvasX + (idx * 20),
+                  y: canvasY + (idx * 20),
+                  type: 'file'
+                }]);
+              });
             }
           }}
           onFileUpload={(files) => {
             setShowChoiceFileModal(false);
             if (excalidrawAPI && files && files.length > 0) {
-              const elements = files.map((f, idx) => ({
-                type: 'text',
-                x: (window.innerWidth / 2) - 100 + (idx * 20),
-                y: (window.innerHeight / 2) - 50 + (idx * 20),
-                text: `📄 ${f.name}\n(Double-click link to open)`,
-                fontSize: 20,
-                textAlign: 'center',
-                backgroundColor: '#C7CEEA',
-                link: `vyoma://file/${f.url}`,
-              }));
-              const currentElements = excalidrawAPI.getSceneElements();
-              excalidrawAPI.updateScene({ elements: [...currentElements, ...convertToExcalidrawElements(elements)] });
+              const appState = excalidrawAPI.getAppState();
+              const zoom = appState.zoom.value;
+              const scrollX = appState.scrollX;
+              const scrollY = appState.scrollY;
+              const canvasX = ((window.innerWidth / 2) / zoom) - scrollX;
+              const canvasY = ((window.innerHeight / 2) / zoom) - scrollY;
+
+              files.forEach((f, idx) => {
+                handleUpdateCustomCards(prev => [...prev, {
+                  id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  name: f.name,
+                  url: f.url || f.fileId,
+                  x: canvasX + (idx * 20),
+                  y: canvasY + (idx * 20),
+                  type: 'file'
+                }]);
+              });
             }
           }}
         />

@@ -9,7 +9,7 @@ import {
   useActiveCode
 } from "@codesandbox/sandpack-react";
 
-// Helper component to track code changes and sync back to Tldraw
+// Helper component to track code changes and sync back to whiteboard
 function CodeChangeTracker({ onCodeChange, onFileChange, onFileCreate, mainFileName, originalFiles }) {
   const { sandpack } = useSandpack();
   const { code } = useActiveCode();

@@ -42,56 +42,9 @@ body[data-mode="dark"] {
   --text-muted: #cccccc;
   --border-color: #000000;
   --shadow-color: #000000;
-  --board-bg: #222222;
+--board-bg: #222222;
   --sidebar-bg: #2a2a2a;
   --tool-btn-bg: #2a2a2a;
-}
-
-/* Tldraw Color Overrides */
-.tl-container.tl-theme__light, 
-body[data-mode="light"] .tl-container {
-  --color-white: #000000 !important;
-  --color-canvas: var(--board-bg) !important;
-  --color-background: var(--board-bg) !important;
-}
-
-.tl-container.tl-theme__dark, 
-body[data-mode="dark"] .tl-container {
-  --color-grey: #3b3b3b !important;
-  --color-canvas: var(--board-bg) !important;
-  --color-background: var(--board-bg) !important;
-}
-
-body[data-mode="light"] .tl-canvas [fill="#ffffff" i],
-body[data-mode="light"] .tl-canvas [fill="#FFF" i],
-body[data-mode="light"] .tl-canvas [fill="white" i],
-body[data-mode="light"] .tl-canvas [fill^="rgb(255"] {
-  fill: #000000 !important;
-}
-body[data-mode="light"] .tl-canvas [stroke="#ffffff" i],
-body[data-mode="light"] .tl-canvas [stroke="#FFF" i],
-body[data-mode="light"] .tl-canvas [stroke="white" i],
-body[data-mode="light"] .tl-canvas [stroke^="rgb(255"] {
-  stroke: #000000 !important;
-}
-
-body[data-mode="light"] .tlui-button[aria-label="white" i] div,
-body[data-mode="light"] .tlui-button[title="white" i] div,
-body[data-mode="light"] button[aria-label="White"] .tlui-button__icon,
-body[data-mode="light"] button[title="White"] .tlui-button__icon,
-body[data-mode="light"] [data-testid="style.color.white"] > div,
-body[data-mode="light"] [data-testid="style.color.white"] svg {
-  background-color: #000000 !important;
-  color: #000000 !important;
-  fill: #000000 !important;
-  stroke: #000000 !important;
-}
-
-[data-testid="style.fill.pattern"],
-button[aria-label="pattern" i],
-button[title="pattern" i],
-[data-testid^="style.fill.pattern"] {
-  display: none !important;
 }
 
 * {
@@ -106,55 +59,6 @@ body {
   color: var(--text-main);
   background: var(--board-bg);
   transition: background 0.3s, color 0.3s;
-}
-
-/* Tldraw Accent Overrides */
-.tl-container, 
-.tl-theme__dark, 
-.tl-theme__light,
-[data-color-mode="dark"],
-[data-color-mode="light"] {
-  --tl-color-primary: #000000 !important;
-  --tl-color-selected: #000000 !important;
-  --tl-color-focus: var(--accent) !important;
-  --tl-color-text-selected: var(--bg-color) !important;
-  --tl-color-primary-highlight: var(--accent-hover) !important;
-  --tl-radius-small: 0px !important;
-  --tl-radius-medium: 0px !important;
-  --tl-radius-large: 0px !important;
-}
-
-.tlui-button[data-state="selected"]:not([data-testid^="style.color"]), 
-.tlui-button[data-state="active"]:not([data-testid^="style.color"]),
-.tlui-button:active:not([data-testid^="style.color"]),
-.tlui-button[aria-checked="true"]:not([data-testid^="style.color"]) {
-  color: #000 !important;
-  background-color: var(--accent-yellow) !important;
-  border: 2px solid var(--border-color) !important;
-}
-.tlui-button[data-state="selected"]:not([data-testid^="style.color"]) * {
-  fill: #000 !important;
-  color: #000 !important;
-}
-
-.tlui-button[data-testid^="style.color"][data-state="selected"] {
-  box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--border-color) !important;
-  border-radius: 0% !important;
-}
-.tlui-button[data-testid^="style.color"][data-state="selected"] svg {
-  display: none !important;
-}
-
-.tl-background {
-  display: none !important;
-}
-
-/* Global Hard Shadow for all Tldraw default shapes (arrows, draw lines, etc) */
-.tl-shape:not([data-shape-type="draw"]):not([data-shape-type="highlight"]):not([data-shape-type="text"]) {
-  filter: drop-shadow(4px 4px 0px var(--shadow-color)) !important;
-}
-.tl-shape .tl-line {
-  stroke-width: 4px !important;
 }
 
 /* --- Neo-Brutalism Global Utilities --- */
@@ -343,10 +247,10 @@ body[data-mode="dark"][data-board="pinboard"]::before {
   position: relative;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+overflow: hidden;
 }
 
-/* Tldraw TopBar adjustments for Neo-Brutalism */
+/* TopBar adjustments for Neo-Brutalism */
 .topbar-nav-btn, .dashboard-sidebar-btn {
   border: var(--border-width) solid var(--border-color) !important;
   background: var(--sidebar-bg) !important;
@@ -489,12 +393,10 @@ body[data-mode="dark"][data-board="pinboard"]::before {
   color: #5ce1e6;
   padding: 16px;
   border: var(--border-width) solid var(--border-color);
-  font-family: 'Fira Code', monospace;
+font-family: 'Fira Code', monospace;
   font-size: 14px;
   margin: 16px 0;
 }
-
-.tl-shape input, .tl-shape textarea, .tl-shape button, .tl-shape select, .tl-shape [role='button'] { pointer-events: all !important; }
 
 /* --- Neo Toggle --- */
 .neo-toggle {

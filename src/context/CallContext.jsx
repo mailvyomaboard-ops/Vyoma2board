@@ -35,11 +35,8 @@ export const CallProvider = ({ children, roomId }) => {
   const iceCandidateQueue = useRef({});
   const localStreamRef = useRef(null);
   
-  // Maintain a stable reference to myUserId, adding a random suffix so multiple tabs (same user) get distinct signaling IDs for local testing
   const [myUserId] = useState(() => {
-    const baseId = localStorage.getItem('userId') || 'anon-' + Math.random().toString(36).substring(7);
-    const tabSuffix = Math.random().toString(36).substring(2, 6);
-    return `${baseId}-${tabSuffix}`;
+    return localStorage.getItem('userId') || 'anon-' + Math.random().toString(36).substring(7);
   });
   const myUserIdRef = useRef(myUserId);
   myUserIdRef.current = myUserId;
@@ -94,20 +91,21 @@ export const CallProvider = ({ children, roomId }) => {
     if (!roomId) return;
     
     let active = true;
-    const token = localStorage.getItem('token') || (import.meta.env.DEV ? 'dev-mode-token-12345' : '');
-    const wsUrl = `${getWsUrl()}/comms?token=${encodeURIComponent(token)}`;
+    const wsUrl = `${getWsUrl()}/comms`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
       if (!active) return;
       const accentColor = JSON.parse(localStorage.getItem('themeAccent') || '{"hex": "#92a9e1"}');
+      const token = localStorage.getItem('token') || (import.meta.env.DEV ? 'dev-mode-token-12345' : '');
       ws.send(JSON.stringify({
         type: 'join',
         roomId,
         userId: myUserIdRef.current,
-        name: localStorage.getItem('userName') || 'You',
-        color: accentColor.hex
+        name: localStorage.getItem('userName') || 'Anonymous',
+        color: localStorage.getItem('userColor') || '#FF0000',
+        token
       }));
     };
 

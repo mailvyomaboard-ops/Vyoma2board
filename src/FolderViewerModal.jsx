@@ -8,7 +8,7 @@ export default function FolderViewerModal({ folderId, initialName, initialFiles,
   const [files, setFiles] = useState(initialFiles || []);
   const [activeFile, setActiveFile] = useState(null);
 
-  // Sync files to Tldraw store whenever they change
+  // Sync files to store whenever they change
   const syncFiles = (newFiles) => {
     setFiles(newFiles);
     // editor.updateShape({

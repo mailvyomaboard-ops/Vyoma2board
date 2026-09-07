@@ -145,14 +145,30 @@ export default function ExcalidrawCanvas({
     const observer = (event, transaction) => {
       if (transaction.local) return; // Ignore local updates
       
-      const remoteElements = [];
-      elementsMap.forEach((el) => remoteElements.push(el));
+      const localElements = api.getSceneElements();
+      const localMap = new Map(localElements.map(e => [e.id, e]));
       
-      // Merge remote with local to preserve current state. 
-      // Simplified CRDT logic: latest updated element wins, but since Excalidraw manages versions,
-      // we can just supply the elements array and it reconciles internally if versions match,
-      // or we just overwrite.
-      api.updateScene({ elements: remoteElements });
+      const remoteElements = Array.from(elementsMap.values());
+      const newElementsMap = new Map();
+
+      // Apply remote elements, but preserve local if local is newer
+      remoteElements.forEach(remoteEl => {
+        const localEl = localMap.get(remoteEl.id);
+        if (localEl && localEl.version >= remoteEl.version) {
+          newElementsMap.set(localEl.id, localEl);
+        } else {
+          newElementsMap.set(remoteEl.id, remoteEl);
+        }
+      });
+
+      // Add any local elements that aren't in Yjs yet (e.g. actively drawing)
+      localElements.forEach(el => {
+        if (!newElementsMap.has(el.id)) {
+          newElementsMap.set(el.id, el);
+        }
+      });
+
+      api.updateScene({ elements: Array.from(newElementsMap.values()) });
     };
 
     elementsMap.observe(observer);
@@ -269,15 +285,22 @@ export default function ExcalidrawCanvas({
       }
     }
     
-    // Sync to Yjs Map
+    // Sync to Yjs Map efficiently using a known versions map to avoid O(N) map lookups
     if (elementsMap && ydoc) {
       ydoc.transact(() => {
+        // Collect batch of updates
+        const updates = [];
         elements.forEach(el => {
-          const current = elementsMap.get(el.id);
-          // Only sync if version changed or new element
-          if (!current || current.version < el.version) {
-            elementsMap.set(el.id, el);
+          const lastKnownVersion = lastSyncedVersionsRef.current.get(el.id) || 0;
+          if (el.version > lastKnownVersion) {
+            updates.push(el);
+            lastSyncedVersionsRef.current.set(el.id, el.version);
           }
+        });
+
+        // Apply batch
+        updates.forEach(el => {
+          elementsMap.set(el.id, el);
         });
       }, 'local');
     }

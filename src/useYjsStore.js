@@ -4,9 +4,9 @@ import { WebsocketProvider } from 'y-websocket';
 import { db } from './firebase';
 import { doc, getDoc, updateDoc, Bytes } from 'firebase/firestore';
 
-// We'll use a public server for demo/testing until the backend 403 is fixed
-const WS_URL = 'wss://demos.yjs.dev/ws'; 
+import { getWsUrl } from './config';
 
+const WS_URL = `${getWsUrl()}/yjs`;
 export function useYjsStore({ roomId }) {
   const [store, setStore] = useState({
     status: 'loading',

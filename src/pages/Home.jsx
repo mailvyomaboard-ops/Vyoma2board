@@ -104,7 +104,7 @@ export default function Home() {
               <div>
                 <span className="neo-badge" style={{ marginBottom: '12px', background: 'var(--accent-blue)' }}>Infinite Drawing</span>
                 <p style={{ fontWeight: '600', fontSize: '16px', margin: 0, padding: '12px', border: '3px solid #000', background: 'var(--accent-orange)' }}>
-                  An endless canvas powered by Tldraw. Sketch out diagrams, connect sticky notes, and map out your thoughts without running out of space.
+                  An endless canvas for diagrams, sticky notes, and thought mapping without running out of space.
                 </p>
               </div>
             </div>
