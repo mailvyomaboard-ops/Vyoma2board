@@ -100,6 +100,28 @@ export default function Board() {
   const fileInputRef = useRef(null);
 
 
+  const [showCreateFileModal, setShowCreateFileModal] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
+
+  const handleCreateFileSubmit = () => {
+    if (!newFileName.trim()) return;
+    const safeName = newFileName.trim().endsWith('.ipynb') ? newFileName.trim() : `${newFileName.trim()}.ipynb`;
+    const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
+    const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
+    const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
+    
+    handleUpdateCustomCards(prev => [...prev, {
+      id: Date.now().toString() + Math.random().toString(36).substring(7),
+      type: 'notebook',
+      name: safeName,
+      x: -scrollX + (window.innerWidth / 2 / zoom),
+      y: -scrollY + (window.innerHeight / 2 / zoom)
+    }]);
+    
+    setShowCreateFileModal(false);
+    setNewFileName('');
+  };
+
   const [accentColor, setAccentColor] = useState(() => {
     const saved = localStorage.getItem('themeAccent');
     return saved ? JSON.parse(saved) : { id: 'periwinkle', hex: '#92a9e1', hover: '#92a9e1' };
@@ -340,31 +362,38 @@ export default function Board() {
 
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}
-      onDragOver={(e) => {
+      onDragOverCapture={(e) => {
         e.preventDefault();
         e.stopPropagation();
       }}
-      onDrop={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
+      onDropCapture={(e) => {
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          let hasNonImage = false;
           Array.from(e.dataTransfer.files).forEach((file) => {
-            // Ignore images so Excalidraw handles them natively
-            if (file.type.startsWith('image/')) return;
-            
-            const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
-            const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
-            const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
-            const fileUrl = URL.createObjectURL(file);
-            handleUpdateCustomCards(prev => [...prev, {
-              id: Date.now().toString() + Math.random().toString(36).substring(7),
-              type: file.name.endsWith('.ipynb') ? 'notebook' : 'file',
-              name: file.name,
-              url: fileUrl,
-              x: -scrollX + (Math.random() * 50 / zoom),
-              y: -scrollY + (Math.random() * 50 / zoom)
-            }]);
+            if (!file.type.startsWith('image/')) hasNonImage = true;
           });
+          
+          if (hasNonImage) {
+            e.preventDefault();
+            e.stopPropagation();
+            Array.from(e.dataTransfer.files).forEach((file) => {
+              if (file.type.startsWith('image/')) return;
+              
+              const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
+              const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
+              const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
+              const fileUrl = URL.createObjectURL(file);
+              
+              handleUpdateCustomCards(prev => [...prev, {
+                id: Date.now().toString() + Math.random().toString(36).substring(7),
+                type: file.name.endsWith('.ipynb') ? 'notebook' : 'file',
+                name: file.name,
+                url: fileUrl,
+                x: -scrollX + (e.clientX - window.innerWidth / 2) / zoom,
+                y: -scrollY + (e.clientY - window.innerHeight / 2) / zoom
+              }]);
+            });
+          }
         }
       }}
     >
@@ -394,13 +423,16 @@ export default function Board() {
             if (e.target.files && e.target.files.length > 0) {
               const file = e.target.files[0];
               const fileUrl = URL.createObjectURL(file);
+              const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
+              const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
+              const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
               handleUpdateCustomCards(prev => [...prev, {
                 id: Date.now().toString(),
                 type: 'file',
                 name: file.name,
                 url: fileUrl,
-                x: window.innerWidth / 2 - 100 + (Math.random() * 50),
-                y: window.innerHeight / 2 - 100 + (Math.random() * 50)
+                x: -scrollX + (Math.random() * 50 / zoom),
+                y: -scrollY + (Math.random() * 50 / zoom)
               }]);
             }
           }}
@@ -425,20 +457,8 @@ export default function Board() {
               } else if (tool === 'nested') {
                 addShape('milanote-board');
               } else if (tool === 'create') {
-                const name = prompt('Enter notebook name (e.g. data_analysis.ipynb):');
-                if (name) {
-                  const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
-                  const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
-                  const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
-                  const safeName = name.endsWith('.ipynb') ? name : `${name}.ipynb`;
-                  handleUpdateCustomCards(prev => [...prev, {
-                    id: Date.now().toString(),
-                    type: 'notebook',
-                    name: safeName,
-                    x: -scrollX + (Math.random() * 50 / zoom),
-                    y: -scrollY + (Math.random() * 50 / zoom)
-                  }]);
-                }
+                setNewFileName('');
+                setShowCreateFileModal(true);
               } else if (tool === 'call') {
                 joinCall('video');
               }
@@ -535,6 +555,34 @@ export default function Board() {
             }
           }}
         />
+      )}
+
+      {showCreateFileModal && (
+        <div className="modal-overlay" style={{ zIndex: 99999 }}>
+          <div className="neo-window" style={{ width: '400px' }}>
+            <div className="neo-window-header" style={{ background: 'var(--accent-green)' }}>
+              <span style={{ fontWeight: '900', textTransform: 'uppercase' }}>Create File</span>
+              <button onClick={() => setShowCreateFileModal(false)} className="neo-close-btn"><X size={16}/></button>
+            </div>
+            <div className="neo-window-content" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <p style={{ fontWeight: '700', fontSize: '14px' }}>Enter the name for your new file (e.g. analysis.ipynb for a Notebook):</p>
+              <input 
+                type="text" 
+                className="neo-input" 
+                placeholder="filename.ipynb"
+                value={newFileName}
+                onChange={e => setNewFileName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleCreateFileSubmit();
+                }}
+                autoFocus
+              />
+              <button onClick={handleCreateFileSubmit} className="neo-btn" style={{ background: 'var(--accent-blue)', color: 'white' }}>
+                Create File
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showTemplatesModal && (

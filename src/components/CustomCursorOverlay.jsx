@@ -6,6 +6,7 @@ export default function CustomCursorOverlay({ awareness, localClientId, enabled 
   const containerRef = useRef(null);
   const rafRef = useRef(null);
   const lastPositionsRef = useRef(new Map());
+  const [localMouse, setLocalMouse] = useState(null);
 
   useEffect(() => {
     if (!awareness || !enabled) return;
@@ -15,7 +16,7 @@ export default function CustomCursorOverlay({ awareness, localClientId, enabled 
       const newCursors = new Map();
 
       states.forEach((state, clientId) => {
-        if (clientId === localClientId) return;
+        if (clientId === localClientId) return; // Local cursor is handled via native mouse events for 0 latency
         if (!state.pointer) return;
 
         const user = state.user || { name: 'Anonymous', color: '#ff4444' };
@@ -69,9 +70,28 @@ export default function CustomCursorOverlay({ awareness, localClientId, enabled 
     return elements;
   }, [cursors]);
 
-  const handleMouseLeave = () => {
-    setCursors(new Map());
-  };
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      setLocalMouse({
+        x: e.clientX,
+        y: e.clientY,
+        name: 'You',
+        color: 'var(--accent-blue, #3b82f6)'
+      });
+    };
+    
+    const onMouseLeave = () => {
+      setLocalMouse(null);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseleave', onMouseLeave);
+    
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseleave', onMouseLeave);
+    };
+  }, []);
 
   if (!enabled) return null;
 
@@ -89,15 +109,24 @@ export default function CustomCursorOverlay({ awareness, localClientId, enabled 
         zIndex: 9999,
         overflow: 'hidden'
       }}
-      onMouseLeave={handleMouseLeave}
     >
       {cursorElements}
+      {localMouse && (
+        <CustomCursor
+          x={localMouse.x}
+          y={localMouse.y}
+          name={localMouse.name}
+          color={localMouse.color}
+          clientId="local"
+          isLocal={true}
+        />
+      )}
     </div>
   );
 }
 
-function CustomCursor({ x, y, name, color, clientId }) {
-  const [showLabel, setShowLabel] = useState(true);
+function CustomCursor({ x, y, name, color, clientId, isLocal }) {
+  const [showLabel, setShowLabel] = useState(!isLocal);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowLabel(false), 2000);

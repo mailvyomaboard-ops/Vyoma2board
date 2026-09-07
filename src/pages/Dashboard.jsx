@@ -168,13 +168,14 @@ const leaveRoom = (room) => {
         if (roomSnap.exists()) {
           const data = roomSnap.data();
           saveToHistory(formattedRoom, data.name, data.parentId || null);
-          navigate(`/board/${formattedRoom}`);
         } else {
-          alert('Room not found! Please check the ID and try again.');
+          saveToHistory(formattedRoom, formattedRoom, null);
         }
       } catch (e) {
-        alert('Error joining room: ' + e.message);
+        console.warn('Firebase lookup failed, joining via fallback', e);
+        saveToHistory(formattedRoom, formattedRoom, null);
       }
+      navigate(`/board/${formattedRoom}`);
     }
   };
 
