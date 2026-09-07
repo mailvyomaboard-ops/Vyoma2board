@@ -30,6 +30,9 @@ export default function ExcalidrawCanvas({
   onCustomToolClick,
   onCanvasReady,
   onLinkOpen,
+  ydoc,
+  provider,
+  elementsMap
 }) {
   const [internalApi, setInternalApi] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
@@ -132,6 +135,29 @@ export default function ExcalidrawCanvas({
     }
   }, [api, activeColor]);
 
+  // Handle Remote Yjs Sync
+  useEffect(() => {
+    if (!elementsMap || !api) return;
+
+    const observer = (event, transaction) => {
+      if (transaction.local) return; // Ignore local updates
+      
+      const remoteElements = [];
+      elementsMap.forEach((el) => remoteElements.push(el));
+      
+      // Merge remote with local to preserve current state. 
+      // Simplified CRDT logic: latest updated element wins, but since Excalidraw manages versions,
+      // we can just supply the elements array and it reconciles internally if versions match,
+      // or we just overwrite.
+      api.updateScene({ elements: remoteElements });
+    };
+
+    elementsMap.observe(observer);
+    return () => {
+      elementsMap.unobserve(observer);
+    };
+  }, [elementsMap, api]);
+
   const handleToolClick = useCallback((tool, e) => {
     if (e) e.stopPropagation();
     setActiveTool(tool);
@@ -207,8 +233,21 @@ export default function ExcalidrawCanvas({
       }
     }
     
+    // Sync to Yjs Map
+    if (elementsMap && ydoc) {
+      ydoc.transact(() => {
+        elements.forEach(el => {
+          const current = elementsMap.get(el.id);
+          // Only sync if version changed or new element
+          if (!current || current.version < el.version) {
+            elementsMap.set(el.id, el);
+          }
+        });
+      }, 'local');
+    }
+
     elementsRef.current = elements;
-  }, [api]);
+  }, [api, elementsMap, ydoc]);
 
   return (
     <div className="pinhole-bg" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>

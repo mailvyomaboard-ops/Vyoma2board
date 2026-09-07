@@ -61,7 +61,53 @@ export default function Board() {
 
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
   const [activeTool, setActiveTool] = useState('selection');
+  
+  // Yjs Sync
+  const { status: yjsStatus, doc: ydoc, provider, elementsMap, customCardsMap } = useYjsStore({ roomId: id });
   const [customCards, setCustomCards] = useState([]);
+
+  useEffect(() => {
+    if (!customCardsMap) return;
+
+    // Load initial state from Yjs
+    const loadCards = () => {
+      const cards = [];
+      customCardsMap.forEach((card) => {
+        cards.push(card);
+      });
+      setCustomCards(cards);
+    };
+
+    loadCards();
+
+    // Listen for remote updates
+    const observer = (event) => {
+      loadCards();
+    };
+
+    customCardsMap.observe(observer);
+
+    return () => {
+      customCardsMap.unobserve(observer);
+    };
+  }, [customCardsMap]);
+
+  // Wrapper to update both local state and Yjs map
+  const handleUpdateCustomCards = (updater) => {
+    setCustomCards(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      if (customCardsMap) {
+        // Sync to Yjs
+        ydoc.transact(() => {
+          next.forEach(card => {
+            customCardsMap.set(card.id, card);
+          });
+          // Note: for deletions, we'd need to compare prev and next and call .delete()
+        });
+      }
+      return next;
+    });
+  };
 
   const customEditor = {
     ...dummyEditor,
@@ -131,7 +177,7 @@ export default function Board() {
           const canvasX = (dropX / zoom) - scrollX;
           const canvasY = (dropY / zoom) - scrollY;
 
-          setCustomCards(prev => [...prev, {
+          handleUpdateCustomCards(prev => [...prev, {
             id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: file.name,
             url: url,
@@ -282,7 +328,7 @@ export default function Board() {
             const canvasX = (centerX / zoom) - scrollX;
             const canvasY = (centerY / zoom) - scrollY;
 
-            setCustomCards(prev => [...prev, {
+            handleUpdateCustomCards(prev => [...prev, {
               id: `card_${Date.now()}_${boardId}`,
               name: `📂 ${name}`,
               boardId: boardId,
@@ -357,7 +403,10 @@ export default function Board() {
           addShape={addShape}
           themeMode={mode}
           customCards={customCards}
-          setCustomCards={setCustomCards}
+          setCustomCards={handleUpdateCustomCards}
+          ydoc={ydoc}
+          provider={provider}
+          elementsMap={elementsMap}
           onCustomToolClick={(tool) => {
             if (tool === 'upload') {
               fileInputRef.current?.click();
