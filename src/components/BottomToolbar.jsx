@@ -18,7 +18,6 @@ const TOOLBAR_ITEMS = [
   { id: 'freedraw', icon: PenTool, label: 'Pen' },
   { id: 'shape', icon: Square, label: 'Shape' },
   { id: 'text', icon: Type, label: 'Text' },
-  { id: 'call', icon: Phone, label: 'Call' },
   { id: 'upload', icon: UploadCloud, label: 'Upload File' },
   { id: 'create', icon: FilePlus, label: 'Create File' },
   { id: 'nested', icon: LayoutDashboard, label: 'Nested Board' }
@@ -34,10 +33,24 @@ const TOOLBAR_ITEMS = [
  *   canRedo?: boolean,
  *   onUndo?: () => void,
  *   onRedo?: () => void
+ *   viewModeEnabled?: boolean,
+ *   perms?: any
  * }} props
  */
-const BottomToolbar = React.memo(function BottomToolbar({ activeTool, onToolSelect }) {
+const BottomToolbar = React.memo(function BottomToolbar({ activeTool, onToolSelect, viewModeEnabled, perms }) {
   const [hoveredTool, setHoveredTool] = useState(null);
+
+  const visibleItems = TOOLBAR_ITEMS.filter(item => {
+    // If files permission is explicitly denied, hide file-related tools
+    if (perms && perms.files === false) {
+      if (['upload', 'create', 'nested'].includes(item.id)) return false;
+    }
+    // If viewMode is enabled (host locked), hide drawing tools
+    if (viewModeEnabled) {
+      return ['selection', 'hand', 'upload'].includes(item.id);
+    }
+    return true;
+  });
 
   return (
     <div className="neo-brutalist-panel" style={{
@@ -55,7 +68,7 @@ const BottomToolbar = React.memo(function BottomToolbar({ activeTool, onToolSele
       zIndex: 1000,
       pointerEvents: 'all'
     }}>
-      {TOOLBAR_ITEMS.map((item) => {
+      {visibleItems.map((item) => {
         const Icon = item.icon;
         const isShape = ['shape', 'rectangle', 'ellipse', 'diamond', 'triangle', 'arrow', 'line'].includes(activeTool);
         const isFreeDraw = ['freedraw', 'highlighter', 'eraser', 'laser'].includes(activeTool);

@@ -1,37 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-import { ChevronLeft, ChevronRight, X, Cloud, Loader2 } from 'lucide-react';
+import React from 'react';
+import { Cloud, Loader2 } from 'lucide-react';
 import { storage } from '../firebase';
 import { ref, uploadBytes, uploadString, getDownloadURL } from 'firebase/storage';
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+import { useState } from 'react';
 
 export default function PDFViewer({ fileData, onClose, onToggleFullscreen, isFullscreen = false, onSaveToCloudSuccess }) {
-  const [numPages, setNumPages] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [uploadingToCloud, setUploadingToCloud] = useState(false);
-  const containerRef = useRef(null);
-  
-  const isPublicUrl = fileData.url && fileData.url.startsWith('http') && !fileData.url.includes('localhost');
 
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
-    setLoading(false);
-    setError(null);
-  };
-
-  const onDocumentLoadError = (err) => {
-    console.error("Failed to load PDF:", err);
-    setError(err.message);
-    setLoading(false);
-  };
+  if (!fileData) return null;
 
   const handleSaveToCloud = async () => {
     if (!fileData.url) return;
@@ -62,34 +38,7 @@ export default function PDFViewer({ fileData, onClose, onToggleFullscreen, isFul
     }
   };
 
-  const goToPage = (index) => {
-    if (index >= 1 && index <= numPages) {
-      setPageNumber(index);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
-      e.preventDefault();
-      goToPage(pageNumber + 1);
-    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-      e.preventDefault();
-      goToPage(pageNumber - 1);
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      goToPage(1);
-    } else if (e.key === 'End' && numPages) {
-      e.preventDefault();
-      goToPage(numPages);
-    } else if (e.key === 'Escape' && isFullscreen) {
-      onToggleFullscreen?.(false);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pageNumber, numPages, isFullscreen]);
+  const isPublicUrl = fileData.url && fileData.url.startsWith('http') && !fileData.url.includes('localhost');
 
   return (
     <div 
@@ -101,156 +50,61 @@ export default function PDFViewer({ fileData, onClose, onToggleFullscreen, isFul
         display: 'flex', 
         flexDirection: 'column',
         borderRadius: isFullscreen ? '0' : '12px',
-        overflow: 'visible'
+        overflow: 'hidden'
       }} 
-      onKeyDown={handleKeyDown} 
-      tabIndex={0}
-      ref={containerRef}
     >
-
-      <div 
-        style={{ 
-          flex: 1, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          overflow: 'visible',
-          background: '#0d0d14',
-          position: 'relative',
-          minHeight: 0,
-        }}
-      >
-        <Document
-          file={fileData.url}
-          onLoadSuccess={onDocumentLoadSuccess}
-          onLoadError={onDocumentLoadError}
-          loading={
-            <div style={{ color: '#888', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Loader2 size={24} className="spin" /> Loading PDF...
-            </div>
-          }
-        >
-          {numPages && (
-            <Page 
-              pageNumber={pageNumber} 
-              renderTextLayer={true}
-              renderAnnotationLayer={true}
-              className="pdf-page-wrapper"
-              width={containerRef.current ? Math.min(containerRef.current.clientWidth - 40, 1200) : undefined}
-            />
-          )}
-        </Document>
-
-        {error && (
-          <div style={{ color: '#ef4444', padding: '24px', textAlign: 'center' }}>
-            <p>Failed to load PDF: {error}</p>
-          </div>
-        )}
-      </div>
-
-      {(!isFullscreen || true) && numPages > 1 && (
+      {/* Cloud Backup Toolbar */}
+      {(!isPublicUrl || uploadingToCloud) && (
         <div style={{ 
-          height: '72px', 
-          background: isFullscreen ? 'transparent' : 'rgba(10, 10, 15, 0.95)', 
-          position: isFullscreen ? 'absolute' : 'sticky',
-          bottom: isFullscreen ? '20px' : '0',
-          left: isFullscreen ? '50%' : 'auto',
-          transform: isFullscreen ? 'translateX(-50%)' : 'none',
+          background: '#1a1a2e', 
+          padding: '12px 24px', 
           display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          gap: '16px', 
-          padding: '0 20px', 
-          borderTop: isFullscreen ? 'none' : '1px solid rgba(255,255,255,0.1)',
-          borderRadius: isFullscreen ? '20px' : '0',
-          flexShrink: 0,
-          backdropFilter: 'none',
-          zIndex: 10,
-          pointerEvents: 'auto'
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          borderBottom: '1px solid rgba(255,255,255,0.1)' 
         }}>
-          <button 
-            onClick={() => goToPage(1)}
-            disabled={pageNumber === 1}
-            style={{ 
-              background: 'rgba(255,255,255,0.1)', 
-              border: 'none', 
-              color: pageNumber === 1 ? '#666' : '#e0e0e0', 
-              cursor: pageNumber === 1 ? 'not-allowed' : 'pointer', 
-              padding: '8px', 
-              borderRadius: '8px', 
-              display: 'flex',
-              transition: 'background 0.2s',
-              backdropFilter: 'none'
-            }}
-            title="First Page"
-          >
-            <ChevronLeft size={18} />
-            <ChevronLeft size={18} />
-          </button>
-          
-          <button 
-            onClick={() => goToPage(pageNumber - 1)}
-            disabled={pageNumber === 1}
-            style={{ 
-              background: 'rgba(255,255,255,0.1)', 
-              border: 'none', 
-              color: pageNumber === 1 ? '#666' : '#e0e0e0', 
-              cursor: pageNumber === 1 ? 'not-allowed' : 'pointer', 
-              padding: '8px', 
-              borderRadius: '8px', 
-              display: 'flex',
-              transition: 'background 0.2s',
-              backdropFilter: 'none'
-            }}
-            title="Previous Page (←)"
-          >
-            <ChevronLeft size={22} />
-          </button>
-          
-          <div style={{ color: '#e0e0e0', fontSize: '14px', background: isFullscreen ? 'rgba(0,0,0,0.5)' : 'transparent', padding: isFullscreen ? '6px 12px' : '0', borderRadius: '20px' }}>
-            {pageNumber} / {numPages}
-          </div>
-          
-          <button 
-            onClick={() => goToPage(pageNumber + 1)}
-            disabled={pageNumber === numPages}
-            style={{ 
-              background: 'rgba(255,255,255,0.1)', 
-              border: 'none', 
-              color: pageNumber === numPages ? '#666' : '#e0e0e0', 
-              cursor: pageNumber === numPages ? 'not-allowed' : 'pointer', 
-              padding: '8px', 
-              borderRadius: '8px', 
-              display: 'flex',
-              transition: 'background 0.2s',
-              backdropFilter: 'none'
-            }}
-            title="Next Page (→)"
-          >
-            <ChevronRight size={22} />
-          </button>
-          
-          <button 
-            onClick={() => goToPage(numPages)}
-            disabled={pageNumber === numPages}
-            style={{ 
-              background: 'rgba(255,255,255,0.1)', 
-              border: 'none', 
-              color: pageNumber === numPages ? '#666' : '#e0e0e0', 
-              cursor: pageNumber === numPages ? 'not-allowed' : 'pointer', 
-              padding: '8px', 
-              borderRadius: '8px', 
-              display: 'flex',
-              transition: 'background 0.2s',
-              backdropFilter: 'none'
-            }}
-            title="Last Page"
-          >
-            <ChevronRight size={18} />
-            <ChevronRight size={18} />
-          </button>
+          {!isPublicUrl && (
+            <button
+              onClick={handleSaveToCloud}
+              disabled={uploadingToCloud}
+              className="neo-btn"
+              style={{
+                background: 'var(--accent-blue)',
+                padding: '8px 16px',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              {uploadingToCloud ? <Loader2 size={16} className="spin" /> : <Cloud size={16} />}
+              {uploadingToCloud ? 'Saving to Cloud...' : 'Backup to Cloud'}
+            </button>
+          )}
         </div>
       )}
+
+      {/* Native PDF Viewer */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <object
+          data={fileData.url}
+          type="application/pdf"
+          style={{ width: '100%', height: '100%', border: 'none' }}
+        >
+          <iframe
+            src={fileData.url}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            title="PDF Viewer"
+          >
+            <div style={{ color: '#ef4444', padding: '24px', textAlign: 'center' }}>
+              <p>Your browser does not support inline PDFs.</p>
+              <a href={fileData.url} target="_blank" rel="noreferrer" style={{ color: '#3b82f6' }}>
+                Download PDF
+              </a>
+            </div>
+          </iframe>
+        </object>
+      </div>
     </div>
   );
 }

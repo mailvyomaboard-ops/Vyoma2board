@@ -4,23 +4,19 @@ export const getApiUrl = () => {
 };
 
 export const getWsUrl = () => {
-  // Use VITE_WS_URL if explicitly set
+  // y-webrtc doesn't use this - it connects to free public signaling servers directly
+  // This is kept for any legacy WebSocket usage (e.g., CallManager)
   if (import.meta.env.VITE_WS_URL) {
     return import.meta.env.VITE_WS_URL;
   }
-  
-  // If VITE_BACKEND_URL is set (e.g. https://my-backend.onrender.com), derive the WS URL from it
   if (import.meta.env.VITE_BACKEND_URL) {
     const url = new URL(import.meta.env.VITE_BACKEND_URL);
     const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${protocol}//${url.host}`;
   }
-
-  // Local development: use local y-websocket server
   if (import.meta.env.DEV) {
     return 'ws://localhost:1234';
   }
-
-  // Fallback to public Yjs server for production if no backend URL is provided
-  return 'wss://demos.yjs.dev/ws';
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}`;
 };

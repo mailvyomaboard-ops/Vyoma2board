@@ -46,7 +46,22 @@ export const CallProvider = ({ children, roomId }) => {
   const configuration = {
     iceServers: isLocalNetwork ? [] : [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
+      { urls: 'stun:stun1.l.google.com:19302' },
+      {
+        urls: "turn:openrelay.metered.ca:80",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443?transport=tcp",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      }
     ]
   };
 
@@ -91,7 +106,8 @@ export const CallProvider = ({ children, roomId }) => {
     if (!roomId) return;
     
     let active = true;
-    const wsUrl = `${getWsUrl()}/comms`;
+    const token = localStorage.getItem('token') || '';
+    const wsUrl = `${getWsUrl()}/comms?token=${token}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 

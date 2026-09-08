@@ -2,12 +2,9 @@ import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { db } from './firebase';
-import { doc, getDoc, updateDoc, Bytes } from 'firebase/firestore';
+import { doc, updateDoc, Bytes, onSnapshot } from 'firebase/firestore';
 
-import { getWsUrl } from './config';
-
-const WS_URL = `${getWsUrl()}/yjs`;
-export function useYjsStore({ roomId }) {
+export function useYjsStore({ roomId, localUserId }) {
   const [store, setStore] = useState({
     status: 'loading',
     doc: null,
@@ -30,29 +27,29 @@ export function useYjsStore({ roomId }) {
     const roomConfigMap = ydoc.getMap('room-config');
 
     let timeoutId = null;
+    let unsubscribeSnapshot = null;
 
     const initialize = async () => {
-      try {
-        const roomRef = doc(db, 'rooms', roomId);
-        const roomSnap = await getDoc(roomRef);
-        if (roomSnap.exists()) {
-          const data = roomSnap.data();
+      // Subscribe to real-time Firebase updates as a fallback channel
+      const roomRef = doc(db, 'rooms', roomId);
+      unsubscribeSnapshot = onSnapshot(roomRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
           if (data.yjsState) {
             const uint8array = data.yjsState.toUint8Array();
-            Y.applyUpdate(ydoc, uint8array);
+            // Apply with origin 'firebase' so we don't reflect this update back to the database
+            Y.applyUpdate(ydoc, uint8array, 'firebase');
           }
         }
-      } catch (err) {
-        console.error("Failed to load initial Yjs state from Firebase:", err);
-      }
+      });
 
-      // Room ID is prefixed to prevent collisions on public servers
-      provider = new WebsocketProvider(WS_URL, `vyoma2board-${roomId}`, ydoc);
+      // Use y-websocket for reliable awareness and fallback sync
+      provider = new WebsocketProvider('wss://demos.yjs.dev/ws', `vyoma2board-${roomId}`, ydoc);
 
       provider.on('status', event => {
         setStore(s => ({
           ...s,
-          status: event.status === 'connected' ? 'connected' : 'loading'
+          status: event.status === 'connected' ? 'connected' : 'connecting'
         }));
       });
 
@@ -67,7 +64,10 @@ export function useYjsStore({ roomId }) {
       });
 
       // Save state on updates, debounced by 2.5s
-      ydoc.on('update', () => {
+      ydoc.on('update', (update, origin) => {
+        // Don't save updates that came from firebase back to firebase
+        if (origin === 'firebase') return;
+        
         if (timeoutId) clearTimeout(timeoutId);
         timeoutId = setTimeout(async () => {
           try {
@@ -86,6 +86,7 @@ export function useYjsStore({ roomId }) {
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
       if (provider) provider.destroy();
       ydoc.destroy();
     };

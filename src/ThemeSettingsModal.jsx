@@ -78,7 +78,10 @@ export default function ThemeSettingsModal({
               {ACCENTS.map(accent => (
                 <button
                   key={accent.id}
-                  onClick={() => setAccentColor(accent)}
+                  onClick={() => {
+                    setAccentColor(accent);
+                    window.dispatchEvent(new CustomEvent('profile-updated', { detail: 'color' }));
+                  }}
                   style={{
                     width: '40px', height: '40px', background: accent.hex,
                     border: '3px solid var(--border-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',

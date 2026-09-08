@@ -17,7 +17,7 @@ import PDFViewer from './components/PDFViewer';
 import { ErrorBoundary } from './ErrorBoundary';
 import { getApiUrl, getWsUrl } from './config';
 
-export default function FileViewerModal({ fileData, folderFiles = [], onClose, onSaveCloudFile, onCreateCloudFile, onOpenFile, editor, boardName }) {
+export default function FileViewerModal({ fileData, folderFiles = [], onClose, onSaveCloudFile, onCreateCloudFile, onOpenFile, editor, boardName, ydoc }) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,24 +56,90 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
   const [selectedStrokeIndex, setSelectedStrokeIndex] = useState(-1);
   const [laserPoints, setLaserPoints] = useState([]);
   
-  useEffect(() => {
-    if (activeTool !== 'laser') {
-      if (laserPoints.length > 0) setLaserPoints([]);
-      return;
-    }
-    let frame;
-    const update = () => {
-       const now = Date.now();
-       setLaserPoints(prev => {
-         const next = prev.filter(p => now - p.t < 800);
-         return next.length !== prev.length ? next : prev;
-       });
-       frame = requestAnimationFrame(update);
+    useEffect(() => {
+      if (activeTool !== 'laser') {
+        if (laserPoints.length > 0) setLaserPoints([]);
+        return;
+      }
+      let frame;
+      const update = () => {
+         const now = Date.now();
+         setLaserPoints(prev => {
+           const next = prev.filter(p => now - p.t < 800);
+           return next.length !== prev.length ? next : prev;
+         });
+         frame = requestAnimationFrame(update);
+      };
+      frame = requestAnimationFrame(update);
+      return () => cancelAnimationFrame(frame);
+    }, [activeTool, laserPoints.length]);
+    
+    const getFileId = () => {
+      if (activeZipFile) return activeZipFile.path.split('/').pop();
+      if (fileData.fileId) return fileData.fileId;
+      if (fileData.originShapeId) return fileData.originShapeId;
+      if (fileData.url && !fileData.url.startsWith('data:') && !fileData.url.startsWith('blob:')) {
+         return fileData.url.split('/').pop();
+      }
+      return fileData.name || 'unknown_file';
     };
-    frame = requestAnimationFrame(update);
-    return () => cancelAnimationFrame(frame);
-  }, [activeTool, laserPoints.length]);
-  
+
+    // Real-time Annotation Syncing via Yjs
+    useEffect(() => {
+      const fileId = getFileId();
+      
+      // Fallback: load once from DB
+      fetch(`${getApiUrl()}/api/annotations/${encodeURIComponent(fileId)}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.strokes && strokes.length === 0) setStrokes(data.strokes);
+        }).catch(err => console.error("Failed to load annotations", err));
+
+      if (!ydoc) return;
+      const mapId = `file_annotations_${fileId}`;
+      const annotationsMap = ydoc.getMap(mapId);
+      
+      const observer = () => {
+        const syncedStrokes = annotationsMap.get('strokes');
+        if (syncedStrokes) setStrokes(syncedStrokes);
+      };
+      
+      annotationsMap.observe(observer);
+      
+      // Load initial from map if available
+      const initial = annotationsMap.get('strokes');
+      if (initial) setStrokes(initial);
+      
+      return () => {
+        annotationsMap.unobserve(observer);
+      };
+    }, [fileData.url, activeZipFile, fileData.fileId, fileData.originShapeId, fileData.name, ydoc]);
+
+    const saveAnnotationsToBackend = (newStrokes) => {
+      // Sync to Yjs instantly
+      if (ydoc) {
+        const fileId = getFileId();
+        const mapId = `file_annotations_${fileId}`;
+        const annotationsMap = ydoc.getMap(mapId);
+        annotationsMap.set('strokes', newStrokes);
+      }
+      
+      // Save to DB for persistence
+      fetch(`${getApiUrl()}/api/annotations`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          url: fileData.url || fileData.fileId || fileData.name,
+          origin: fileData.originShapeId,
+          strokes: newStrokes
+        })
+      }).catch(e => console.error("Failed to save annotations", e));
+    };
   // Download State
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -522,26 +588,7 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
     }
   };
 
-  const saveAnnotationsToBackend = (newStrokes) => {
-    const getFileId = () => {
-      if (activeZipFile) return activeZipFile.path.split('/').pop();
-      if (fileData.fileId) return fileData.fileId;
-      if (fileData.originShapeId) return fileData.originShapeId;
-      if (fileData.url && !fileData.url.startsWith('data:') && !fileData.url.startsWith('blob:')) {
-         return fileData.url.split('/').pop();
-      }
-      return fileData.name || 'unknown_file';
-    };
-    const fileId = getFileId();
-    fetch(`/api/annotations/${encodeURIComponent(fileId)}`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({ strokes: newStrokes })
-    }).catch(err => console.error("Failed to save annotations", err));
-  };
+
 
   const handlePointerDown = (e) => {
     if (activeTool !== 'select') {
@@ -788,6 +835,13 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
             content={content}
             folderFiles={folderFiles.map(f => ({ id: f.id, name: f.name, content: f.content, url: f.url }))}
             onCodeChange={(newCode) => {
+              if (fileData.fileId && ydoc) {
+                const cardsMap = ydoc.getMap('custom-cards');
+                const card = cardsMap.get(fileData.fileId);
+                if (card) {
+                  cardsMap.set(fileData.fileId, { ...card, content: newCode });
+                }
+              }
               setContent(newCode);
               setEditContent(newCode);
               if (onSaveCloudFile) {

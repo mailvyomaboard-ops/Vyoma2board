@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { File, FileCode, FileSpreadsheet, FileText, Image as ImageIcon, Music, Play, Folder, Trash2 } from 'lucide-react';
+import { File, FileCode, FileSpreadsheet, FileText, Image as ImageIcon, Music, Play, Folder, Trash2, Layout } from 'lucide-react';
 import '../index.css';
 
 export default function FileCard({ 
@@ -16,10 +16,22 @@ export default function FileCard({
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [isSelected, setIsSelected] = useState(false);
+
+  // Global click handler to deselect when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (cardRef.current && !cardRef.current.contains(e.target)) {
+        setIsSelected(false);
+      }
+    };
+    window.addEventListener('pointerdown', handleClickOutside);
+    return () => window.removeEventListener('pointerdown', handleClickOutside);
+  }, []);
 
   const getIcon = () => {
-    if (card.type === 'nested-board') return Folder;
-    const ext = card.name.split('.').pop().toLowerCase();
+    if (card.type === 'nested-board') return Layout;
+    const ext = (card.name || '').split('.').pop().toLowerCase();
     if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return ImageIcon;
     if (['js', 'py', 'html', 'css', 'json', 'cpp'].includes(ext)) return FileCode;
     if (['xls', 'xlsx', 'csv'].includes(ext)) return FileSpreadsheet;
@@ -36,6 +48,7 @@ export default function FileCard({
 
   const handlePointerDown = (e) => {
     e.stopPropagation();
+    setIsSelected(true);
     if (e.target.setPointerCapture) e.target.setPointerCapture(e.pointerId);
     setIsDragging(true);
     setStartPos({
@@ -89,14 +102,14 @@ export default function FileCard({
       }}
       style={{
         position: 'absolute',
-        left: `calc(50% + ${(card.x + dragOffset.x + scrollX) * zoom}px)`,
-        top: `calc(50% + ${(card.y + dragOffset.y + scrollY) * zoom}px)`,
+        left: `${(card.x + dragOffset.x + scrollX) * zoom}px`,
+        top: `${(card.y + dragOffset.y + scrollY) * zoom}px`,
         transform: `translate(-50%, -50%) scale(${zoom})`,
         width: '120px',
         height: '140px',
-        background: 'var(--surface-color)',
-        border: 'var(--border-width) solid var(--border-color)',
-        boxShadow: isDragging ? 'none' : 'var(--shadow-md)',
+        background: isSelected ? 'var(--accent-blue, #3b82f6)' : 'var(--surface-color)',
+        border: isSelected ? '4px solid #000' : 'var(--border-width) solid var(--border-color)',
+        boxShadow: isDragging ? 'none' : (isSelected ? '0 0 0 4px rgba(59,130,246,0.3)' : 'var(--shadow-md)'),
         borderRadius: '8px',
         display: 'flex',
         flexDirection: 'column',
@@ -107,15 +120,16 @@ export default function FileCard({
         userSelect: 'none',
         padding: '12px',
         gap: '12px',
-        zIndex: 50, // Above canvas, below toolbars
+        zIndex: isSelected ? 55 : 50, // Pop above other cards when selected
+        transition: 'background 0.1s, border 0.1s, box-shadow 0.1s'
       }}
     >
       <div style={{
         background: iconBg,
         padding: '12px',
         borderRadius: '8px',
-        border: '2px solid var(--border-color)',
-        boxShadow: '2px 2px 0px var(--shadow-color)',
+        border: '2px solid #000',
+        boxShadow: '2px 2px 0px #000',
       }}>
         <Icon size={32} color="var(--text-main)" />
       </div>

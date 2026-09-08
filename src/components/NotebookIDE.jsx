@@ -117,36 +117,53 @@ export default function NotebookIDE({
     }
 
     try {
-      const token = localStorage.getItem('token') || '';
-      const response = await fetch(`${getApiUrl()}/api/run-code`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          language: cell.language || 'python',
-          code: cell.content || '',
-          files: [...folderFiles, ...uploadedFiles] // Send both workspace and locally uploaded files
-        })
-      });
-      
-      const data = await response.json();
-      
-      setCells(prev => {
-        const newCells = prev.map(c => {
-          if (c.id === cell.id) {
-            if (data.success) {
-              return { ...c, output: data.output || (data.errorOutput ? `stderr:\n${data.errorOutput}` : '') };
-            } else {
-              return { ...c, output: `Error: ${data.error || data.errorOutput || data.compileError}` };
-            }
-          }
-          return c;
+      try {
+        const pistonLangMap = {
+          python: { language: 'python', version: '3.10.0' },
+          javascript: { language: 'javascript', version: '18.15.0' },
+          java: { language: 'java', version: '15.0.2' },
+          c: { language: 'c', version: '10.2.0' },
+        };
+        
+        const targetLang = pistonLangMap[cell.language] || pistonLangMap.python;
+
+        const response = await fetch(`https://emkc.org/api/v2/piston/execute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            language: targetLang.language,
+            version: targetLang.version,
+            files: [
+              ...folderFiles.map(f => ({ name: f.name, content: f.content })),
+              ...uploadedFiles.map(f => ({ name: f.name, content: f.content })),
+              { name: 'main', content: cell.content || '' }
+            ]
+          })
         });
-        onCodeChange(JSON.stringify(newCells, null, 2));
-        return newCells;
-      });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Execution failed');
+        }
+
+        const runResult = data.run || {};
+        const output = runResult.output || runResult.stderr || runResult.stdout || 'No output';
+        
+        setCells(prev => {
+          const newCells = prev.map(c => c.id === cell.id ? { ...c, output: output } : c);
+          onCodeChange(JSON.stringify(newCells, null, 2));
+          return newCells;
+        });
+      } catch (err) {
+        setCells(prev => {
+          const newCells = prev.map(c => c.id === cell.id ? { ...c, output: `Error: ${err.message}` } : c);
+          onCodeChange(JSON.stringify(newCells, null, 2));
+          return newCells;
+        });
+      } finally {
+        setRunningCellId(prev => prev === cell.id ? null : prev);
+      }
     } catch (e) {
       setCells(prev => {
         const newCells = prev.map(c => c.id === cell.id ? { ...c, output: `Execution failed: ${e.message}` } : c);

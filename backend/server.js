@@ -22,6 +22,7 @@ const { setupWSConnection, setPersistence } = require('y-websocket/bin/utils');
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import cron from 'node-cron';
+import { ExpressPeerServer } from 'peer';
 import { z } from 'zod';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
@@ -753,7 +754,7 @@ function startServer(port) {
       console.log(`Backend server running on HTTP port ${port} (Cloud/Fallback mode)`);
       serverInstance.on('upgrade', upgradeHandler);
     });
-    server = serverInstance;
+    return serverInstance;
   } else {
     // Local dev uses HTTPS
     const options = {
@@ -765,11 +766,18 @@ function startServer(port) {
       console.log(`Backend server running on HTTPS port ${port} (Local Dev mode)`);
       serverInstance.on('upgrade', upgradeHandler);
     });
-    server = serverInstance;
+    return serverInstance;
   }
 }
 
 server = startServer(DEFAULT_PORT);
+
+// Setup PeerJS server
+const peerServer = ExpressPeerServer(server, {
+  debug: true,
+  path: '/'
+});
+app.use('/peerjs', peerServer);
 
 // Setup WebSocket servers for Yjs and WebRTC Comms
 const wssYjs = new WebSocketServer({ noServer: true });

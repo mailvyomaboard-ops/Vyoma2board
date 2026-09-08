@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 
 import HostControlPanel from '../components/HostControlPanel';
@@ -13,18 +14,19 @@ import AuthFieldsEditorModal from '../components/AuthFieldsEditorModal';
 import ClassSettingsModal from '../components/ClassSettingsModal';
 
 import FileViewerModal from '../FileViewerModal';
+import { getApiUrl } from '../config';
 import BoardViewerModal from '../BoardViewerModal';
 import FolderViewerModal from '../FolderViewerModal';
 import ThemeSettingsModal from '../ThemeSettingsModal';
-import CallManager from '../components/CallManager';
-import { useCallContext } from '../context/CallContext';
 import ChatPanel from '../components/ChatPanel';
 import TemplatesModal from '../components/TemplatesModal';
 import ChoiceFileModal from '../components/ChoiceFileModal';
 import { useYjsStore } from '../useYjsStore';
 import { useParams, useNavigate } from 'react-router-dom';
 import { actingHostId } from '../lib/classMeta';
+import { sweepHostActions } from '../lib/hostControl';
 import { addRoomToHistory } from '../lib/roomHistory';
+import Peer from 'peerjs';
 import TopBar from '../components/TopBar';
 import ExcalidrawCanvas from '../components/ExcalidrawCanvas';
 import { ErrorBoundary } from '../ErrorBoundary';
@@ -36,9 +38,13 @@ export default function Board() {
   const excalidrawAPIRef = useRef(null);
   const [activeTool, setActiveTool] = useState('selection');
   
+  const localUserId = localStorage.getItem('userId');
+  
   // Yjs Sync
-  const { doc: ydoc, provider, awareness, elementsMap, customCardsMap, roomConfigMap } = useYjsStore({ roomId: id });
+  const { doc: ydoc, provider, awareness, elementsMap, customCardsMap, roomConfigMap } = useYjsStore({ roomId: id, localUserId });
   const [customCards, setCustomCards] = useState([]);
+
+
 
   useEffect(() => {
     if (!customCardsMap) return;
@@ -146,14 +152,13 @@ export default function Board() {
   const [showAuthFields, setShowAuthFields] = useState(false);
   const [showHostControls, setShowHostControls] = useState(false);
   const [showClassSettings, setShowClassSettings] = useState(false);
-  const [presentUserIds, setPresentUserIds] = useState([]);
+  const [presentUsers, setPresentUsers] = useState([]);
   const [actingHost, setActingHost] = useState(null);
   const [hostLocked, setHostLocked] = useState(false);
   const [perms, setPerms] = useState({ share: true, files: true, mic: true, copyPaste: true });
   const [quizCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const localUserId = localStorage.getItem('userId');
   const isHost = actingHost === localUserId;
   const canEdit = isHost || !hostLocked;
 
@@ -181,52 +186,275 @@ export default function Board() {
     if (!awareness) return;
 
     const userName = localStorage.getItem('userName') || 'Anonymous';
-    const userColor = localStorage.getItem('themeAccent') || '#ff4444';
+    const userColor = accentColor?.hex || '#ff4444';
 
     // Announce ourselves with full user info for cursor rendering
     awareness.setLocalStateField('userId', localUserId);
     awareness.setLocalStateField('user', { name: userName, color: userColor });
 
     const updatePresence = () => {
-      const states = awareness.getStates();
-      const users = new Set();
-      states.forEach(state => {
-        if (state.userId) users.add(state.userId);
-      });
-      const newUsers = Array.from(users).sort();
-      setPresentUserIds(prev => {
-        if (prev.length !== newUsers.length) return newUsers;
-        const sortedPrev = [...prev].sort();
-        for (let i = 0; i < newUsers.length; i++) {
-          if (newUsers[i] !== sortedPrev[i]) return newUsers;
-        }
-        return prev; // No change
-      });
+        const states = awareness.getStates();
+        const usersMap = new Map();
+        states.forEach((state, clientId) => {
+          if (state.user) {
+            usersMap.set(state.userId || clientId, {
+              clientId,
+              id: state.authUserId || state.userId || clientId,
+              name: state.user.name,
+              color: state.user.color,
+              isSpeaking: state.isSpeaking || false
+            });
+          }
+        });
+        const newUsers = Array.from(usersMap.values()).sort((a, b) => a.id.localeCompare(b.id));
+        
+        setPresentUsers(prev => {
+          if (prev.length !== newUsers.length) return newUsers;
+          let changed = false;
+          for (let i = 0; i < prev.length; i++) {
+            if (prev[i].clientId !== newUsers[i].clientId || 
+                prev[i].id !== newUsers[i].id ||
+                prev[i].name !== newUsers[i].name ||
+                prev[i].color !== newUsers[i].color ||
+                prev[i].isSpeaking !== newUsers[i].isSpeaking) {
+              changed = true;
+              break;
+            }
+          }
+          return changed ? newUsers : prev;
+        });
+
+      // Enforce Host Actions
+      if (actingHost) {
+          sweepHostActions(provider, actingHost, awareness.clientID, (action) => {
+            const { cmd } = action;
+            if (cmd === 'allowMic') setPerms(p => ({ ...p, mic: true }));
+            if (cmd === 'blockMic') {
+              setPerms(p => ({ ...p, mic: false }));
+              setMicActive(false); // Force close mic
+            }
+            if (cmd === 'unlock') setHostLocked(false);
+            if (cmd === 'lock') setHostLocked(true);
+            if (cmd === 'allowShare') setPerms(p => ({ ...p, share: true }));
+            if (cmd === 'blockShare') setPerms(p => ({ ...p, share: false }));
+            if (cmd === 'allowFiles') setPerms(p => ({ ...p, files: true }));
+            if (cmd === 'blockFiles') setPerms(p => ({ ...p, files: false }));
+            if (cmd === 'allowCopyPaste') setPerms(p => ({ ...p, copyPaste: true }));
+            if (cmd === 'blockCopyPaste') setPerms(p => ({ ...p, copyPaste: false }));
+            
+            if (cmd === 'bringAllToMe' && excalidrawAPIRef.current) {
+              excalidrawAPIRef.current.updateScene({
+                appState: {
+                  scrollX: action.x || 0,
+                  scrollY: action.y || 0,
+                  zoom: { value: action.zoom || 1 }
+                }
+              });
+            }
+            if (cmd === 'clearBoard' && excalidrawAPIRef.current) {
+               const elements = excalidrawAPIRef.current.getSceneElements();
+               const remainingElements = elements.filter(el => el.locked);
+               excalidrawAPIRef.current.updateScene({ elements: remainingElements });
+            }
+          });
+      }
     };
 
     updatePresence();
     awareness.on('change', updatePresence);
-    return () => awareness.off('change', updatePresence);
-  }, [awareness, localUserId]);
+
+    const handleProfileUpdate = () => {
+      const newName = localStorage.getItem('userName') || 'Anonymous';
+      let newColor = '#ff4444';
+      try {
+        const saved = localStorage.getItem('themeAccent');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.hex) newColor = parsed.hex;
+        }
+      } catch (e) {}
+      awareness.setLocalStateField('user', { name: newName, color: newColor });
+    };
+    window.addEventListener('profile-updated', handleProfileUpdate);
+
+    return () => {
+      awareness.off('change', updatePresence);
+      window.removeEventListener('profile-updated', handleProfileUpdate);
+    };
+  }, [awareness, localUserId, accentColor]);
 
   useEffect(() => {
     if (roomInfo) {
-      setActingHost(actingHostId(roomInfo, presentUserIds.length > 0 ? presentUserIds : [localUserId]));
+      const ids = presentUsers.map(u => u.id);
+      setActingHost(actingHostId(roomInfo, ids.length > 0 ? ids : [localUserId]));
     }
-  }, [roomInfo, localUserId, presentUserIds]);
+  }, [roomInfo, localUserId, presentUsers]);
 
-  // Auth guard — boards opened via share link must go through auth first.
+  // Auth guard - boards opened via share link must go through auth first.
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token && id) {
-      navigate(`/auth?next=/board/${id}`);
+    if (roomInfo && roomInfo.isExam && !['host','teacher'].includes(localStorage.getItem('userRole'))) {
+      const loaded = JSON.parse(localStorage.getItem('userProfile') || '{}');
+      if (!loaded.prn || !loaded.rollNo) {
+        setShowAuthFields(true);
+      }
     }
-  }, [id, navigate]);
-  
+  }, [roomInfo]);
+
+  // Voice Activity Detection Helper
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const vadRafRef = useRef(null);
+
+  // Audio State
+  const [peer, setPeer] = useState(null);
+  const [localStream, setLocalStream] = useState(null);
+  const callsRef = useRef({});
+
   // Communication States
-  const { isCallActive, isCallHidden, joinCall } = useCallContext();
-  
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+
+  // Initialize PeerJS for Audio
+  useEffect(() => {
+    if (!localUserId) return;
+    
+    const newPeer = new Peer(`vyomaboard-audio-${localUserId}-${id}`, {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          },
+          {
+            urls: "turn:openrelay.metered.ca:443",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          },
+          {
+            urls: "turn:openrelay.metered.ca:443?transport=tcp",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          }
+        ]
+      }
+    });
+    
+    newPeer.on('open', (id) => {
+      console.log('My peer ID is: ' + id);
+      setPeer(newPeer);
+    });
+
+    newPeer.on('call', (call) => {
+      if (!localStream) {
+        call.answer();
+      } else {
+        call.answer(localStream);
+      }
+      
+      call.on('stream', (remoteStream) => {
+        const audio = new Audio();
+        audio.srcObject = remoteStream;
+        audio.autoplay = true;
+        audio.play().catch(e => console.error('Audio play failed:', e));
+      });
+      // We do NOT add inbound calls to callsRef so that our outbound effect will still call them when our mic activates
+    });
+
+    return () => {
+      newPeer.destroy();
+    };
+  }, [localUserId, id, localStream]);
+
+  // Handle Local Mic Toggle & VAD
+  const [micActive, setMicActive] = useState(false);
+  
+  // Expose a toggle for the TopBar
+  const toggleMic = () => {
+    setMicActive(prev => !prev);
+  };
+
+  useEffect(() => {
+    if (micActive && !localStream) {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        setLocalStream(stream);
+        
+        // Setup VAD
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioContextRef.current = new AudioContext();
+          const source = audioContextRef.current.createMediaStreamSource(stream);
+          analyserRef.current = audioContextRef.current.createAnalyser();
+          analyserRef.current.minDecibels = -80;
+          analyserRef.current.maxDecibels = -10;
+          analyserRef.current.smoothingTimeConstant = 0.85;
+          source.connect(analyserRef.current);
+          
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          let wasSpeaking = false;
+          
+          const checkAudio = () => {
+            if (!analyserRef.current) return;
+            analyserRef.current.getByteFrequencyData(dataArray);
+            const sum = dataArray.reduce((a, b) => a + b, 0);
+            const avg = sum / dataArray.length;
+            
+            const isLoud = avg > 5; // Lowered Threshold
+            if (isLoud !== wasSpeaking) {
+              wasSpeaking = isLoud;
+              if (awareness) {
+                awareness.setLocalStateField('isSpeaking', isLoud);
+              }
+            }
+            vadRafRef.current = requestAnimationFrame(checkAudio);
+          };
+          checkAudio();
+        }
+      }).catch(err => {
+        console.error('Failed to get local stream', err);
+        alert('Microphone access denied or failed.');
+        setMicActive(false);
+        if (awareness) awareness.setLocalStateField('isSpeaking', false);
+      });
+    } else if (!micActive && localStream) {
+      localStream.getTracks().forEach(t => t.stop());
+      setLocalStream(null);
+      if (vadRafRef.current) cancelAnimationFrame(vadRafRef.current);
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(console.error);
+        audioContextRef.current = null;
+        analyserRef.current = null;
+      }
+      Object.values(callsRef.current).forEach(c => c.close());
+      callsRef.current = {};
+      if (awareness) awareness.setLocalStateField('isSpeaking', false);
+    }
+  }, [micActive, peer, awareness, id, localStream, localUserId, presentUsers]);
+
+  // Make sure new peers get called if we are active
+  useEffect(() => {
+    if (micActive && localStream && peer) {
+      presentUsers.forEach(u => {
+        if (u.id !== localUserId) {
+          const peerId = `vyomaboard-audio-${u.id}-${id}`;
+          if (!callsRef.current[peerId]) {
+            const call = peer.call(peerId, localStream);
+            if (call) {
+              call.on('stream', (remoteStream) => {
+                const audio = new Audio();
+                audio.srcObject = remoteStream;
+                audio.autoplay = true;
+                audio.play().catch(e => console.error('Audio play failed:', e));
+              });
+              callsRef.current[peerId] = call;
+            }
+          }
+        }
+      });
+    }
+  }, [presentUsers, micActive, localStream, peer, localUserId, id]);
 
   // Theme State
   const [showThemeSettings, setShowThemeSettings] = useState(false);
@@ -368,29 +596,40 @@ export default function Board() {
       }}
       onDropCapture={(e) => {
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          const files = Array.from(e.dataTransfer.files);
           let hasNonImage = false;
-          Array.from(e.dataTransfer.files).forEach((file) => {
+          files.forEach((file) => {
             if (!file.type.startsWith('image/')) hasNonImage = true;
           });
           
           if (hasNonImage) {
             e.preventDefault();
             e.stopPropagation();
-            Array.from(e.dataTransfer.files).forEach((file) => {
+            if (files.length === 1 && files[0].type.startsWith('image/')) return;
+            
+            const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
+            const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
+            const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
+            
+            files.forEach(async (file) => {
               if (file.type.startsWith('image/')) return;
               
-              const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
-              const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
-              const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
-              const fileUrl = URL.createObjectURL(file);
-              
+              let fileUrl = URL.createObjectURL(file);
+              try {
+                const storage = getStorage();
+                const fileRef = storageRef(storage, `board-files/${id}/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(fileRef, file);
+                fileUrl = await getDownloadURL(snapshot.ref);
+              } catch (err) {
+                console.error("Firebase upload failed, using local blob", err);
+              }
               handleUpdateCustomCards(prev => [...prev, {
                 id: Date.now().toString() + Math.random().toString(36).substring(7),
                 type: file.name.endsWith('.ipynb') ? 'notebook' : 'file',
                 name: file.name,
                 url: fileUrl,
-                x: -scrollX + (e.clientX - window.innerWidth / 2) / zoom,
-                y: -scrollY + (e.clientY - window.innerHeight / 2) / zoom
+                x: -scrollX + (window.innerWidth / 2 / zoom),
+                y: -scrollY + (window.innerHeight / 2 / zoom)
               }]);
             });
           }
@@ -403,9 +642,14 @@ export default function Board() {
         roomInfo={roomInfo}
         localUserId={localUserId}
         actingHost={actingHost}
+        presentUsers={presentUsers}
+        awareness={awareness}
         onOpenHostControls={() => setShowHostControls(true)}
         onOpenRoster={() => setShowRoster(true)}
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
+        onOpenSettings={() => setShowThemeSettings(true)}
+        isMicOn={micActive}
+        onToggleMic={toggleMic}
       />
 
       <div style={{ display: 'flex', flex: 1, position: 'relative', minHeight: 0 }}>
@@ -419,20 +663,29 @@ export default function Board() {
           multiple 
           ref={fileInputRef} 
           style={{ display: 'none' }} 
-          onChange={(e) => {
+          onChange={async (e) => {
             if (e.target.files && e.target.files.length > 0) {
               const file = e.target.files[0];
-              const fileUrl = URL.createObjectURL(file);
+              let fileUrl = URL.createObjectURL(file);
+              try {
+                const storage = getStorage();
+                const fileRef = storageRef(storage, `board-files/${id}/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(fileRef, file);
+                fileUrl = await getDownloadURL(snapshot.ref);
+              } catch (err) {
+                console.error("Firebase upload failed, using local blob", err);
+              }
               const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
               const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
               const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
+              const isNotebook = file.name.endsWith('.ipynb');
               handleUpdateCustomCards(prev => [...prev, {
-                id: Date.now().toString(),
-                type: 'file',
+                id: Date.now().toString() + Math.random().toString(36).substring(7),
+                type: isNotebook ? 'notebook' : 'file',
                 name: file.name,
                 url: fileUrl,
-                x: -scrollX + (Math.random() * 50 / zoom),
-                y: -scrollY + (Math.random() * 50 / zoom)
+                x: -scrollX + (window.innerWidth / 2 / zoom),
+                y: -scrollY + (window.innerHeight / 2 / zoom)
               }]);
             }
           }}
@@ -451,6 +704,7 @@ export default function Board() {
             awareness={awareness}
             elementsMap={elementsMap}
             viewModeEnabled={!canEdit}
+            perms={perms}
             onCustomToolClick={(tool) => {
               if (tool === 'upload') {
                 fileInputRef.current?.click();
@@ -459,13 +713,11 @@ export default function Board() {
               } else if (tool === 'create') {
                 setNewFileName('');
                 setShowCreateFileModal(true);
-              } else if (tool === 'call') {
-                joinCall('video');
               }
             }}
             onCardDoubleClick={(card) => {
-              if (card.type === 'file') {
-                setActivePreviewFile({ url: card.url, name: card.name });
+              if (card.type === 'file' || card.type === 'notebook') {
+                setActivePreviewFile({ url: card.url, name: card.name, content: card.content, fileId: card.id });
               } else if (card.type === 'nested-board') {
                 setActiveBoard({ boardId: card.boardId, name: card.name, files: [] });
               }
@@ -502,6 +754,7 @@ export default function Board() {
           onClose={() => setActivePreviewFile(null)}
           onSaveCloudFile={() => {}}
           onCreateCloudFile={() => {}}
+          ydoc={ydoc}
           onOpenFile={() => {}}
           editor={null}
         />
@@ -514,19 +767,31 @@ export default function Board() {
             setShowChoiceFileModal(false);
             if (excalidrawAPIRef.current && files && files.length > 0) {
               const appState = excalidrawAPIRef.current.getAppState();
-              const zoom = appState.zoom.value;
-              const scrollX = appState.scrollX;
-              const scrollY = appState.scrollY;
-              const canvasX = ((window.innerWidth / 2) / zoom) - scrollX;
-              const canvasY = ((window.innerHeight / 2) / zoom) - scrollY;
+              const zoom = appState.zoom.value || 1;
+              const scrollX = appState.scrollX || 0;
+              const scrollY = appState.scrollY || 0;
 
-              files.forEach((f, idx) => {
+              files.forEach(async (f, idx) => {
+                let fileUrl = f.url || f.fileId || f.id;
+                
+                if (f instanceof File) {
+                  fileUrl = URL.createObjectURL(f);
+                  try {
+                    const storage = getStorage();
+                    const fileRef = storageRef(storage, `board-files/${id}/${Date.now()}_${f.name}`);
+                    const snapshot = await uploadBytes(fileRef, f);
+                    fileUrl = await getDownloadURL(snapshot.ref);
+                  } catch (err) {
+                    console.error("Firebase upload failed, using local blob", err);
+                  }
+                }
+
                 handleUpdateCustomCards(prev => [...prev, {
                   id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                   name: f.name,
-                  url: f.url || f.fileId || f.id,
-                  x: canvasX + (idx * 20),
-                  y: canvasY + (idx * 20),
+                  url: fileUrl,
+                  x: -scrollX + (window.innerWidth / 2 / zoom) + (idx * 20),
+                  y: -scrollY + (window.innerHeight / 2 / zoom) + (idx * 20),
                   type: 'file'
                 }]);
               });
@@ -610,13 +875,6 @@ export default function Board() {
         />
       )}
 
-
-      {isCallActive && (
-        <CallManager 
-          isCallHidden={isCallHidden}
-          roomInfo={roomInfo}
-        />
-      )}
 
       </div>
 

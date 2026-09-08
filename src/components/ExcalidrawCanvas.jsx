@@ -35,7 +35,8 @@ const NOTE_COLORS = {
  *   provider?: any,
  *   awareness: any,
  *   elementsMap: any,
- *   viewModeEnabled: boolean
+ *   viewModeEnabled: boolean,
+ *   perms: any
  * }} props
  */
 export default function ExcalidrawCanvas({
@@ -50,13 +51,32 @@ export default function ExcalidrawCanvas({
   onCanvasReady,
   onLinkOpen,
   ydoc,
+  provider,
   awareness,
   elementsMap,
   viewModeEnabled,
+  perms,
   localClientId
 }) {
   const [internalApi, setInternalApi] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
+
+  // Automatically switch back to 'selection' tool if the host locks the current tool
+  useEffect(() => {
+    if (viewModeEnabled) {
+      const drawingTools = ['freedraw', 'shape', 'rectangle', 'ellipse', 'diamond', 'triangle', 'arrow', 'line', 'text'];
+      if (drawingTools.includes(activeTool)) {
+        setActiveTool('selection');
+      }
+    }
+    if (perms && perms.files === false) {
+      const fileTools = ['upload', 'create', 'nested'];
+      if (fileTools.includes(activeTool)) {
+        setActiveTool('selection');
+      }
+    }
+  }, [viewModeEnabled, perms, activeTool, setActiveTool]);
+
   const [activeColor, setActiveColor] = useState('black');
   const [activeFill, setActiveFill] = useState('none');
   const [activeDash, setActiveDash] = useState('solid');
@@ -113,11 +133,19 @@ export default function ExcalidrawCanvas({
     onCanvasReadyRef.current = onCanvasReady;
   }, [onCanvasReady]);
 
-  const handleApiReady = useCallback((api) => {
-    setInternalApi(api);
+  const handleApiReady = useCallback((excalidrawApi) => {
+    setInternalApi(excalidrawApi);
+    apiRef.current = excalidrawApi;
     if (onCanvasReadyRef.current) {
-      onCanvasReadyRef.current(api);
+      onCanvasReadyRef.current(excalidrawApi);
     }
+    
+    // Center the view on load for everyone
+    setTimeout(() => {
+      try {
+        excalidrawApi.scrollToContent();
+      } catch(e) {}
+    }, 500);
   }, []);
 
   const updateStyle = useCallback((key, value) => {
@@ -246,13 +274,12 @@ export default function ExcalidrawCanvas({
       const clientId = awareness.clientID;
 
       states.forEach((state, client) => {
-        if (client !== clientId && state.pointer && state.user) {
+        if (client !== clientId && state.user) {
           collaborators.set(client, {
-            pointer: state.pointer,
-            button: state.button || 'up',
+            // We omit 'pointer' and 'button' here so Excalidraw doesn't render its built-in cursors.
+            // Our CustomCursorOverlay handles the cursor rendering.
             selectedElementIds: state.selectedElementIds || {},
-            username: state.user.name || 'Anonymous',
-            color: { background: state.user.color || '#ff4444', stroke: '#000000' }
+            username: state.user.name || 'Anonymous'
           });
         }
       });
@@ -456,6 +483,9 @@ export default function ExcalidrawCanvas({
         awareness={awareness}
         localClientId={localClientId}
         enabled={!!awareness}
+        zoom={zoom}
+        scrollX={scrollX}
+        scrollY={scrollY}
       />
 
       {/* Cards Overlay */}
@@ -501,7 +531,6 @@ export default function ExcalidrawCanvas({
         {Math.round(zoom * 100)}%
       </div>
 
-      {!viewModeEnabled && (
         <BottomToolbar
           activeTool={activeTool}
           onToolSelect={handleToolClick}
@@ -511,8 +540,9 @@ export default function ExcalidrawCanvas({
           canRedo={false}
           onUndo={() => {}}
           onRedo={() => {}}
+          viewModeEnabled={viewModeEnabled}
+          perms={perms}
         />
-      )}
 
       {!viewModeEnabled && (
         <ContextualPanel
