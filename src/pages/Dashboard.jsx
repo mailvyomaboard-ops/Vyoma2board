@@ -216,7 +216,7 @@ const leaveRoom = (room) => {
       
       {/* Sidebar */}
       <div className={`neo-border dashboard-sidebar-container ${mobileMenuOpen ? 'mobile-open' : ''}`} style={{
-        width: '280px',
+        width: '290px',
         backgroundColor: 'var(--accent-purple)',
         display: 'flex',
         flexDirection: 'column',
@@ -224,19 +224,61 @@ const leaveRoom = (room) => {
         borderTop: 'none',
         borderBottom: 'none'
       }}>
+        {/* Mobile Drawer Header with Close Button */}
+        <div className="mobile-only" style={{
+          padding: '12px 16px',
+          background: 'var(--accent-yellow)',
+          borderBottom: '3px solid #000',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <span style={{ fontWeight: '900', fontSize: '15px' }}>Vyomaboard Navigation</span>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              background: '#fff',
+              border: '2px solid #000',
+              padding: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+            title="Close Menu"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Drawer Search Bar */}
+        <div style={{ padding: '12px 16px', background: 'var(--surface-color)', borderBottom: '3px solid #000' }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Search size={16} style={{ position: 'absolute', left: '10px' }} color="#000" />
+            <input 
+              type="text" 
+              className="neo-input" 
+              placeholder="Search rooms..." 
+              value={sidebarSearch}
+              onChange={e => setSidebarSearch(e.target.value)}
+              style={{ width: '100%', padding: '6px 10px 6px 32px', fontSize: '13px' }} 
+            />
+          </div>
+        </div>
+
         <button 
-          onClick={() => navigate('/dashboard')}
+          onClick={() => { navigate('/dashboard'); setMobileMenuOpen(false); }}
           className="dashboard-sidebar-btn"
           style={{
-            height: '60px',
+            height: '56px',
             padding: '0 16px',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            fontSize: '16px',
+            fontSize: '15px',
             cursor: 'pointer',
             textAlign: 'left',
-            background: 'var(--accent-green)'
+            background: 'var(--accent-green)',
+            borderBottom: '2px solid #000'
           }}
         >
           <div style={{ width: '32px', height: '32px', border: '3px solid #000', backgroundColor: 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -246,31 +288,30 @@ const leaveRoom = (room) => {
         </button>
 
         <button 
-          onClick={() => navigate('/exams')}
+          onClick={() => { navigate('/exams'); setMobileMenuOpen(false); }}
           className="dashboard-sidebar-btn"
           style={{
-            height: '60px',
+            height: '56px',
             padding: '0 16px',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            fontSize: '16px',
+            fontSize: '15px',
             cursor: 'pointer',
             textAlign: 'left',
-            background: 'var(--surface-color)'
+            background: 'var(--surface-color)',
+            borderBottom: '2px solid #000'
           }}
         >
           <div style={{ width: '32px', height: '32px', border: '3px solid #000', backgroundColor: 'var(--accent-pink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <GraduationCap size={18} color="#000" />
           </div>
-          Exams
+          Exams & Tests
         </button>
 
         {/* Content List */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', background: 'var(--surface-color)' }}>
-
-          
-          <div style={{ margin: '16px 0 8px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', minHeight: 0, padding: '12px 16px', background: 'var(--surface-color)' }}>
+          <div style={{ margin: '8px 0 8px' }}>
              <span className="neo-badge" style={{ background: 'var(--accent-pink)', fontSize: '12px' }}>Recent Rooms</span>
           </div>
           
@@ -283,7 +324,7 @@ const leaveRoom = (room) => {
            {filteredRooms.map(room => (
             <button 
               key={room.id}
-              onClick={() => navigate(`/board/${room.id}`)}
+              onClick={() => { navigate(`/board/${room.id}`); setMobileMenuOpen(false); }}
               className="dashboard-room-btn"
               style={{
                 width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '12px',
@@ -297,44 +338,50 @@ const leaveRoom = (room) => {
         </div>
 
         {/* Sidebar Actions */}
-        <div style={{ padding: '16px', background: 'var(--surface-color)', borderTop: '3px solid #000', display: 'flex', gap: '8px' }}>
-           <button onClick={() => setShowCreateModal(true)} className="neo-btn" style={{ flex: 1, background: 'var(--accent-purple)', padding: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+        <div style={{ padding: '12px 16px', background: 'var(--surface-color)', borderTop: '3px solid #000', display: 'flex', gap: '8px' }}>
+           <button onClick={() => { setShowCreateModal(true); setMobileMenuOpen(false); }} className="neo-btn" style={{ flex: 1, background: 'var(--accent-purple)', padding: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
              <Plus size={16} /> Create
            </button>
-           <button onClick={() => setShowJoinModal(true)} className="neo-btn" style={{ flex: 1, background: 'var(--accent-yellow)', padding: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+           <button onClick={() => { setShowJoinModal(true); setMobileMenuOpen(false); }} className="neo-btn" style={{ flex: 1, background: 'var(--accent-yellow)', padding: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
              <LogIn size={16} /> Join
            </button>
         </div>
 
-        {/* User Settings Footer */}
-        <div className="neo-border" style={{
+        {/* User Settings Footer - Always Visible & Safe-Area Aware */}
+        <div className="neo-border dashboard-sidebar-footer" style={{
           backgroundColor: 'var(--accent-yellow)',
-          padding: '16px',
+          padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '10px',
           borderLeft: 'none',
           borderRight: 'none',
           borderBottom: 'none',
-          flexWrap: 'wrap'
+          flexShrink: 0
         }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '0', border: '3px solid #000', backgroundColor: 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: '900' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '0', border: '3px solid #000', backgroundColor: 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: '900', flexShrink: 0 }}>
             {displayName[0]?.toUpperCase()}
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <span style={{ color: '#000', fontSize: '16px', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</span>
-            <span className="neo-badge" style={{ background: 'var(--accent-purple)', fontSize: '10px', marginTop: '4px', alignSelf: 'flex-start' }}>{userRole}</span>
+            <span style={{ color: '#000', fontSize: '14px', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</span>
+            <span className="neo-badge" style={{ background: 'var(--accent-purple)', fontSize: '10px', marginTop: '2px', alignSelf: 'flex-start' }}>{userRole}</span>
           </div>
-          <div style={{ display: 'flex', gap: '4px' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
               <button 
                 onClick={handleLogout}
+                className="neo-btn"
                 title="Log Out"
-                style={{ background: 'var(--accent-orange)', border: '3px solid #000', color: '#000', cursor: 'pointer', padding: '6px', boxShadow: '2px 2px 0px #000' }}
+                style={{
+                  background: 'var(--accent-orange)',
+                  padding: '6px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '12px',
+                  fontWeight: '800'
+                }}
               >
-                <LogOut size={16} />
-              </button>
-              <button style={{ background: 'var(--accent-blue)', border: '3px solid #000', color: '#000', cursor: 'pointer', padding: '6px', boxShadow: '2px 2px 0px #000' }}>
-                <Settings size={16} />
+                <LogOut size={14} /> Logout
               </button>
           </div>
         </div>
@@ -395,6 +442,21 @@ const leaveRoom = (room) => {
          <div className="dashboard-main-content" style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
            
            <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+                {/* Mobile Full-Width Search Bar */}
+                <div className="mobile-only" style={{ marginBottom: '20px' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <Search size={18} style={{ position: 'absolute', left: '12px' }} color="#000" />
+                    <input 
+                      type="text" 
+                      className="neo-input" 
+                      placeholder="Search boards..." 
+                      value={sidebarSearch}
+                      onChange={e => setSidebarSearch(e.target.value)}
+                      style={{ width: '100%', padding: '10px 12px 10px 38px', fontSize: '14px', background: 'var(--surface-color)' }}
+                    />
+                  </div>
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
                   <span className="neo-title-block" style={{ fontSize: '28px', background: 'var(--accent-pink)', transform: 'rotate(-1deg)' }}>
                       Workspace

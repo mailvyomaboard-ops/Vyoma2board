@@ -254,6 +254,64 @@ export default function TopBar({
 
       <div style={{ width: '3px', height: '24px', background: 'var(--border-color)', opacity: 0.5 }}></div>
 
+      {/* Mobile Room Badge */}
+      <span className="neo-badge mobile-only" style={{
+        background: 'var(--accent-yellow)',
+        fontSize: '11px',
+        fontWeight: '900',
+        padding: '4px 8px',
+        maxWidth: '120px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      }}>
+        {roomName}
+      </span>
+
+      <div style={{ flex: 1 }} className="mobile-only"></div>
+
+      {/* Mobile Chat Button */}
+      <button
+        className="mobile-only"
+        onClick={onToggleChat}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'var(--accent-purple)',
+          color: 'var(--text-main)',
+          border: 'var(--border-width) solid var(--border-color)',
+          borderRadius: '4px',
+          width: '32px', height: '32px',
+          cursor: 'pointer',
+          boxShadow: 'var(--shadow-sm)',
+          flexShrink: 0
+        }}
+        title="Open Room Chat"
+      >
+        <MessageSquare size={15} />
+      </button>
+
+      {/* Mobile Collaborators Pill */}
+      <button
+        className="mobile-only"
+        onClick={onOpenRoster}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '4px',
+          background: 'var(--accent-blue)',
+          color: '#fff',
+          border: 'var(--border-width) solid var(--border-color)',
+          borderRadius: '4px',
+          padding: '4px 8px',
+          fontSize: '11px',
+          fontWeight: '900',
+          cursor: 'pointer',
+          boxShadow: 'var(--shadow-sm)',
+          flexShrink: 0
+        }}
+        title="Online Participants"
+      >
+        <Users size={13} /> {orderedUsers.length}
+      </button>
+
       {/* Mic Toggle Button */}
       <button
         onClick={onToggleMic}
@@ -263,8 +321,8 @@ export default function TopBar({
           color: 'var(--text-main)',
           border: 'var(--border-width) solid var(--border-color)',
           borderRadius: '4px',
-          padding: '6px 12px',
-          fontSize: '13px',
+          padding: '6px 10px',
+          fontSize: '12px',
           fontWeight: '800',
           cursor: 'pointer',
           boxShadow: 'var(--shadow-sm)',
@@ -272,7 +330,7 @@ export default function TopBar({
         }}
         title="Toggle Microphone"
       >
-        {isMicOn ? <Mic size={16} /> : <MicOff size={16} />}
+        {isMicOn ? <Mic size={15} /> : <MicOff size={15} />}
       </button>
 
       {/* Mobile Menu Toggle Button */}
@@ -284,14 +342,14 @@ export default function TopBar({
           background: showMobileMenu ? 'var(--accent-yellow)' : 'var(--surface-color)',
           border: 'var(--border-width) solid var(--border-color)',
           borderRadius: '4px',
-          width: '36px', height: '36px',
+          width: '32px', height: '32px',
           cursor: 'pointer',
           boxShadow: 'var(--shadow-sm)',
           flexShrink: 0
         }}
         title="More Options"
       >
-        <MoreVertical size={18} />
+        <MoreVertical size={16} />
       </button>
 
     </div>
@@ -302,10 +360,10 @@ export default function TopBar({
         className="neo-card mobile-only" 
         style={{
           position: 'absolute',
-          top: '64px',
+          top: '56px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: 'calc(100vw - 32px)',
+          width: 'calc(100vw - 24px)',
           maxWidth: '340px',
           background: 'var(--surface-color)',
           border: '3px solid #000',
@@ -360,8 +418,8 @@ export default function TopBar({
       </div>
     )}
 
-    {/* Floating Avatar Stack - Top Right */}
-    <div style={{
+    {/* Floating Avatar Stack - Top Right (Desktop Only to prevent mobile header collision) */}
+    <div className="desktop-only" style={{
       position: 'absolute',
       top: '16px',
       right: '16px',

@@ -580,17 +580,12 @@ export default function ExcalidrawCanvas({
       </div>
 
       {/* Zoom indicator */}
-      <div className="neo-brutalist-panel" style={{
-        position: 'absolute',
-        bottom: '24px',
-        right: '24px',
+      <div className="neo-brutalist-panel board-zoom-indicator" style={{
         background: 'var(--surface-color)',
         border: 'var(--border-width) solid var(--border-color)',
         boxShadow: 'var(--shadow-sm)',
-        padding: '8px 12px',
         fontFamily: 'Inter, sans-serif',
         fontWeight: '700',
-        fontSize: '14px',
         zIndex: 1000,
         pointerEvents: 'all',
         borderRadius: '8px',
