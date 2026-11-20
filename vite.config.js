@@ -11,6 +11,20 @@ export default defineConfig(({ mode }) => {
       'process.env': {}
     },
     plugins: [react()],
+    build: {
+      chunkSizeWarningLimit: 1200,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-yjs': ['yjs', 'y-websocket'],
+            'vendor-excalidraw': ['@excalidraw/excalidraw'],
+            'vendor-office-parsers': ['xlsx', 'mammoth'],
+            'vendor-pdf': ['jspdf', 'html2canvas']
+          }
+        }
+      }
+    },
     server: {
       host: true,
       https: {

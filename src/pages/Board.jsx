@@ -1,26 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+// Lazy-load heavy modals to optimize initial board bundle and sub-second load times
+const HostControlPanel = lazy(() => import('../components/HostControlPanel'));
+const RosterModal = lazy(() => import('../components/RosterModal'));
+const AttendanceModal = lazy(() => import('../components/AttendanceModal'));
+const ExamWindowModal = lazy(() => import('../components/ExamWindowModal'));
+const AddQuestionModal = lazy(() => import('../components/AddQuestionModal'));
+const AuthFieldsEditorModal = lazy(() => import('../components/AuthFieldsEditorModal'));
+const ClassSettingsModal = lazy(() => import('../components/ClassSettingsModal'));
 
-import HostControlPanel from '../components/HostControlPanel';
-import RosterModal from '../components/RosterModal';
-import AttendanceModal from '../components/AttendanceModal';
-import ExamWindowModal from '../components/ExamWindowModal';
-import AddQuestionModal from '../components/AddQuestionModal';
-import AuthFieldsEditorModal from '../components/AuthFieldsEditorModal';
-import ClassSettingsModal from '../components/ClassSettingsModal';
-
-import FileViewerModal from '../FileViewerModal';
-import { getApiUrl } from '../config';
-import BoardViewerModal from '../BoardViewerModal';
-import FolderViewerModal from '../FolderViewerModal';
-import ThemeSettingsModal from '../ThemeSettingsModal';
-import ChatPanel from '../components/ChatPanel';
-import TemplatesModal from '../components/TemplatesModal';
-import ChoiceFileModal from '../components/ChoiceFileModal';
+const FileViewerModal = lazy(() => import('../FileViewerModal'));
+const BoardViewerModal = lazy(() => import('../BoardViewerModal'));
+const FolderViewerModal = lazy(() => import('../FolderViewerModal'));
+const ThemeSettingsModal = lazy(() => import('../ThemeSettingsModal'));
+const ChatPanel = lazy(() => import('../components/ChatPanel'));
+const TemplatesModal = lazy(() => import('../components/TemplatesModal'));
+const ChoiceFileModal = lazy(() => import('../components/ChoiceFileModal'));
 import { useYjsStore } from '../useYjsStore';
 import { useParams, useNavigate } from 'react-router-dom';
 import { actingHostId } from '../lib/classMeta';
@@ -158,7 +157,7 @@ export default function Board() {
   const [hostLocked, setHostLocked] = useState(false);
   const [perms, setPerms] = useState({ share: true, files: true, mic: true, copyPaste: true });
   const [quizCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const isHost = actingHost === localUserId;
   const canEdit = isHost || !hostLocked;
@@ -580,15 +579,6 @@ export default function Board() {
     }
   };
 
-  if (loading) {
-    return (
-      <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#121212', color: 'white' }}>
-        <Loader2 size={32} className="spin" />
-        <span style={{ marginLeft: '12px' }}>Connecting to Board...</span>
-      </div>
-    );
-  }
-
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}
       onDragOverCapture={(e) => {
@@ -739,27 +729,30 @@ export default function Board() {
           />
         </ErrorBoundary>
       </div>
+      </div>
 
-      {isChatOpen && (
-        <ChatPanel
-            onClose={() => setIsChatOpen(false)}
-            roomInfo={roomInfo}
-        />
-      )}
-      
-      {activePreviewFile && (
-        <FileViewerModal 
-          fileData={activePreviewFile} 
-          boardName={roomInfo?.name || 'Untitled'}
-          folderFiles={[]}
-          onClose={() => setActivePreviewFile(null)}
-          onSaveCloudFile={() => {}}
-          onCreateCloudFile={() => {}}
-          ydoc={ydoc}
-          onOpenFile={() => {}}
-          editor={null}
-        />
-      )}
+      {/* Lazy-Loaded Modals & Drawers */}
+      <Suspense fallback={null}>
+        {isChatOpen && (
+          <ChatPanel
+              onClose={() => setIsChatOpen(false)}
+              roomInfo={roomInfo}
+          />
+        )}
+        
+        {activePreviewFile && (
+          <FileViewerModal 
+            fileData={activePreviewFile} 
+            boardName={roomInfo?.name || 'Untitled'}
+            folderFiles={[]}
+            onClose={() => setActivePreviewFile(null)}
+            onSaveCloudFile={() => {}}
+            onCreateCloudFile={() => {}}
+            ydoc={ydoc}
+            onOpenFile={() => {}}
+            editor={null}
+          />
+        )}
 
       {showChoiceFileModal && (
         <ChoiceFileModal 
@@ -877,8 +870,7 @@ export default function Board() {
       )}
 
 
-      </div>
-
+      {/* Modals continued */}
       {showThemeSettings && (
         <ThemeSettingsModal 
           onClose={() => setShowThemeSettings(false)}
@@ -957,6 +949,7 @@ export default function Board() {
       {showAuthFields && (
         <AuthFieldsEditorModal roomId={id} onClose={() => setShowAuthFields(false)} />
       )}
+      </Suspense>
     </div>
   );
 }

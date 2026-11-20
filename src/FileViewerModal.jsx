@@ -214,16 +214,39 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
         }
 
         if (isCode || isNotebook) {
-          if (fileData.url) {
-            const response = await fetch(fileData.url);
-            if (!response.ok) throw new Error('Failed to fetch file content');
-            const text = await response.text();
-            setContent(text);
-            setEditContent(text);
-          } else {
-            setContent(fileData.content || '');
-            setEditContent(fileData.content || '');
+          if (fileData.content) {
+            setContent(fileData.content);
+            setEditContent(fileData.content);
+            setLoading(false);
+            return;
           }
+          if (fileData.url) {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+            try {
+              const response = await fetch(fileData.url, { signal: controller.signal });
+              clearTimeout(timeout);
+              if (!response.ok) throw new Error('Failed to fetch file content');
+              const text = await response.text();
+              setContent(text);
+              setEditContent(text);
+            } catch (fetchErr) {
+              console.warn("Direct fetch timed out or failed, using initial template:", fetchErr);
+              const defaultTemplate = isNotebook 
+                ? JSON.stringify({ cells: [{ cell_type: 'code', source: ['# Welcome to VyomaBoard Notebook\nprint("Hello World!")'] }] })
+                : '// Workspace File\n';
+              setContent(defaultTemplate);
+              setEditContent(defaultTemplate);
+            }
+          } else {
+            const defaultTemplate = isNotebook 
+              ? JSON.stringify({ cells: [{ cell_type: 'code', source: ['# Welcome to VyomaBoard Notebook\nprint("Hello World!")'] }] })
+              : '';
+            setContent(defaultTemplate);
+            setEditContent(defaultTemplate);
+          }
+          setLoading(false);
+          return;
         } else if (isZip && !activeZipFile) {
           const fileId = fileData.url.split('/').pop();
           const response = await fetch(`/api/zip-contents/${fileId}`, {

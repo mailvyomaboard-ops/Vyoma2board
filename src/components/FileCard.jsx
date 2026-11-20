@@ -149,6 +149,33 @@ export default function FileCard({
         {card.name}
       </div>
 
+      {/* Quick Open Action Button */}
+      {(isSelected || isHovered) && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDoubleClick(card);
+          }}
+          className="neo-btn"
+          style={{
+            position: 'absolute',
+            bottom: '-10px',
+            background: 'var(--accent-yellow, #facc15)',
+            color: '#000',
+            border: '2px solid #000',
+            borderRadius: '4px',
+            padding: '2px 8px',
+            fontSize: '11px',
+            fontWeight: '900',
+            boxShadow: '2px 2px 0 #000',
+            cursor: 'pointer',
+            zIndex: 60
+          }}
+        >
+          Open
+        </button>
+      )}
+
       {isHovered && onDelete && canEdit && (
         <button
           onClick={(e) => {
