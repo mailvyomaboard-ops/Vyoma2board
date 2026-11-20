@@ -1031,6 +1031,17 @@ body[data-board="pinboard"]::before {
     opacity: 0.8;
   }
 
+  /* File Upload HUD on Mobile (Top Left below TopBar) */
+  .upload-status-hud {
+    position: fixed !important;
+    top: 56px !important;
+    left: 10px !important;
+    max-width: calc(100vw - 120px) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
   /* Bottom Toolbar in Canvas - Fixed Bottom Floating Dock */
   .bottom-toolbar-dock {
     position: fixed !important;

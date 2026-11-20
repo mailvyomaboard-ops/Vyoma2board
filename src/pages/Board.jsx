@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, Check } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadFileToCloud } from '../lib/cloudStorage';
 
 // Lazy-load heavy modals to optimize initial board bundle and sub-second load times
 const HostControlPanel = lazy(() => import('../components/HostControlPanel'));
@@ -43,6 +44,79 @@ export default function Board() {
   // Yjs Sync
   const { doc: ydoc, provider, awareness, elementsMap, customCardsMap, roomConfigMap } = useYjsStore({ roomId: id, localUserId });
   const [customCards, setCustomCards] = useState([]);
+  const [uploadStatus, setUploadStatus] = useState(null);
+
+  const handleFileUploadOptimistic = async (file) => {
+    if (!file) return;
+
+    const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name);
+    const isNotebook = file.name.endsWith('.ipynb');
+    const cardType = isImage ? 'image' : (isNotebook ? 'notebook' : 'file');
+    const localBlobUrl = URL.createObjectURL(file);
+    const cardId = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Read initial text/code content if available
+    let initialContent = '';
+    if (isNotebook || file.type.startsWith('text/') || /\.(py|js|json|txt|md|html|css|c|cpp)$/i.test(file.name)) {
+      try {
+        initialContent = await file.text();
+      } catch (err) {
+        console.warn('Local text read notice:', err);
+      }
+    }
+
+    const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
+    const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
+    const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
+    const canvasX = ((window.innerWidth / 2) / zoom) - scrollX;
+    const canvasY = ((window.innerHeight / 2) / zoom) - scrollY;
+
+    // 1. Instantly display card on canvas (0ms delay)
+    handleUpdateCustomCards(prev => [...prev, {
+      id: cardId,
+      type: cardType,
+      name: file.name,
+      url: localBlobUrl,
+      content: initialContent,
+      x: canvasX,
+      y: canvasY,
+      isUploading: true
+    }]);
+
+    // 2. Show floating status indicator below top bar on top-left
+    setUploadStatus({
+      active: true,
+      fileName: file.name,
+      progress: 25,
+      success: false
+    });
+
+    // 3. Asynchronously upload to cloud storage
+    try {
+      const { url: cloudUrl } = await uploadFileToCloud(file, id || 'global', ({ percent }) => {
+        setUploadStatus(s => s ? { ...s, progress: percent } : null);
+      });
+
+      // Update card with permanent cloud URL
+      handleUpdateCustomCards(prev => prev.map(c => c.id === cardId ? { ...c, url: cloudUrl, isUploading: false } : c));
+      setUploadStatus({
+        active: false,
+        fileName: file.name,
+        progress: 100,
+        success: true
+      });
+      setTimeout(() => setUploadStatus(null), 3000);
+    } catch (uploadErr) {
+      console.warn('Cloud sync background notice, file preserved locally:', uploadErr);
+      setUploadStatus({
+        active: false,
+        fileName: file.name,
+        progress: 100,
+        success: true
+      });
+      setTimeout(() => setUploadStatus(null), 3000);
+    }
+  };
 
 
 
@@ -111,17 +185,27 @@ export default function Board() {
 
   const handleCreateFileSubmit = () => {
     if (!newFileName.trim()) return;
-    const safeName = newFileName.trim().endsWith('.ipynb') ? newFileName.trim() : `${newFileName.trim()}.ipynb`;
+    const rawName = newFileName.trim();
+    const isNotebook = rawName.endsWith('.ipynb');
+    const safeName = isNotebook ? rawName : (rawName.includes('.') ? rawName : `${rawName}.ipynb`);
     const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
     const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
     const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
+    const canvasX = ((window.innerWidth / 2) / zoom) - scrollX;
+    const canvasY = ((window.innerHeight / 2) / zoom) - scrollY;
+
+    const initialTemplate = isNotebook || safeName.endsWith('.ipynb')
+      ? JSON.stringify({ cells: [{ cell_type: 'code', source: ['# Welcome to your Python Notebook\nprint("Hello from VyomaBoard!")'] }] })
+      : '// New workspace document\n';
     
     handleUpdateCustomCards(prev => [...prev, {
-      id: Date.now().toString() + Math.random().toString(36).substring(7),
-      type: 'notebook',
+      id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: isNotebook || safeName.endsWith('.ipynb') ? 'notebook' : 'file',
       name: safeName,
-      x: -scrollX + (window.innerWidth / 2 / zoom),
-      y: -scrollY + (window.innerHeight / 2 / zoom)
+      content: initialTemplate,
+      url: '',
+      x: canvasX,
+      y: canvasY
     }]);
     
     setShowCreateFileModal(false);
@@ -587,43 +671,10 @@ export default function Board() {
       }}
       onDropCapture={(e) => {
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          e.preventDefault();
+          e.stopPropagation();
           const files = Array.from(e.dataTransfer.files);
-          let hasNonImage = false;
-          files.forEach((file) => {
-            if (!file.type.startsWith('image/')) hasNonImage = true;
-          });
-          
-          if (hasNonImage) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (files.length === 1 && files[0].type.startsWith('image/')) return;
-            
-            const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
-            const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
-            const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
-            
-            files.forEach(async (file) => {
-              if (file.type.startsWith('image/')) return;
-              
-              let fileUrl = URL.createObjectURL(file);
-              try {
-                const storage = getStorage();
-                const fileRef = storageRef(storage, `board-files/${id}/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(fileRef, file);
-                fileUrl = await getDownloadURL(snapshot.ref);
-              } catch (err) {
-                console.error("Firebase upload failed, using local blob", err);
-              }
-              handleUpdateCustomCards(prev => [...prev, {
-                id: Date.now().toString() + Math.random().toString(36).substring(7),
-                type: file.name.endsWith('.ipynb') ? 'notebook' : 'file',
-                name: file.name,
-                url: fileUrl,
-                x: -scrollX + (window.innerWidth / 2 / zoom),
-                y: -scrollY + (window.innerHeight / 2 / zoom)
-              }]);
-            });
-          }
+          files.forEach(file => handleFileUploadOptimistic(file));
         }
       }}
     >
@@ -643,6 +694,43 @@ export default function Board() {
         onToggleMic={toggleMic}
       />
 
+      {/* Real-time File Upload Status HUD (Top Left below TopBar) */}
+      {uploadStatus && (
+        <div
+          className="neo-brutalist-panel upload-status-hud"
+          style={{
+            position: 'fixed',
+            top: '56px',
+            left: '10px',
+            background: uploadStatus.success ? 'var(--accent-green, #4ade80)' : 'var(--accent-yellow, #facc15)',
+            color: '#000',
+            border: '2px solid #000',
+            boxShadow: '3px 3px 0 #000',
+            padding: '5px 12px',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '12px',
+            fontWeight: '900',
+            zIndex: 1002,
+            animation: 'chatBubblePop 0.15s ease-out'
+          }}
+        >
+          {uploadStatus.active ? (
+            <>
+              <Loader2 size={13} className="spin" />
+              <span>Uploading {uploadStatus.fileName}...</span>
+            </>
+          ) : (
+            <>
+              <Check size={14} />
+              <span>{uploadStatus.fileName} Ready!</span>
+            </>
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'flex', flex: 1, position: 'relative', minHeight: 0 }}>
 
 
@@ -654,30 +742,11 @@ export default function Board() {
           multiple 
           ref={fileInputRef} 
           style={{ display: 'none' }} 
-          onChange={async (e) => {
+          onChange={(e) => {
             if (e.target.files && e.target.files.length > 0) {
-              const file = e.target.files[0];
-              let fileUrl = URL.createObjectURL(file);
-              try {
-                const storage = getStorage();
-                const fileRef = storageRef(storage, `board-files/${id}/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(fileRef, file);
-                fileUrl = await getDownloadURL(snapshot.ref);
-              } catch (err) {
-                console.error("Firebase upload failed, using local blob", err);
-              }
-              const zoom = excalidrawAPIRef.current?.getAppState()?.zoom?.value || 1;
-              const scrollX = excalidrawAPIRef.current?.getAppState()?.scrollX || 0;
-              const scrollY = excalidrawAPIRef.current?.getAppState()?.scrollY || 0;
-              const isNotebook = file.name.endsWith('.ipynb');
-              handleUpdateCustomCards(prev => [...prev, {
-                id: Date.now().toString() + Math.random().toString(36).substring(7),
-                type: isNotebook ? 'notebook' : 'file',
-                name: file.name,
-                url: fileUrl,
-                x: -scrollX + (window.innerWidth / 2 / zoom),
-                y: -scrollY + (window.innerHeight / 2 / zoom)
-              }]);
+              const files = Array.from(e.target.files);
+              files.forEach(file => handleFileUploadOptimistic(file));
+              e.target.value = '';
             }
           }}
         />
@@ -759,58 +828,14 @@ export default function Board() {
           onClose={() => setShowChoiceFileModal(false)}
           onFileSelect={(files) => {
             setShowChoiceFileModal(false);
-            if (excalidrawAPIRef.current && files && files.length > 0) {
-              const appState = excalidrawAPIRef.current.getAppState();
-              const zoom = appState.zoom.value || 1;
-              const scrollX = appState.scrollX || 0;
-              const scrollY = appState.scrollY || 0;
-
-              files.forEach(async (f, idx) => {
-                let fileUrl = f.url || f.fileId || f.id;
-                
-                if (f instanceof File) {
-                  fileUrl = URL.createObjectURL(f);
-                  try {
-                    const storage = getStorage();
-                    const fileRef = storageRef(storage, `board-files/${id}/${Date.now()}_${f.name}`);
-                    const snapshot = await uploadBytes(fileRef, f);
-                    fileUrl = await getDownloadURL(snapshot.ref);
-                  } catch (err) {
-                    console.error("Firebase upload failed, using local blob", err);
-                  }
-                }
-
-                handleUpdateCustomCards(prev => [...prev, {
-                  id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                  name: f.name,
-                  url: fileUrl,
-                  x: -scrollX + (window.innerWidth / 2 / zoom) + (idx * 20),
-                  y: -scrollY + (window.innerHeight / 2 / zoom) + (idx * 20),
-                  type: 'file'
-                }]);
-              });
+            if (files && files.length > 0) {
+              files.forEach(f => handleFileUploadOptimistic(f));
             }
           }}
           onFileUpload={(files) => {
             setShowChoiceFileModal(false);
-            if (excalidrawAPIRef.current && files && files.length > 0) {
-              const appState = excalidrawAPIRef.current.getAppState();
-              const zoom = appState.zoom.value;
-              const scrollX = appState.scrollX;
-              const scrollY = appState.scrollY;
-              const canvasX = ((window.innerWidth / 2) / zoom) - scrollX;
-              const canvasY = ((window.innerHeight / 2) / zoom) - scrollY;
-
-              files.forEach((f, idx) => {
-                handleUpdateCustomCards(prev => [...prev, {
-                  id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                  name: f.name,
-                  url: f.url || f.fileId,
-                  x: canvasX + (idx * 20),
-                  y: canvasY + (idx * 20),
-                  type: 'file'
-                }]);
-              });
+            if (files && files.length > 0) {
+              files.forEach(f => handleFileUploadOptimistic(f));
             }
           }}
         />

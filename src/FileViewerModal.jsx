@@ -194,6 +194,21 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
       try {
         setLoading(true);
         setError(null);
+
+        // Instant image display (0ms delay)
+        if (isImage) {
+          setLoading(false);
+          return;
+        }
+
+        // Instant memory cache check (0ms delay)
+        if (fileData.content) {
+          setContent(fileData.content);
+          setEditContent(fileData.content);
+          setLoading(false);
+          return;
+        }
+
         if (fileData.isCloudFile) {
           if (isExcel && fileData.content) {
             try {

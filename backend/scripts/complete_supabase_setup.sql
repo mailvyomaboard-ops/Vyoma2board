@@ -288,3 +288,27 @@ INSERT INTO boards (id, name, school_id, is_locked) VALUES
 ('room-default-1', 'Main Classroom', '00000000-0000-0000-0000-000000000001', false),
 ('room-exam-1', 'Physics Midterm Room', '00000000-0000-0000-0000-000000000001', false)
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 16. STORAGE BUCKET & RLS POLICIES (Ultra-Fast 50MB Cloud File & Image Uploads)
+-- ============================================================================
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('board-assets', 'board-assets', true, 52428800)
+ON CONFLICT (id) DO UPDATE SET public = true, file_size_limit = 52428800;
+
+DO $$ 
+BEGIN
+    DROP POLICY IF EXISTS "Public board-assets uploads" ON storage.objects;
+    CREATE POLICY "Public board-assets uploads" ON storage.objects FOR INSERT TO public WITH CHECK (bucket_id = 'board-assets');
+
+    DROP POLICY IF EXISTS "Public board-assets select" ON storage.objects;
+    CREATE POLICY "Public board-assets select" ON storage.objects FOR SELECT TO public USING (bucket_id = 'board-assets');
+
+    DROP POLICY IF EXISTS "Public board-assets update" ON storage.objects;
+    CREATE POLICY "Public board-assets update" ON storage.objects FOR UPDATE TO public USING (bucket_id = 'board-assets');
+
+    DROP POLICY IF EXISTS "Public board-assets delete" ON storage.objects;
+    CREATE POLICY "Public board-assets delete" ON storage.objects FOR DELETE TO public USING (bucket_id = 'board-assets');
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;

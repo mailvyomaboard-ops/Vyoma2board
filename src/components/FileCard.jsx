@@ -29,6 +29,8 @@ export default function FileCard({
     return () => window.removeEventListener('pointerdown', handleClickOutside);
   }, []);
 
+  const isImage = card.type === 'image' || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes((card.name || '').split('.').pop().toLowerCase());
+
   const getIcon = () => {
     if (card.type === 'nested-board') return Layout;
     const ext = (card.name || '').split('.').pop().toLowerCase();
@@ -124,15 +126,38 @@ export default function FileCard({
         transition: 'background 0.1s, border 0.1s, box-shadow 0.1s'
       }}
     >
-      <div style={{
-        background: iconBg,
-        padding: '12px',
-        borderRadius: '8px',
-        border: '2px solid #000',
-        boxShadow: '2px 2px 0px #000',
-      }}>
-        <Icon size={32} color="var(--text-main)" />
-      </div>
+      {/* Card Visual: Image Thumbnail or Icon */}
+      {isImage && card.url ? (
+        <div style={{
+          width: '96px',
+          height: '64px',
+          borderRadius: '6px',
+          border: '2px solid #000',
+          overflow: 'hidden',
+          background: '#090a0f',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '2px 2px 0px #000'
+        }}>
+          <img 
+            src={card.url} 
+            alt={card.name} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            loading="lazy"
+          />
+        </div>
+      ) : (
+        <div style={{
+          background: iconBg,
+          padding: '12px',
+          borderRadius: '8px',
+          border: '2px solid #000',
+          boxShadow: '2px 2px 0px #000',
+        }}>
+          <Icon size={32} color="var(--text-main)" />
+        </div>
+      )}
       
       <div style={{
         fontSize: '12px',
