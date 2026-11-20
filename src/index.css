@@ -1,0 +1,514 @@
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Caveat&family=Cinzel&family=Creepster&family=Fira+Code&family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Pacifico&family=Playfair+Display&family=Press+Start+2P&display=swap');
+
+:root {
+  /* Neo-Brutalism Theme Tokens */
+  --bg-color: #fdfdfd;
+  --surface-color: #ffffff;
+  --text-main: #000000;
+  --text-muted: #333333;
+  --border-color: #000000;
+  --border-width: 3px;
+  --shadow-color: #000000;
+  
+  /* Vibrant Pastel Colors */
+  --accent-yellow: #FBEA72; /* Vibrant pastel yellow */
+  --accent-pink: #FF9CEE; /* Vibrant pastel pink */
+  --accent-blue: #88D8C0; /* Vibrant pastel teal/aqua */
+  --accent-green: #B5EAD7; /* Vibrant pastel mint */
+  --accent-purple: #C7CEEA; /* Vibrant pastel periwinkle */
+  --accent-orange: #FFB7B2; /* Vibrant pastel peach */
+  
+  /* Active accent (dynamic) */
+  --accent: var(--accent-yellow);
+  --accent-hover: #e0c248;
+
+  /* Hard Shadows */
+  --shadow-sm: 2px 2px 0px var(--shadow-color);
+  --shadow-md: 4px 4px 0px var(--shadow-color);
+  --shadow-lg: 8px 8px 0px var(--shadow-color);
+  
+  --board-bg: #f4f4f0;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #000000;
+  --tool-btn-bg: #ffffff;
+  --tool-btn-border: var(--border-color);
+  --tool-btn-hover-bg: var(--accent-yellow);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  background: var(--board-bg);
+  transition: background 0.3s, color 0.3s;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* --- Neo-Brutalism Global Utilities --- */
+
+.neo-badge {
+  display: inline-block;
+  background: var(--accent-yellow);
+  color: #000;
+  border: var(--border-width) solid var(--border-color);
+  padding: 4px 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 2px 2px 0px var(--shadow-color);
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.neo-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-color);
+  color: #000;
+  border: var(--border-width) solid var(--border-color);
+  padding: 6px 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: var(--shadow-sm);
+  border-radius: 50px;
+}
+
+.neo-title-block {
+  display: inline-block;
+  background: var(--accent-pink);
+  color: #000;
+  border: 4px solid var(--border-color);
+  padding: 12px 24px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 24px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 16px;
+  transform: rotate(-1deg);
+}
+
+.neo-window {
+  background: var(--sidebar-bg);
+  color: var(--text-main);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.neo-window-header {
+  background: var(--accent-blue);
+  border-bottom: var(--border-width) solid var(--border-color);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.neo-window-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+}
+.neo-window-dot.red { background: #ff5f56; }
+.neo-window-dot.yellow { background: #ffbd2e; }
+.neo-window-dot.green { background: #27c93f; }
+
+.neo-window-content {
+  padding: 24px;
+  flex: 1;
+}
+
+.neo-border {
+  border: var(--border-width) solid var(--border-color) !important;
+}
+
+.neo-shadow {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.neo-shadow:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--shadow-color) !important;
+}
+
+.neo-shadow:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 0px 0px 0px var(--shadow-color) !important;
+}
+
+.neo-card {
+  background: var(--sidebar-bg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 0px;
+  box-shadow: var(--shadow-md);
+  padding: 24px;
+}
+
+.neo-btn {
+  background: var(--sidebar-bg);
+  color: var(--text-main);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 0px;
+  padding: 12px 24px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.1s ease-in-out;
+  box-shadow: var(--shadow-md);
+}
+
+.neo-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--shadow-color);
+}
+
+.neo-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--shadow-color);
+}
+
+.neo-btn-primary {
+  background: var(--accent-yellow);
+}
+
+.neo-btn-secondary {
+  background: var(--accent-pink);
+}
+
+.neo-input {
+  border: var(--border-width) solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-main);
+  padding: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  outline: none;
+  border-radius: 0px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.1s ease-in-out;
+}
+
+.neo-input:focus {
+  background: var(--accent-blue);
+}
+
+/* -- Board Textures -- */
+/* Pinboard / holed background */
+body[data-board="pinboard"] {
+  --board-bg: transparent;
+}
+body[data-board="pinboard"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle, var(--border-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: -1;
+}
+
+
+/* Root App container */
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+overflow: hidden;
+}
+
+/* TopBar adjustments for Neo-Brutalism */
+.topbar-nav-btn, .dashboard-sidebar-btn {
+  border: var(--border-width) solid var(--border-color) !important;
+  background: var(--sidebar-bg) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: 0 !important;
+  font-weight: 800 !important;
+}
+
+.topbar-nav-btn:hover, .dashboard-sidebar-btn:hover {
+  background: var(--accent-yellow) !important;
+  transform: translate(-1px, -1px);
+  color: #000 !important;
+  box-shadow: 3px 3px 0px var(--shadow-color) !important;
+}
+
+.topbar-nav-btn:active, .dashboard-sidebar-btn:active {
+  transform: translate(1px, 1px) !important;
+  box-shadow: 0px 0px 0px var(--shadow-color) !important;
+}
+
+/* --- Sidebar Neo-Brutalism --- */
+.milanote-sidebar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 200px;
+  background: var(--sidebar-bg);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+  z-index: 40;
+  transform: translateX(-150%);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.milanote-sidebar.open {
+  transform: translateX(0);
+}
+
+.milanote-sidebar .sidebar-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-btn {
+  background: var(--tool-btn-bg);
+  border: var(--border-width) solid var(--tool-btn-border);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.1s;
+}
+
+.tool-btn:hover {
+  background: var(--accent-yellow);
+  color: #000;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px var(--shadow-color);
+}
+
+.tool-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--shadow-color);
+}
+
+.dashboard-room-btn {
+  border: var(--border-width) solid var(--border-color) !important;
+  background: var(--sidebar-bg) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: 0 !important;
+  font-weight: 700 !important;
+  transition: all 0.1s !important;
+}
+
+.dashboard-room-btn:hover {
+  background: var(--accent-pink) !important;
+  transform: translate(-2px, -2px) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.dashboard-room-btn.active {
+  background: var(--accent-blue) !important;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  background: var(--accent-yellow);
+}
+
+.modal-title {
+  font-weight: 800;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-transform: uppercase;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.document-preview-content pre {
+  background: #000;
+  color: #5ce1e6;
+  padding: 16px;
+  border: var(--border-width) solid var(--border-color);
+font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+/* --- Neo Toggle --- */
+.neo-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--sidebar-bg);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  user-select: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.1s ease-in-out;
+  border-radius: 0px;
+}
+
+.neo-toggle:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-md);
+}
+
+.neo-toggle.on {
+  background: var(--accent-green);
+}
+
+.neo-toggle-track {
+  width: 44px;
+  height: 24px;
+  background: var(--surface-color);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  position: relative;
+  transition: all 0.1s;
+}
+
+.neo-toggle.on .neo-toggle-track {
+  background: var(--accent-yellow);
+}
+
+.neo-toggle-thumb {
+  width: 16px;
+  height: 16px;
+  background: #000;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: all 0.1s ease-in-out;
+}
+
+.neo-toggle.on .neo-toggle-thumb {
+  left: 22px;
+}
+
+/* --- Restore Neo-Brutalism for TLDraw UI --- */
+.tlui-style-panel, .tlui-main-toolbar, .tlui-navigation-panel, .tlui-page-menu__wrapper, .tlui-menu, .tlui-popover__content, .tlui-dialog__content, .tlui-contextual-toolbar, .tlui-toast__main, .tlui-help-menu, .tlui-actions-menu {
+  background: var(--sidebar-bg) !important;
+  border: 4px solid var(--border-color) !important;
+  box-shadow: 6px 6px 0px var(--shadow-color) !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+}
+
+.tlui-button {
+  border-radius: 0 !important;
+  border: 2px solid transparent !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+
+.tlui-button:hover:not(:disabled) {
+  background: var(--accent-yellow) !important;
+  border: 2px solid var(--border-color) !important;
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 4px 4px 0px var(--shadow-color) !important;
+}
+
+.tlui-button:active:not(:disabled) {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 0px 0px 0px var(--shadow-color) !important;
+}
+
+.tlui-button[data-state="selected"], 
+.tlui-button[data-state="active"] {
+  background: var(--accent-yellow) !important;
+  border: 2px solid var(--border-color) !important;
+  color: #000 !important;
+  box-shadow: 2px 2px 0px var(--shadow-color) !important;
+}
+
+.tlui-button[data-state="selected"] *, 
+.tlui-button[data-state="active"] * {
+  fill: #000 !important;
+  color: #000 !important;
+}
+/* Pinhole Background */
+.pinhole-bg {
+  background-color: var(--board-bg) !important;
+  background-image: radial-gradient(var(--border-color) 1.5px, transparent 1.5px) !important;
+  background-size: 24px 24px !important;
+}
+
+.pinhole-bg {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1.5px, transparent 1.5px) !important;
+}
+
+/* Custom Excalidraw Overrides */
+.excalidraw .layer-ui__wrapper { display: none !important; }
+.excalidraw-cursor { display: none !important; }
+.excalidraw-container { cursor: none !important; }
+.excalidraw-container * { cursor: none !important; }
+
+
+/* Brutalist UI Panel Overrides */
+.neo-brutalist-panel { border: 3px solid #000 !important; box-shadow: 4px 4px 0 #000 !important; }
+
