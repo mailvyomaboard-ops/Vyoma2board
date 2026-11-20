@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import '../index.css';
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import '../index.css';
-
 /**
  * Figma-style High-Performance Real-Time Cursor Overlay
  * - World-to-Screen coordinate projection
