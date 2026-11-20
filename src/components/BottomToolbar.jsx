@@ -105,9 +105,10 @@ const BottomToolbar = React.memo(function BottomToolbar({
   return (
     <div 
       ref={toolbarRef}
+      className="bottom-toolbar-dock"
       style={{
-        position: 'absolute',
-        bottom: 'max(16px, env(safe-area-inset-bottom))',
+        position: 'fixed',
+        bottom: 'max(12px, env(safe-area-inset-bottom))',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 1000,

@@ -64,7 +64,7 @@ export default function ContextualPanel({
   onSendBackward,
   onToolChange = () => {}
 }) {
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

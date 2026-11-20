@@ -983,49 +983,67 @@ body[data-board="pinboard"]::before {
     box-sizing: border-box !important;
   }
 
-  /* TopBar in Canvas - Mobile Header Bar */
+  /* TopBar in Canvas - Floating Mobile Header Bar */
   .top-bar-panel {
-    width: calc(100vw - 16px) !important;
-    max-width: calc(100vw - 16px) !important;
+    position: fixed !important;
+    top: 8px !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
     padding: 6px 10px !important;
     gap: 8px !important;
-    top: 8px !important;
     justify-content: space-between !important;
     box-sizing: border-box !important;
+    z-index: 1000 !important;
   }
 
   /* Whiteboard Mobile Contextual Panel (Bottom Action Sheet) */
   .mobile-contextual-panel {
-    position: absolute !important;
-    bottom: 80px !important;
+    position: fixed !important;
+    bottom: 64px !important;
     left: 10px !important;
     right: 10px !important;
     top: auto !important;
     transform: none !important;
     width: auto !important;
-    max-height: 250px !important;
+    max-height: 200px !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
     z-index: 1050 !important;
-    padding: 12px !important;
+    padding: 10px !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3), 4px 4px 0 #000 !important;
   }
 
-  /* Whiteboard Mobile Zoom Indicator (Top Left under Header) */
+  /* Whiteboard Mobile Zoom Indicator (Discreet top-right HUD, non-blocking) */
   .board-zoom-indicator {
-    top: 64px !important;
-    left: 10px !important;
+    position: fixed !important;
+    top: 56px !important;
+    right: 10px !important;
+    left: auto !important;
     bottom: auto !important;
-    right: auto !important;
-    padding: 4px 8px !important;
-    font-size: 11px !important;
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    pointer-events: none !important;
+    z-index: 998 !important;
+    opacity: 0.8;
   }
 
-  /* Bottom Toolbar in Canvas - Mobile Responsive Dock */
+  /* Bottom Toolbar in Canvas - Fixed Bottom Floating Dock */
+  .bottom-toolbar-dock {
+    position: fixed !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    max-width: calc(100vw - 16px) !important;
+    z-index: 1000 !important;
+  }
+
   .bottom-toolbar-panel {
     max-width: calc(100vw - 16px) !important;
-    padding: 6px !important;
-    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    padding: 5px 8px !important;
     gap: 6px !important;
     justify-content: center !important;
   }

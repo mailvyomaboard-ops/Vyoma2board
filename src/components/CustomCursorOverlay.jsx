@@ -322,38 +322,8 @@ export default function CustomCursorOverlay({
       {/* Local touch feedback indicator on mobile */}
       {renderedLocalTouchCursor}
 
-      {/* Mobile Floating Action Button to Trigger Cursor Chat */}
-      {isMobile && !isTyping && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            openChatInput({ x: window.innerWidth / 2 - 80, y: window.innerHeight - 140 });
-          }}
-          className="cursor-chat-mobile-btn neo-btn"
-          style={{
-            position: 'absolute',
-            bottom: '72px',
-            right: '16px',
-            pointerEvents: 'auto',
-            zIndex: 9995,
-            background: 'var(--accent-pink)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 14px',
-            fontSize: '13px',
-            fontWeight: '800',
-            borderRadius: '24px',
-            boxShadow: '3px 3px 0 #000'
-          }}
-          title="Send Cursor Message"
-        >
-          <MessageSquare size={16} /> Chat
-        </button>
-      )}
-
-      {/* Ephemeral Cursor Chat Input Bar */}
-      {isTyping && (
+      {/* Ephemeral Cursor Chat Input Bar (Desktop Only) */}
+      {isTyping && !isMobile && (
         <div
           className="cursor-chat-input-wrapper"
           style={{
@@ -534,8 +504,8 @@ function RemoteCursorItem({ screenX, screenY, name, color, chat, pointerType }) 
         {name}
       </div>
 
-      {/* Cursor Live Chat Message Bubble */}
-      {chat && (
+      {/* Cursor Live Chat Message Bubble (Desktop Only) */}
+      {!isTouch && chat && (
         <div
           className="cursor-chat-bubble"
           style={{

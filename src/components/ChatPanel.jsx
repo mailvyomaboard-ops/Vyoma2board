@@ -4,19 +4,19 @@ import { useCallContext } from '../context/CallContext';
 import '../index.css';
 
 export default function ChatPanel({ onClose, roomInfo }) {
-  const { 
-    myUserId, 
-    activeUsers, 
-    chatMessages, 
-    dmHistory, 
-    sendChatMessage, 
-    sendDirectMessage 
+  const {
+    myUserId,
+    activeUsers,
+    chatMessages,
+    dmHistory,
+    sendChatMessage,
+    sendDirectMessage
   } = useCallContext();
 
   const [activeView, setActiveView] = useState('inbox'); // 'inbox' | 'group' | targetUserId
   const [searchQuery, setSearchQuery] = useState('');
   const [input, setInput] = useState('');
-  
+
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function ChatPanel({ onClose, roomInfo }) {
     } else {
       sendDirectMessage(activeView, input);
     }
-    
+
     setInput('');
   };
 
@@ -50,7 +50,7 @@ export default function ChatPanel({ onClose, roomInfo }) {
     .sort((a, b) => {
       const roleA = roomInfo?.roles?.[a.id] || (a.id === roomInfo?.hostId ? 'admin' : 'member');
       const roleB = roomInfo?.roles?.[b.id] || (b.id === roomInfo?.hostId ? 'admin' : 'member');
-      
+
       const isHostA = roleA === 'admin' || roleA === 'co-admin';
       const isHostB = roleB === 'admin' || roleB === 'co-admin';
 
@@ -88,14 +88,14 @@ export default function ChatPanel({ onClose, roomInfo }) {
               <X size={16} />
             </button>
           </div>
-          
+
           <div className="neo-window-content" style={{ padding: 0, display: 'flex', flexDirection: 'column', flex: 1, background: 'var(--surface-color)' }}>
             <div style={{ padding: '12px', borderBottom: '3px solid #000' }}>
               <div style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', border: '2px solid #000', borderRadius: '4px', padding: '4px 8px' }}>
                 <Search size={16} color="#000" />
-                <input 
-                  type="text" 
-                  placeholder="Search participants..." 
+                <input
+                  type="text"
+                  placeholder="Search participants..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', padding: '4px 8px', width: '100%', fontSize: '14px' }}
@@ -105,10 +105,10 @@ export default function ChatPanel({ onClose, roomInfo }) {
 
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {/* Group Chat Item */}
-              <div 
+              <div
                 onClick={() => setActiveView('group')}
-                style={{ 
-                  padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', 
+                style={{
+                  padding: '16px', display: 'flex', alignItems: 'center', gap: '12px',
                   borderBottom: '3px solid #000', cursor: 'pointer', background: 'var(--accent-blue)', color: '#000'
                 }}
               >
@@ -125,18 +125,18 @@ export default function ChatPanel({ onClose, roomInfo }) {
               {sortedUsers.map(user => {
                 const role = roomInfo?.roles?.[user.id] || (user.id === roomInfo?.hostId ? 'admin' : 'member');
                 return (
-                  <div 
+                  <div
                     key={user.id}
                     onClick={() => setActiveView(user.id)}
-                    style={{ 
-                      padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', 
+                    style={{
+                      padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px',
                       borderBottom: '2px solid #000', cursor: 'pointer', background: 'var(--surface-color)'
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface-color)'}
                   >
-                    <div style={{ 
-                      width: '40px', height: '40px', background: user.color, 
+                    <div style={{
+                      width: '40px', height: '40px', background: user.color,
                       border: '3px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: '900', fontSize: '18px'
                     }}>
@@ -208,7 +208,7 @@ const UsersIcon = () => (
 );
 
 const MessageBubble = ({ msg, isMe }) => (
-  <div style={{ 
+  <div style={{
     display: 'flex', flexDirection: 'column', gap: '4px',
     background: msg.isSystem ? 'var(--accent-green)' : isMe ? 'var(--accent-blue)' : '#f1f5f9',
     alignSelf: msg.isSystem ? 'center' : isMe ? 'flex-end' : 'flex-start',
