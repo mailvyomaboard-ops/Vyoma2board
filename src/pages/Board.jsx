@@ -762,6 +762,7 @@ export default function Board() {
             ydoc={ydoc}
             provider={provider}
             awareness={awareness}
+            localClientId={awareness?.clientID}
             elementsMap={elementsMap}
             viewModeEnabled={!canEdit}
             perms={perms}
@@ -794,7 +795,6 @@ export default function Board() {
                 }
               }
             }}
-            localClientId={awareness?.clientID}
           />
         </ErrorBoundary>
       </div>

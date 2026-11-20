@@ -236,9 +236,9 @@ export default function CustomCursorOverlay({
     return list;
   }, [cursors, zoom, scrollX, scrollY, containerOrigin]);
 
-  // Render local touch cursor (visible on mobile / touch when actively touching)
-  const renderedLocalTouchCursor = useMemo(() => {
-    if (!localCursor || localCursor.pointerType !== 'touch') return null;
+  // Render local cursor (visible on desktop mouse AND mobile touch with (You) badge)
+  const renderedLocalCursor = useMemo(() => {
+    if (!localCursor) return null;
 
     const screenPos = boardToScreenCoordinates(
       localCursor.x,
@@ -249,9 +249,11 @@ export default function CustomCursorOverlay({
       containerOrigin
     );
 
+    const isTouch = localCursor.pointerType === 'touch';
+
     return (
       <div
-        className="local-touch-indicator"
+        className="local-cursor-container"
         style={{
           position: 'absolute',
           left: 0,
@@ -259,27 +261,59 @@ export default function CustomCursorOverlay({
           transform: `translate3d(${screenPos.x}px, ${screenPos.y}px, 0)`,
           pointerEvents: 'none',
           zIndex: 9998,
-          willChange: 'transform'
+          willChange: 'transform',
+          transition: isTouch ? 'none' : 'transform 0.03s cubic-bezier(0, 0, 0.2, 1)'
         }}
       >
+        {isTouch ? (
+          // Mobile / Tablet Touch Ring
+          <div style={{ position: 'relative', width: 0, height: 0 }}>
+            <div
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                border: `2.5px solid ${localCursor.color}`,
+                background: `${localCursor.color}33`,
+                transform: 'translate(-50%, -50%)',
+                boxShadow: `0 0 12px ${localCursor.color}`,
+                animation: 'touchPulse 1.2s ease-out infinite'
+              }}
+            />
+          </div>
+        ) : (
+          // Desktop Precision Cyberpunk Arrow Pointer
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              filter: `drop-shadow(0px 2px 6px rgba(0,0,0,0.6)) drop-shadow(0 0 8px ${localCursor.color}66)`
+            }}
+          >
+            <path
+              d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 01.35-.15h6.87a.5.5 0 00.35-.85L5.5 3.21z"
+              fill={localCursor.color}
+              stroke="#090a0f"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
+
+        {/* Local Participant Badge with (You) tag */}
         <div
-          style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: '50%',
-            border: `2.5px solid ${localCursor.color}`,
-            background: 'rgba(0, 255, 204, 0.2)',
-            transform: 'translate(-50%, -50%)',
-            boxShadow: `0 0 12px ${localCursor.color}`,
-            animation: 'touchPulse 1.2s ease-out infinite'
-          }}
-        />
-        <div
+          className="cursor-participant-label"
           style={{
             position: 'absolute',
-            top: '16px',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            top: isTouch ? '18px' : '22px',
+            left: isTouch ? '0' : '14px',
+            transform: isTouch ? 'translateX(-50%)' : 'none',
             background: localCursor.color,
             color: '#090a0f',
             padding: '2px 8px',
@@ -289,13 +323,38 @@ export default function CustomCursorOverlay({
             whiteSpace: 'nowrap',
             fontFamily: "'Space Grotesk', sans-serif",
             boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            letterSpacing: '0.5px'
+            letterSpacing: '0.5px',
+            border: '1px solid rgba(0,0,0,0.2)'
           }}
         >
           {localCursor.name} (You)
         </div>
+
+        {/* Local Cursor Ephemeral Chat Bubble */}
         {localCursor.chat && (
-          <div className="cursor-chat-bubble" style={{ borderColor: localCursor.color, top: '38px', left: '50%', transform: 'translateX(-50%)' }}>
+          <div
+            className="cursor-chat-bubble"
+            style={{
+              borderColor: localCursor.color,
+              position: 'absolute',
+              left: isTouch ? '0' : '14px',
+              top: isTouch ? '40px' : '44px',
+              transform: isTouch ? 'translateX(-50%)' : 'none',
+              background: 'rgba(17, 19, 28, 0.95)',
+              color: '#f0f6fc',
+              border: `1.5px solid ${localCursor.color}`,
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: '600',
+              fontFamily: "'Space Grotesk', sans-serif",
+              whiteSpace: 'pre-wrap',
+              maxWidth: '240px',
+              wordBreak: 'break-word',
+              boxShadow: `0 4px 16px rgba(0,0,0,0.5), 0 0 10px ${localCursor.color}44`,
+              backdropFilter: 'blur(6px)'
+            }}
+          >
             {localCursor.chat}
           </div>
         )}
@@ -319,8 +378,8 @@ export default function CustomCursorOverlay({
       {/* Remote participants' cursors */}
       {renderedRemoteCursors}
 
-      {/* Local touch feedback indicator on mobile */}
-      {renderedLocalTouchCursor}
+      {/* Local participant cursor (desktop pointer arrow + mobile touch ring) */}
+      {renderedLocalCursor}
 
       {/* Ephemeral Cursor Chat Input Bar (Desktop Only) */}
       {isTyping && !isMobile && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
+import { WebrtcProvider } from 'y-webrtc';
 import { db } from './firebase';
 import { doc, updateDoc, Bytes, onSnapshot } from 'firebase/firestore';
 import { getWsUrl, getAuthToken, ensureAuthToken } from './config';
@@ -28,6 +29,7 @@ export function useYjsStore({ roomId, localUserId }) {
       return;
     }
     let provider = null;
+    let webrtcProvider = null;
     const ydoc = new Y.Doc();
     const elementsMap = ydoc.getMap('excalidraw-elements');
     const customCardsMap = ydoc.getMap('custom-cards');
@@ -66,10 +68,29 @@ export function useYjsStore({ roomId, localUserId }) {
         console.warn('[useYjsStore] Firestore fallback skipped:', err);
       }
 
-      // Connect to the authenticated backend Yjs WebSocket server
-      const wsUrl = `${getWsUrl()}/yjs`;
-      const providerOpts = token ? { params: { token } } : {};
-      provider = new WebsocketProvider(wsUrl, roomId, ydoc, providerOpts);
+      // Connect to the authenticated backend Yjs WebSocket server or resilient public relay
+      const rawWs = getWsUrl();
+      const isPublicRelay = rawWs.includes('yjs.dev') || rawWs.includes('fly.dev');
+      const wsUrl = isPublicRelay ? rawWs : (rawWs.endsWith('/yjs') ? rawWs : `${rawWs}/yjs`);
+      const roomKey = isPublicRelay ? `vyoma2_${roomId}` : roomId;
+      const providerOpts = token && !isPublicRelay ? { params: { token } } : {};
+      provider = new WebsocketProvider(wsUrl, roomKey, ydoc, providerOpts);
+
+      // Create WebRTC P2P mesh alongside WebSocket for 0ms direct awareness and mesh resilience
+      try {
+        if (typeof window !== 'undefined') {
+          webrtcProvider = new WebrtcProvider(`vyoma2_mesh_${roomId}`, ydoc, {
+            signaling: [
+              'wss://signaling.yjs.dev',
+              'wss://y-webrtc-signaling-eu.herokuapp.com',
+              'wss://y-webrtc-signaling-us.herokuapp.com'
+            ],
+            awareness: provider.awareness
+          });
+        }
+      } catch (webrtcErr) {
+        console.warn('[useYjsStore] WebRTC provider notice:', webrtcErr);
+      }
 
       provider.on('status', event => {
         if (isDisposed) return;
@@ -115,7 +136,12 @@ export function useYjsStore({ roomId, localUserId }) {
       isDisposed = true;
       if (timeoutId) clearTimeout(timeoutId);
       if (unsubscribeSnapshot) unsubscribeSnapshot();
-      if (provider) provider.destroy();
+      if (webrtcProvider) {
+        try { webrtcProvider.destroy(); } catch (e) {}
+      }
+      if (provider) {
+        try { provider.destroy(); } catch (e) {}
+      }
       ydoc.destroy();
     };
   }, [roomId]);

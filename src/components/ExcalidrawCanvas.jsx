@@ -4,7 +4,7 @@ import BottomToolbar from './BottomToolbar';
 import ContextualPanel from './ContextualPanel';
 import FileCard from './FileCard';
 import CustomCursorOverlay from './CustomCursorOverlay';
-import { getParticipantColor } from '../lib/cursorCoordinates';
+import { getParticipantColor, screenToBoardCoordinates } from '../lib/cursorCoordinates';
 import '../index.css';
 
 const NOTE_COLORS = {
@@ -528,6 +528,26 @@ export default function ExcalidrawCanvas({
   return (
     <div
       ref={containerRef}
+      onPointerMove={(e) => {
+        if (!awarenessRef.current || !apiRef.current) return;
+        try {
+          const appState = apiRef.current.getAppState();
+          const containerOrigin = containerRef.current?.getBoundingClientRect() || { left: 0, top: 0 };
+          const boardCoords = screenToBoardCoordinates(
+            e.clientX,
+            e.clientY,
+            appState.zoom?.value || 1,
+            appState.scrollX || 0,
+            appState.scrollY || 0,
+            containerOrigin
+          );
+          handlePointerUpdate({
+            pointer: boardCoords,
+            button: e.buttons > 0 ? 'down' : 'up',
+            pointerType: e.pointerType || 'mouse'
+          });
+        } catch (err) {}
+      }}
       onPointerLeave={() => {
         if (awarenessRef.current) {
           awarenessRef.current.setLocalStateField('pointer', null);

@@ -21,8 +21,17 @@ export const getWsUrl = () => {
   if (import.meta.env.DEV) {
     return 'ws://localhost:1234';
   }
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.host}`;
+  // In production static hosting (e.g. Firebase Hosting *.web.app or *.firebaseapp.com),
+  // there is no WebSocket server hosted on the static CDN. Fall back to resilient public Yjs relay.
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.includes('web.app') || host.includes('firebaseapp.com') || host.includes('github.io')) {
+      return 'wss://demos.yjs.dev/ws';
+    }
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.host}`;
+  }
+  return 'wss://demos.yjs.dev/ws';
 };
 
 /**
