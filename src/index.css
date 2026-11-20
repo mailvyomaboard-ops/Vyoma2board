@@ -505,8 +505,70 @@ font-family: 'Fira Code', monospace;
 /* Custom Excalidraw Overrides */
 .excalidraw .layer-ui__wrapper { display: none !important; }
 .excalidraw-cursor { display: none !important; }
-.excalidraw-container { cursor: none !important; }
-.excalidraw-container * { cursor: none !important; }
+
+/* Real-Time Cursor & Presence Overlay Styles */
+.custom-cursor-overlay-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9990;
+  overflow: hidden;
+}
+
+.remote-cursor-container {
+  will-change: transform;
+  pointer-events: none;
+}
+
+.cursor-participant-label {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+@keyframes touchPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+}
+
+.cursor-chat-bubble {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  animation: chatBubblePop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes chatBubblePop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.cursor-chat-mobile-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #000 !important;
+}
+
+.cursor-chat-mobile-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #000 !important;
+}
 
 
 /* Brutalist UI Panel Overrides */

@@ -30,6 +30,7 @@ import Peer from 'peerjs';
 import TopBar from '../components/TopBar';
 import ExcalidrawCanvas from '../components/ExcalidrawCanvas';
 import { ErrorBoundary } from '../ErrorBoundary';
+import { getParticipantColor } from '../lib/cursorCoordinates';
 
 export default function Board() {
   const { id } = useParams();
@@ -186,7 +187,7 @@ export default function Board() {
     if (!awareness) return;
 
     const userName = localStorage.getItem('userName') || 'Anonymous';
-    const userColor = accentColor?.hex || '#ff4444';
+    const userColor = accentColor?.hex || getParticipantColor(localUserId || userName);
 
     // Announce ourselves with full user info for cursor rendering
     awareness.setLocalStateField('userId', localUserId);

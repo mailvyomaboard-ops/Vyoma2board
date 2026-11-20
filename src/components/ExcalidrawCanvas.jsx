@@ -4,6 +4,7 @@ import BottomToolbar from './BottomToolbar';
 import ContextualPanel from './ContextualPanel';
 import FileCard from './FileCard';
 import CustomCursorOverlay from './CustomCursorOverlay';
+import { getParticipantColor } from '../lib/cursorCoordinates';
 import '../index.css';
 
 const NOTE_COLORS = {
@@ -423,22 +424,72 @@ export default function ExcalidrawCanvas({
   // is intentionally stable for the lifetime of the component.
   }, []);
 
+  const containerRef = useRef(null);
   const lastUserRef = useRef(null);
+  const lastBroadcastTimeRef = useRef(0);
+  const lastPointerTypeRef = useRef('mouse');
+
+  // Track pointer type on window (mouse vs touch)
+  useEffect(() => {
+    const onPointerDown = (e) => {
+      lastPointerTypeRef.current = e.pointerType || 'mouse';
+    };
+    window.addEventListener('pointerdown', onPointerDown, { passive: true });
+    return () => window.removeEventListener('pointerdown', onPointerDown);
+  }, []);
+
+  // When tab is hidden or pointer leaves the window/canvas, clear pointer awareness immediately
+  useEffect(() => {
+    const handleClearPointer = () => {
+      if (awarenessRef.current) {
+        awarenessRef.current.setLocalStateField('pointer', null);
+        awarenessRef.current.setLocalStateField('lastActivity', Date.now());
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) handleClearPointer();
+    };
+
+    window.addEventListener('blur', handleClearPointer);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('blur', handleClearPointer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const handlePointerUpdate = useCallback((payload) => {
-    if (awarenessRef.current) {
-      awarenessRef.current.setLocalStateField('pointer', payload.pointer);
-      awarenessRef.current.setLocalStateField('button', payload.button);
-      
-      const userName = localStorage.getItem('userName') || 'Anonymous';
-      const userColor = localStorage.getItem('themeAccent') || '#ff4444';
-      
-      const currentUser = lastUserRef.current;
-      if (!currentUser || currentUser.name !== userName || currentUser.color !== userColor) {
-        const newUser = { name: userName, color: userColor };
-        awarenessRef.current.setLocalStateField('user', newUser);
-        lastUserRef.current = newUser;
-      }
+    if (!awarenessRef.current) return;
+    
+    const now = Date.now();
+    // Throttle awareness broadcast to ~40fps (25ms) to prevent WebSocket saturation
+    if (now - lastBroadcastTimeRef.current < 25) return;
+    lastBroadcastTimeRef.current = now;
+
+    const pType = payload.pointerType || lastPointerTypeRef.current || 'mouse';
+    const isVisible = !!payload.pointer;
+
+    awarenessRef.current.setLocalStateField('pointer', isVisible ? {
+      x: payload.pointer.x,
+      y: payload.pointer.y,
+      visible: true,
+      pointerType: pType
+    } : null);
+
+    awarenessRef.current.setLocalStateField('button', payload.button || 'up');
+    awarenessRef.current.setLocalStateField('lastActivity', now);
+
+    const userName = localStorage.getItem('userName') || 'Anonymous';
+    const userId = localStorage.getItem('userId') || 'guest';
+    const userColor = localStorage.getItem('themeAccent') || getParticipantColor(userId);
+
+    const currentUser = lastUserRef.current;
+    if (!currentUser || currentUser.name !== userName || currentUser.color !== userColor) {
+      const newUser = { name: userName, color: userColor };
+      awarenessRef.current.setLocalStateField('user', newUser);
+      awarenessRef.current.setLocalStateField('userId', userId);
+      lastUserRef.current = newUser;
     }
   }, []);
 
@@ -475,10 +526,25 @@ export default function ExcalidrawCanvas({
   ]);
 
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+    <div
+      ref={containerRef}
+      onPointerLeave={() => {
+        if (awarenessRef.current) {
+          awarenessRef.current.setLocalStateField('pointer', null);
+          awarenessRef.current.setLocalStateField('lastActivity', Date.now());
+        }
+      }}
+      onPointerCancel={() => {
+        if (awarenessRef.current) {
+          awarenessRef.current.setLocalStateField('pointer', null);
+          awarenessRef.current.setLocalStateField('lastActivity', Date.now());
+        }
+      }}
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+    >
       {excalidrawElement}
 
-      {/* Custom Cursor Overlay - Figma-style remote cursors */}
+      {/* Custom Cursor Overlay - Master Figma/Miro-style presence */}
       <CustomCursorOverlay
         awareness={awareness}
         localClientId={localClientId}
@@ -486,6 +552,7 @@ export default function ExcalidrawCanvas({
         zoom={zoom}
         scrollX={scrollX}
         scrollY={scrollY}
+        containerRef={containerRef}
       />
 
       {/* Cards Overlay */}
