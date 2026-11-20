@@ -378,7 +378,9 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
       }).catch(err => console.error("Failed to load annotations", err));
   }, [fileData.url, activeZipFile, fileData.fileId, fileData.originShapeId, fileData.name]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    setShowDownloadMenu(false);
+
     // 1. If spreadsheet was edited, generate and download updated CSV/XLSX
     if (isExcel && excelSheets && excelSheets.length > 0) {
       if (ext === 'csv') {
@@ -393,8 +395,7 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(downloadUrl);
-        setShowDownloadMenu(false);
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
         return;
       } else {
         const wb = XLSX.utils.book_new();
@@ -403,14 +404,14 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
           XLSX.utils.book_append_sheet(wb, ws, sheet.name);
         });
         XLSX.writeFile(wb, fileData.name || 'document.xlsx');
-        setShowDownloadMenu(false);
         return;
       }
     }
 
     // 2. If code/text was edited, generate updated text blob
-    if (isCode && editContent) {
-      const blob = new Blob([editContent], { type: 'text/plain;charset=utf-8;' });
+    if ((isCode || isNotebook) && (editContent || content)) {
+      const textToSave = editContent || content;
+      const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8;' });
       const downloadUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
@@ -418,19 +419,50 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(downloadUrl);
-      setShowDownloadMenu(false);
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
       return;
     }
 
-    // 3. Fallback to canonical URL
-    const link = document.createElement('a');
-    link.href = fileData.url;
-    link.download = fileData.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setShowDownloadMenu(false);
+    // 3. Robust cross-origin fetch & download for images, PDFs, binary files
+    if (fileData.url) {
+      try {
+        const res = await fetch(fileData.url);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileData.name || 'download';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+        return;
+      } catch (fetchErr) {
+        console.warn('Cross-origin blob fetch fallback:', fetchErr);
+        // Fallback to direct anchor navigation
+        const link = document.createElement('a');
+        link.href = fileData.url;
+        link.target = '_blank';
+        link.download = fileData.name || 'download';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+    }
+
+    // 4. Memory content fallback
+    if (fileData.content) {
+      const blob = new Blob([fileData.content], { type: 'application/octet-stream' });
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileData.name || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+    }
   };
 
   const handleDownloadPdf = async () => {
@@ -1223,13 +1255,82 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
             )}
 
             <div style={{ position: 'relative' }}>
-              <button onClick={() => setShowDownloadMenu(!showDownloadMenu)} style={{ background: '#4b5563', border: 'none', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
-                {isGeneratingPdf ? <Loader2 size={16} className="spin" /> : <Download size={16} />} DL <ChevronDown size={14} />
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDownloadMenu(!showDownloadMenu);
+                }} 
+                style={{ 
+                  background: 'var(--accent-yellow, #facc15)', 
+                  border: '2px solid #000', 
+                  color: '#000', 
+                  padding: '6px 14px', 
+                  borderRadius: '6px', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  fontSize: '13px',
+                  fontWeight: '800',
+                  boxShadow: '2px 2px 0px #000'
+                }}
+                title="Download options"
+              >
+                {isGeneratingPdf ? <Loader2 size={16} className="spin" /> : <Download size={16} />} Download <ChevronDown size={14} />
               </button>
               {showDownloadMenu && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: 'var(--color-bg)', border: '1px solid var(--color-text)', borderRadius: '6px', overflow: 'hidden', zIndex: 100, display: 'flex', flexDirection: 'column', width: '150px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
-                  <button onClick={handleDownload} style={{ background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px 12px', textAlign: 'left', cursor: 'pointer', fontSize: '13px' }} onMouseEnter={e => e.target.style.background='rgba(255,255,255,0.1)'} onMouseLeave={e => e.target.style.background='transparent'}>Original File</button>
-                  <button onClick={handleDownloadPdf} style={{ background: 'transparent', border: 'none', color: 'white', padding: '8px 12px', textAlign: 'left', cursor: 'pointer', fontSize: '13px' }} onMouseEnter={e => e.target.style.background='rgba(255,255,255,0.1)'} onMouseLeave={e => e.target.style.background='transparent'}>Annotated PDF</button>
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '100%', 
+                  right: 0, 
+                  marginTop: '6px', 
+                  background: '#090a0f', 
+                  border: '2px solid #000', 
+                  borderRadius: '8px', 
+                  overflow: 'hidden', 
+                  zIndex: 100005, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  width: '160px', 
+                  boxShadow: '4px 4px 0px #000' 
+                }}>
+                  <button 
+                    onClick={handleDownload} 
+                    style={{ 
+                      background: 'transparent', 
+                      border: 'none', 
+                      borderBottom: '1px solid rgba(255,255,255,0.15)', 
+                      color: '#00ffcc', 
+                      padding: '10px 14px', 
+                      textAlign: 'left', 
+                      cursor: 'pointer', 
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      fontFamily: "'Space Grotesk', sans-serif"
+                    }} 
+                    onMouseEnter={e => e.target.style.background='rgba(0,255,204,0.15)'} 
+                    onMouseLeave={e => e.target.style.background='transparent'}
+                  >
+                    Original File
+                  </button>
+                  <button 
+                    onClick={handleDownloadPdf} 
+                    style={{ 
+                      background: 'transparent', 
+                      border: 'none', 
+                      color: '#ffffff', 
+                      padding: '10px 14px', 
+                      textAlign: 'left', 
+                      cursor: 'pointer', 
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      fontFamily: "'Space Grotesk', sans-serif"
+                    }} 
+                    onMouseEnter={e => e.target.style.background='rgba(255,255,255,0.15)'} 
+                    onMouseLeave={e => e.target.style.background='transparent'}
+                  >
+                    Annotated PDF
+                  </button>
                 </div>
               )}
             </div>
