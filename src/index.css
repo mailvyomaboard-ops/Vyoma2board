@@ -9,15 +9,21 @@
   --border-color: #000000;
   --border-width: 3px;
   --shadow-color: #000000;
-  
+
   /* Vibrant Pastel Colors */
-  --accent-yellow: #FBEA72; /* Vibrant pastel yellow */
-  --accent-pink: #FF9CEE; /* Vibrant pastel pink */
-  --accent-blue: #88D8C0; /* Vibrant pastel teal/aqua */
-  --accent-green: #B5EAD7; /* Vibrant pastel mint */
-  --accent-purple: #C7CEEA; /* Vibrant pastel periwinkle */
-  --accent-orange: #FFB7B2; /* Vibrant pastel peach */
-  
+  --accent-yellow: #FBEA72;
+  /* Vibrant pastel yellow */
+  --accent-pink: #FF9CEE;
+  /* Vibrant pastel pink */
+  --accent-blue: #88D8C0;
+  /* Vibrant pastel teal/aqua */
+  --accent-green: #B5EAD7;
+  /* Vibrant pastel mint */
+  --accent-purple: #C7CEEA;
+  /* Vibrant pastel periwinkle */
+  --accent-orange: #FFB7B2;
+  /* Vibrant pastel peach */
+
   /* Active accent (dynamic) */
   --accent: var(--accent-yellow);
   --accent-hover: #e0c248;
@@ -26,7 +32,7 @@
   --shadow-sm: 2px 2px 0px var(--shadow-color);
   --shadow-md: 4px 4px 0px var(--shadow-color);
   --shadow-lg: 8px 8px 0px var(--shadow-color);
-  
+
   --board-bg: #f4f4f0;
   --sidebar-bg: #ffffff;
   --sidebar-border: #000000;
@@ -54,6 +60,7 @@ body {
     transform: scale(1);
     opacity: 0.8;
   }
+
   100% {
     transform: scale(1.5);
     opacity: 0;
@@ -129,9 +136,18 @@ body {
   border-radius: 50%;
   border: 2px solid var(--border-color);
 }
-.neo-window-dot.red { background: #ff5f56; }
-.neo-window-dot.yellow { background: #ffbd2e; }
-.neo-window-dot.green { background: #27c93f; }
+
+.neo-window-dot.red {
+  background: #ff5f56;
+}
+
+.neo-window-dot.yellow {
+  background: #ffbd2e;
+}
+
+.neo-window-dot.green {
+  background: #27c93f;
+}
 
 .neo-window-content {
   padding: 24px;
@@ -219,11 +235,12 @@ body {
 body[data-board="pinboard"] {
   --board-bg: transparent;
 }
+
 body[data-board="pinboard"]::before {
   content: "";
   position: fixed;
   inset: 0;
-  background-image: 
+  background-image:
     radial-gradient(circle, var(--border-color) 1px, transparent 1px);
   background-size: 40px 40px;
   opacity: 0.08;
@@ -244,11 +261,12 @@ body[data-board="pinboard"]::before {
   position: relative;
   display: flex;
   flex-direction: column;
-overflow: hidden;
+  overflow: hidden;
 }
 
 /* TopBar adjustments for Neo-Brutalism */
-.topbar-nav-btn, .dashboard-sidebar-btn {
+.topbar-nav-btn,
+.dashboard-sidebar-btn {
   border: var(--border-width) solid var(--border-color) !important;
   background: var(--sidebar-bg) !important;
   color: var(--text-main) !important;
@@ -257,14 +275,16 @@ overflow: hidden;
   font-weight: 800 !important;
 }
 
-.topbar-nav-btn:hover, .dashboard-sidebar-btn:hover {
+.topbar-nav-btn:hover,
+.dashboard-sidebar-btn:hover {
   background: var(--accent-yellow) !important;
   transform: translate(-1px, -1px);
   color: #000 !important;
   box-shadow: 3px 3px 0px var(--shadow-color) !important;
 }
 
-.topbar-nav-btn:active, .dashboard-sidebar-btn:active {
+.topbar-nav-btn:active,
+.dashboard-sidebar-btn:active {
   transform: translate(1px, 1px) !important;
   box-shadow: 0px 0px 0px var(--shadow-color) !important;
 }
@@ -378,9 +398,15 @@ overflow: hidden;
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
+
 .spin {
   animation: spin 1s linear infinite;
 }
@@ -390,7 +416,7 @@ overflow: hidden;
   color: #5ce1e6;
   padding: 16px;
   border: var(--border-width) solid var(--border-color);
-font-family: 'Fira Code', monospace;
+  font-family: 'Fira Code', monospace;
   font-size: 14px;
   margin: 16px 0;
 }
@@ -452,7 +478,17 @@ font-family: 'Fira Code', monospace;
 }
 
 /* --- Restore Neo-Brutalism for TLDraw UI --- */
-.tlui-style-panel, .tlui-main-toolbar, .tlui-navigation-panel, .tlui-page-menu__wrapper, .tlui-menu, .tlui-popover__content, .tlui-dialog__content, .tlui-contextual-toolbar, .tlui-toast__main, .tlui-help-menu, .tlui-actions-menu {
+.tlui-style-panel,
+.tlui-main-toolbar,
+.tlui-navigation-panel,
+.tlui-page-menu__wrapper,
+.tlui-menu,
+.tlui-popover__content,
+.tlui-dialog__content,
+.tlui-contextual-toolbar,
+.tlui-toast__main,
+.tlui-help-menu,
+.tlui-actions-menu {
   background: var(--sidebar-bg) !important;
   border: 4px solid var(--border-color) !important;
   box-shadow: 6px 6px 0px var(--shadow-color) !important;
@@ -478,7 +514,7 @@ font-family: 'Fira Code', monospace;
   box-shadow: 0px 0px 0px var(--shadow-color) !important;
 }
 
-.tlui-button[data-state="selected"], 
+.tlui-button[data-state="selected"],
 .tlui-button[data-state="active"] {
   background: var(--accent-yellow) !important;
   border: 2px solid var(--border-color) !important;
@@ -486,11 +522,12 @@ font-family: 'Fira Code', monospace;
   box-shadow: 2px 2px 0px var(--shadow-color) !important;
 }
 
-.tlui-button[data-state="selected"] *, 
+.tlui-button[data-state="selected"] *,
 .tlui-button[data-state="active"] * {
   fill: #000 !important;
   color: #000 !important;
 }
+
 /* Pinhole Background */
 .pinhole-bg {
   background-color: var(--board-bg) !important;
@@ -503,8 +540,85 @@ font-family: 'Fira Code', monospace;
 }
 
 /* Custom Excalidraw Overrides */
-.excalidraw .layer-ui__wrapper { display: none !important; }
-.excalidraw-cursor { display: none !important; }
+.excalidraw .layer-ui__wrapper {
+  display: none !important;
+}
+
+.excalidraw-cursor {
+  display: none !important;
+}
+
+/* Real-Time Cursor & Presence Overlay Styles */
+.custom-cursor-overlay-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9990;
+  overflow: hidden;
+}
+
+.excalidraw-cursor {
+  display: none !important;
+}
+
+.remote-cursor-container {
+  will-change: transform;
+  pointer-events: none;
+}
+
+.cursor-participant-label {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes touchPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+}
+
+.cursor-chat-bubble {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  animation: chatBubblePop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes chatBubblePop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.cursor-chat-mobile-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #000 !important;
+}
+
+.cursor-chat-mobile-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #000 !important;
+}
+
 
 /* Real-Time Cursor & Presence Overlay Styles */
 .custom-cursor-overlay-layer {
@@ -524,7 +638,7 @@ font-family: 'Fira Code', monospace;
   user-select: none;
   -webkit-user-select: none;
   pointer-events: none;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes touchPulse {
@@ -532,10 +646,12 @@ font-family: 'Fira Code', monospace;
     transform: translate(-50%, -50%) scale(0.8);
     opacity: 1;
   }
+
   50% {
     transform: translate(-50%, -50%) scale(1.3);
     opacity: 0.6;
   }
+
   100% {
     transform: translate(-50%, -50%) scale(0.8);
     opacity: 1;
@@ -554,6 +670,7 @@ font-family: 'Fira Code', monospace;
     transform: scale(0.85);
     opacity: 0;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -572,7 +689,10 @@ font-family: 'Fira Code', monospace;
 
 
 /* Brutalist UI Panel Overrides */
-.neo-brutalist-panel { border: 3px solid #000 !important; box-shadow: 4px 4px 0 #000 !important; }
+.neo-brutalist-panel {
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0 #000 !important;
+}
 
 
 
@@ -581,10 +701,21 @@ font-family: 'Fira Code', monospace;
    ============================================================================ */
 
 /* Utility classes */
-.mobile-show { display: none !important; }
-.mobile-hide { display: flex !important; }
-.desktop-only { display: flex !important; }
-.mobile-only { display: none !important; }
+.mobile-show {
+  display: none !important;
+}
+
+.mobile-hide {
+  display: flex !important;
+}
+
+.desktop-only {
+  display: flex !important;
+}
+
+.mobile-only {
+  display: none !important;
+}
 
 .page-container-responsive {
   width: 100%;
@@ -644,20 +775,20 @@ font-family: 'Fira Code', monospace;
   backdrop-filter: none;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   overflow: hidden;
 }
 
 .file-viewer-header {
   height: 60px;
-  background: rgba(255,255,255,0.02);
+  background: rgba(255, 255, 255, 0.02);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
   z-index: 50;
   gap: 12px;
@@ -671,6 +802,7 @@ font-family: 'Fira Code', monospace;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
+
 .file-viewer-toolbar::-webkit-scrollbar {
   display: none;
 }
@@ -695,10 +827,21 @@ font-family: 'Fira Code', monospace;
    1. PORTRAIT / VERTICAL MOBILE BREAKPOINT (<= 768px)
    ---------------------------------------------------------------------------- */
 @media screen and (max-width: 768px) {
-  .mobile-show { display: flex !important; }
-  .mobile-hide { display: none !important; }
-  .desktop-only { display: none !important; }
-  .mobile-only { display: flex !important; }
+  .mobile-show {
+    display: flex !important;
+  }
+
+  .mobile-hide {
+    display: none !important;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: flex !important;
+  }
 
   /* Safe Area Support */
   body {
@@ -865,7 +1008,7 @@ font-family: 'Fira Code', monospace;
     -webkit-overflow-scrolling: touch;
     z-index: 1050 !important;
     padding: 12px !important;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.3), 4px 4px 0 #000 !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3), 4px 4px 0 #000 !important;
   }
 
   /* Whiteboard Mobile Zoom Indicator (Top Left under Header) */
@@ -907,6 +1050,7 @@ font-family: 'Fira Code', monospace;
    2. LANDSCAPE / HORIZONTAL MOBILE BREAKPOINT (max-height: 520px)
    ---------------------------------------------------------------------------- */
 @media screen and (max-height: 520px) and (orientation: landscape) {
+
   /* Short Viewport Optimizations */
   .page-container-responsive {
     padding: 12px 16px !important;

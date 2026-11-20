@@ -143,9 +143,9 @@ export default function ExamEditor() {
               </div>
             </div>
 
-            <textarea 
-              value={q.props.question} 
-              onChange={e => updateQuestion(idx, 'question', e.target.value)} 
+            <textarea
+              value={q.props.question}
+              onChange={e => updateQuestion(idx, 'question', e.target.value)}
               placeholder="Question text..."
               style={{ width: '100%', minHeight: '80px', border: '3px solid #000', padding: '12px', fontFamily: 'Inter', fontSize: '16px', resize: 'vertical', marginBottom: '16px', boxSizing: 'border-box' }}
             />
@@ -167,9 +167,9 @@ export default function ExamEditor() {
                   <span style={{ fontWeight: '700', fontSize: '14px' }}>Expected Lines (Editor Height):</span>
                   <input type="number" value={q.props.expectedLines} onChange={e => updateQuestion(idx, 'expectedLines', parseInt(e.target.value) || 5)} style={{ width: '60px', border: '3px solid #000', padding: '4px' }} />
                 </div>
-                <textarea 
-                  value={q.props.expectedAnswer || ''} 
-                  onChange={e => updateQuestion(idx, 'expectedAnswer', e.target.value)} 
+                <textarea
+                  value={q.props.expectedAnswer || ''}
+                  onChange={e => updateQuestion(idx, 'expectedAnswer', e.target.value)}
                   placeholder="Expected answer (optional, for manual grading reference)"
                   style={{ width: '100%', minHeight: '60px', border: '3px solid #000', padding: '12px', fontFamily: 'Inter', fontSize: '14px', resize: 'vertical', background: '#f9f9f9', boxSizing: 'border-box' }}
                 />
@@ -178,23 +178,23 @@ export default function ExamEditor() {
 
             {q.type === 'quiz-code-shape' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                 <p style={{ fontWeight: '700', fontSize: '14px', margin: 0 }}>Languages available for this question:</p>
-                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {['c', 'cpp', 'python', 'java', 'javascript', 'go'].map(lang => {
-                      const hasLang = q.props.languages.some(l => l.id === lang);
-                      return (
-                        <button key={lang} onClick={() => {
-                          let newLangs = [...q.props.languages];
-                          if (hasLang) newLangs = newLangs.filter(l => l.id !== lang);
-                          else newLangs.push({ id: lang, template: `// Default template for ${lang}` });
-                          if (newLangs.length === 0) newLangs.push({ id: 'python', template: 'print("Hello World")' });
-                          updateQuestion(idx, 'languages', newLangs);
-                        }} style={{ border: '3px solid #000', padding: '4px 8px', fontSize: '12px', fontWeight: '900', background: hasLang ? 'var(--accent-green)' : 'var(--surface-color)', cursor: 'pointer' }}>
-                          {lang.toUpperCase()}
-                        </button>
-                      );
-                    })}
-                 </div>
+                <p style={{ fontWeight: '700', fontSize: '14px', margin: 0 }}>Languages available for this question:</p>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {['c', 'cpp', 'python', 'java', 'javascript', 'go'].map(lang => {
+                    const hasLang = q.props.languages.some(l => l.id === lang);
+                    return (
+                      <button key={lang} onClick={() => {
+                        let newLangs = [...q.props.languages];
+                        if (hasLang) newLangs = newLangs.filter(l => l.id !== lang);
+                        else newLangs.push({ id: lang, template: `// Default template for ${lang}` });
+                        if (newLangs.length === 0) newLangs.push({ id: 'python', template: 'print("Hello World")' });
+                        updateQuestion(idx, 'languages', newLangs);
+                      }} style={{ border: '3px solid #000', padding: '4px 8px', fontSize: '12px', fontWeight: '900', background: hasLang ? 'var(--accent-green)' : 'var(--surface-color)', cursor: 'pointer' }}>
+                        {lang.toUpperCase()}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -208,9 +208,9 @@ export default function ExamEditor() {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px', flexWrap: 'wrap' }}>
-          <button className="neo-btn" onClick={addMcq} style={{ background: 'var(--surface-color)' }}><Plus size={16}/> Add MCQ</button>
-          <button className="neo-btn" onClick={addWritten} style={{ background: 'var(--surface-color)' }}><Plus size={16}/> Add Written</button>
-          <button className="neo-btn" onClick={addCode} style={{ background: 'var(--surface-color)' }}><Plus size={16}/> Add Code</button>
+          <button className="neo-btn" onClick={addMcq} style={{ background: 'var(--surface-color)' }}><Plus size={16} /> Add MCQ</button>
+          <button className="neo-btn" onClick={addWritten} style={{ background: 'var(--surface-color)' }}><Plus size={16} /> Add Written</button>
+          <button className="neo-btn" onClick={addCode} style={{ background: 'var(--surface-color)' }}><Plus size={16} /> Add Code</button>
         </div>
       </div>
     </div>
