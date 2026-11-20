@@ -586,10 +586,10 @@ export default function ExcalidrawCanvas({
             zoom={zoom}
             scrollX={scrollX}
             scrollY={scrollY}
-            onUpdatePosition={(id, x, y) => {
+            onUpdatePosition={(id, x, y, width) => {
               // Only allow dragging if we have edit permissions
               if (!viewModeEnabled) {
-                setCustomCards(prev => prev.map(c => c.id === id ? { ...c, x, y } : c));
+                setCustomCards(prev => prev.map(c => c.id === id ? { ...c, x, y, ...(width ? { width } : {}) } : c));
               }
             }}
             onDoubleClick={onCardDoubleClick}

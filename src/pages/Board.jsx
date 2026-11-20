@@ -392,17 +392,25 @@ export default function Board() {
   // Audio State
   const [peer, setPeer] = useState(null);
   const [localStream, setLocalStream] = useState(null);
+  const localStreamRef = useRef(null);
+  localStreamRef.current = localStream;
   const callsRef = useRef({});
+  const [remoteAudioStreams, setRemoteAudioStreams] = useState(new Map());
 
   // Communication States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState([]);
 
-  // Initialize PeerJS for Audio
+  // Initialize PeerJS for Audio (Mounted ONCE per room session)
   useEffect(() => {
     if (!localUserId) return;
     
-    const newPeer = new Peer(`vyomaboard-audio-${localUserId}-${id}`, {
+    // Sanitize user ID and room ID for reliable PeerJS registration
+    const cleanUserId = String(localUserId).replace(/[^a-zA-Z0-9]/g, '');
+    const cleanRoomId = String(id || 'global').replace(/[^a-zA-Z0-9]/g, '');
+    const myPeerId = `vyoma-audio-${cleanUserId}-${cleanRoomId}`;
+
+    const newPeer = new Peer(myPeerId, {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -426,31 +434,50 @@ export default function Board() {
       }
     });
     
-    newPeer.on('open', (id) => {
-      console.log('My peer ID is: ' + id);
+    newPeer.on('open', (assignedId) => {
+      console.log('[PeerJS Audio] Connected with peer ID:', assignedId);
       setPeer(newPeer);
     });
 
     newPeer.on('call', (call) => {
-      if (!localStream) {
-        call.answer();
+      const activeStream = localStreamRef.current;
+      if (activeStream) {
+        call.answer(activeStream);
       } else {
-        call.answer(localStream);
+        call.answer();
       }
       
       call.on('stream', (remoteStream) => {
-        const audio = new Audio();
-        audio.srcObject = remoteStream;
-        audio.autoplay = true;
-        audio.play().catch(e => console.error('Audio play failed:', e));
+        setRemoteAudioStreams(prev => {
+          const next = new Map(prev);
+          next.set(call.peer, remoteStream);
+          return next;
+        });
       });
-      // We do NOT add inbound calls to callsRef so that our outbound effect will still call them when our mic activates
+
+      call.on('close', () => {
+        setRemoteAudioStreams(prev => {
+          const next = new Map(prev);
+          next.delete(call.peer);
+          return next;
+        });
+      });
+
+      call.on('error', (err) => {
+        console.warn('[PeerJS Inbound Call Notice]:', err);
+      });
+    });
+
+    newPeer.on('error', (err) => {
+      console.warn('[PeerJS Notice]:', err);
     });
 
     return () => {
-      newPeer.destroy();
+      try {
+        newPeer.destroy();
+      } catch (e) {}
     };
-  }, [localUserId, id, localStream]);
+  }, [localUserId, id]);
 
   // Handle Local Mic Toggle & VAD
   const [micActive, setMicActive] = useState(false);
@@ -464,76 +491,133 @@ export default function Board() {
     if (micActive && !localStream) {
       navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
         setLocalStream(stream);
+        localStreamRef.current = stream;
+
+        // Dial all connected participants who are present
+        if (peer) {
+          const cleanRoomId = String(id || 'global').replace(/[^a-zA-Z0-9]/g, '');
+          presentUsers.forEach(u => {
+            if (u.id !== localUserId) {
+              const targetCleanId = String(u.id).replace(/[^a-zA-Z0-9]/g, '');
+              const targetPeerId = `vyoma-audio-${targetCleanId}-${cleanRoomId}`;
+              if (!callsRef.current[targetPeerId]) {
+                try {
+                  const call = peer.call(targetPeerId, stream);
+                  if (call) {
+                    call.on('stream', (remStream) => {
+                      setRemoteAudioStreams(prev => {
+                        const next = new Map(prev);
+                        next.set(targetPeerId, remStream);
+                        return next;
+                      });
+                    });
+                    call.on('close', () => {
+                      setRemoteAudioStreams(prev => {
+                        const next = new Map(prev);
+                        next.delete(targetPeerId);
+                        return next;
+                      });
+                      delete callsRef.current[targetPeerId];
+                    });
+                    callsRef.current[targetPeerId] = call;
+                  }
+                } catch (dialErr) {
+                  console.warn('[PeerJS Dial Notice]:', dialErr);
+                }
+              }
+            }
+          });
+        }
         
         // Setup VAD
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) {
-          audioContextRef.current = new AudioContext();
-          const source = audioContextRef.current.createMediaStreamSource(stream);
-          analyserRef.current = audioContextRef.current.createAnalyser();
-          analyserRef.current.minDecibels = -80;
-          analyserRef.current.maxDecibels = -10;
-          analyserRef.current.smoothingTimeConstant = 0.85;
-          source.connect(analyserRef.current);
-          
-          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-          let wasSpeaking = false;
-          
-          const checkAudio = () => {
-            if (!analyserRef.current) return;
-            analyserRef.current.getByteFrequencyData(dataArray);
-            const sum = dataArray.reduce((a, b) => a + b, 0);
-            const avg = sum / dataArray.length;
+          try {
+            audioContextRef.current = new AudioContext();
+            const source = audioContextRef.current.createMediaStreamSource(stream);
+            analyserRef.current = audioContextRef.current.createAnalyser();
+            analyserRef.current.minDecibels = -80;
+            analyserRef.current.maxDecibels = -10;
+            analyserRef.current.smoothingTimeConstant = 0.85;
+            source.connect(analyserRef.current);
             
-            const isLoud = avg > 5; // Lowered Threshold
-            if (isLoud !== wasSpeaking) {
-              wasSpeaking = isLoud;
-              if (awareness) {
-                awareness.setLocalStateField('isSpeaking', isLoud);
+            const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+            let wasSpeaking = false;
+            
+            const checkAudio = () => {
+              if (!analyserRef.current) return;
+              analyserRef.current.getByteFrequencyData(dataArray);
+              const sum = dataArray.reduce((a, b) => a + b, 0);
+              const avg = sum / dataArray.length;
+              
+              const isLoud = avg > 5; // Lowered Threshold
+              if (isLoud !== wasSpeaking) {
+                wasSpeaking = isLoud;
+                if (awareness) {
+                  awareness.setLocalStateField('isSpeaking', isLoud);
+                }
               }
-            }
-            vadRafRef.current = requestAnimationFrame(checkAudio);
-          };
-          checkAudio();
+              vadRafRef.current = requestAnimationFrame(checkAudio);
+            };
+            checkAudio();
+          } catch (e) {
+            console.warn('VAD init notice:', e);
+          }
         }
       }).catch(err => {
         console.error('Failed to get local stream', err);
-        alert('Microphone access denied or failed.');
+        alert('Microphone access denied or unavailable. Please verify browser permissions.');
         setMicActive(false);
         if (awareness) awareness.setLocalStateField('isSpeaking', false);
       });
     } else if (!micActive && localStream) {
       localStream.getTracks().forEach(t => t.stop());
       setLocalStream(null);
+      localStreamRef.current = null;
       if (vadRafRef.current) cancelAnimationFrame(vadRafRef.current);
       if (audioContextRef.current) {
-        audioContextRef.current.close().catch(console.error);
+        try { audioContextRef.current.close(); } catch (e) {}
         audioContextRef.current = null;
         analyserRef.current = null;
       }
-      Object.values(callsRef.current).forEach(c => c.close());
+      Object.values(callsRef.current).forEach(c => {
+        try { c.close(); } catch (e) {}
+      });
       callsRef.current = {};
       if (awareness) awareness.setLocalStateField('isSpeaking', false);
     }
   }, [micActive, peer, awareness, id, localStream, localUserId, presentUsers]);
 
-  // Make sure new peers get called if we are active
+  // Make sure new peers get called if our mic is active
   useEffect(() => {
     if (micActive && localStream && peer) {
+      const cleanRoomId = String(id || 'global').replace(/[^a-zA-Z0-9]/g, '');
       presentUsers.forEach(u => {
         if (u.id !== localUserId) {
-          const peerId = `vyomaboard-audio-${u.id}-${id}`;
-          if (!callsRef.current[peerId]) {
-            const call = peer.call(peerId, localStream);
-            if (call) {
-              call.on('stream', (remoteStream) => {
-                const audio = new Audio();
-                audio.srcObject = remoteStream;
-                audio.autoplay = true;
-                audio.play().catch(e => console.error('Audio play failed:', e));
-              });
-              callsRef.current[peerId] = call;
-            }
+          const targetCleanId = String(u.id).replace(/[^a-zA-Z0-9]/g, '');
+          const targetPeerId = `vyoma-audio-${targetCleanId}-${cleanRoomId}`;
+          if (!callsRef.current[targetPeerId]) {
+            try {
+              const call = peer.call(targetPeerId, localStream);
+              if (call) {
+                call.on('stream', (remStream) => {
+                  setRemoteAudioStreams(prev => {
+                    const next = new Map(prev);
+                    next.set(targetPeerId, remStream);
+                    return next;
+                  });
+                });
+                call.on('close', () => {
+                  setRemoteAudioStreams(prev => {
+                    const next = new Map(prev);
+                    next.delete(targetPeerId);
+                    return next;
+                  });
+                  delete callsRef.current[targetPeerId];
+                });
+                callsRef.current[targetPeerId] = call;
+              }
+            } catch (e) {}
           }
         }
       });
@@ -798,6 +882,23 @@ export default function Board() {
           />
         </ErrorBoundary>
       </div>
+      </div>
+
+      {/* Background Multi-User Voice Mesh Audio Receivers */}
+      <div style={{ display: 'none' }} aria-hidden="true">
+        {Array.from(remoteAudioStreams.entries()).map(([peerId, stream]) => (
+          <audio
+            key={peerId}
+            autoPlay
+            playsInline
+            ref={el => {
+              if (el && el.srcObject !== stream) {
+                el.srcObject = stream;
+                el.play().catch(e => console.warn('Voice autoPlay notice:', e));
+              }
+            }}
+          />
+        ))}
       </div>
 
       {/* Lazy-Loaded Modals & Drawers */}
