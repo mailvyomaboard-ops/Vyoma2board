@@ -80,9 +80,9 @@ export default function Analytics() {
   const COLORS = ['#FF9CEE', '#88D8C0', '#FBEA72', '#C7CEEA', '#FFB7B2', '#92a9e1'];
 
   return (
-    <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--board-bg)', color: '#000' }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+    <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--board-bg)', color: '#000', overflowX: 'hidden' }}>
+      <div className="page-container-responsive">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
           <button className="neo-btn" onClick={() => navigate(`/board/${id}`)} style={{ background: 'var(--accent-yellow)', padding: '8px 12px' }}>
             <ArrowLeft size={18} /> Back to Board
           </button>
@@ -126,7 +126,7 @@ export default function Analytics() {
             <span className="neo-badge" style={{ background: 'var(--accent-yellow)', fontSize: '16px' }}>No data yet — waiting for student submissions.</span>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div className="analytics-charts-grid">
             <div className="neo-card" style={{ background: 'var(--surface-color)', padding: '20px' }}>
               <span className="neo-badge" style={{ background: 'var(--accent-pink)', fontSize: '14px', marginBottom: '16px' }}>Score by Student (%)</span>
               <ResponsiveContainer width="100%" height={260}>

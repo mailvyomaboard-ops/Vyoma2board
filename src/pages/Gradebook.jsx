@@ -154,8 +154,8 @@ export default function Gradebook() {
   }
 
   return (
-    <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--board-bg)', color: '#000' }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px' }}>
+    <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--board-bg)', color: '#000', overflowX: 'hidden' }}>
+      <div className="page-container-responsive">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button className="neo-btn" onClick={() => navigate(`/board/${id}`)} style={{ background: 'var(--accent-yellow)', padding: '8px 12px' }}>

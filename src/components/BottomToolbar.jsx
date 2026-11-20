@@ -53,7 +53,7 @@ const BottomToolbar = React.memo(function BottomToolbar({ activeTool, onToolSele
   });
 
   return (
-    <div className="neo-brutalist-panel" style={{
+    <div className="neo-brutalist-panel bottom-toolbar-panel" style={{
       position: 'absolute',
       bottom: '24px',
       left: '50%',

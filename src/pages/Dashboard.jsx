@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Plus, LogIn, Settings, Hash, Search, Trash, LogOut, GraduationCap } from 'lucide-react';
+import { Layout, Plus, LogIn, Settings, Hash, Search, Trash, LogOut, GraduationCap, Menu, X } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { doc, setDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [sidebarSearch, setSidebarSearch] = useState('');
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const savedName = localStorage.getItem('userName');
@@ -205,9 +206,16 @@ const leaveRoom = (room) => {
       color: '#000',
       overflow: 'hidden'
     }}>
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div 
+          className="dashboard-backdrop" 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+      )}
       
       {/* Sidebar */}
-      <div className="neo-border" style={{
+      <div className={`neo-border dashboard-sidebar-container ${mobileMenuOpen ? 'mobile-open' : ''}`} style={{
         width: '280px',
         backgroundColor: 'var(--accent-purple)',
         display: 'flex',
@@ -333,41 +341,50 @@ const leaveRoom = (room) => {
       </div>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         
         {/* Top Navbar */}
         <div className="neo-border" style={{
           height: '60px',
-          padding: '0 24px',
+          padding: '0 16px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           backgroundColor: 'var(--surface-color)',
           borderTop: 'none',
           borderLeft: 'none',
-          borderRight: 'none'
+          borderRight: 'none',
+          gap: '8px'
         }}>
-           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Hash size={24} color="#000" />
-            <span className="neo-badge" style={{ background: 'var(--accent-green)', fontSize: '16px' }}>
-                Vyomaboard Workspace
+           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+              className="mobile-only neo-btn" 
+              style={{ padding: '6px', background: 'var(--accent-yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Menu"
+            >
+              <Menu size={18} />
+            </button>
+            <Hash size={20} color="#000" className="desktop-only" />
+            <span className="neo-badge" style={{ background: 'var(--accent-green)', fontSize: '14px', whiteSpace: 'nowrap' }}>
+              Vyomaboard
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-             <button onClick={() => setShowCreateModal(true)} className="neo-btn" style={{ background: 'var(--accent-purple)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-               <Plus size={16} /> Create Room
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+             <button onClick={() => setShowCreateModal(true)} className="neo-btn" style={{ background: 'var(--accent-purple)', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+               <Plus size={16} /> <span className="desktop-only">Create</span>
              </button>
-             <button onClick={() => setShowJoinModal(true)} className="neo-btn" style={{ background: 'var(--accent-yellow)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-               <LogIn size={16} /> Join Room
+             <button onClick={() => setShowJoinModal(true)} className="neo-btn" style={{ background: 'var(--accent-yellow)', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+               <LogIn size={16} /> <span className="desktop-only">Join</span>
              </button>
-             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+             <div className="desktop-only" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                <input 
                  type="text" 
                  className="neo-input" 
                  placeholder="Search boards..." 
                  value={sidebarSearch}
                  onChange={e => setSidebarSearch(e.target.value)}
-                 style={{ padding: '8px 12px 8px 36px', width: '250px' }} 
+                 style={{ padding: '8px 12px 8px 36px', width: '200px' }} 
                />
                <Search size={18} style={{ position: 'absolute', left: '12px' }} color="#000" />
              </div>
@@ -375,7 +392,7 @@ const leaveRoom = (room) => {
         </div>
 
          {/* Main Content */}
-         <div style={{ flex: 1, overflowY: 'auto', padding: '40px' }}>
+         <div className="dashboard-main-content" style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
            
            <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>

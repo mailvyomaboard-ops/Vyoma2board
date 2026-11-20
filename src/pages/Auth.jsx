@@ -169,15 +169,8 @@ export default function Auth() {
   );
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--accent-yellow)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px'
-    }}>
-      <div className="neo-window" style={{ maxWidth: '440px', width: '100%' }}>
+    <div className="auth-container">
+      <div className="neo-window auth-window">
         <div className="neo-window-header" style={{ background: 'var(--accent-blue)' }}>
           <div className="neo-window-dot red"></div>
           <div className="neo-window-dot yellow"></div>
@@ -187,7 +180,7 @@ export default function Auth() {
           </span>
         </div>
 
-        <div className="neo-window-content" style={{ background: 'var(--surface-color)' }}>
+        <div className="neo-window-content auth-window-body" style={{ background: 'var(--surface-color)', padding: 'clamp(16px, 4vw, 24px)' }}>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
             <div className="neo-title-block" style={{ transform: 'rotate(-2deg)', background: 'var(--accent-pink)' }}>
               {isLogin ? 'SIGN IN' : 'CREATE ACCOUNT'}

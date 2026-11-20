@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Layout, Settings, Users, MessageSquare, Mic, MicOff, Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { Shield, Layout, Settings, Users, MessageSquare, Mic, MicOff, Eye, EyeOff, Copy, Check, MoreVertical } from 'lucide-react';
 import { isTeacherRole } from '../lib/classMeta';
 import '../index.css';
 
@@ -22,6 +22,7 @@ export default function TopBar({
   const [breadcrumbs, setBreadcrumbs] = useState([]);
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const userRole = localStorage.getItem('userRole') || 'Casual';
   const isHost = actingHost === localUserId;
@@ -74,7 +75,7 @@ export default function TopBar({
   return (
     <>
     {/* Main Centered Top Bar */}
-    <div className="neo-brutalist-panel" style={{
+    <div className="neo-brutalist-panel top-bar-panel" style={{
       position: 'absolute',
       top: '16px',
       left: '50%',
@@ -110,7 +111,8 @@ export default function TopBar({
           cursor: 'pointer',
           color: 'var(--text-main)',
           boxShadow: 'var(--shadow-sm)',
-          transition: 'all 0.1s'
+          transition: 'all 0.1s',
+          flexShrink: 0
         }}
         title="Dashboard"
       >
@@ -119,6 +121,7 @@ export default function TopBar({
 
       {/* Settings Button */}
       <button 
+        className="desktop-only"
         onClick={onOpenSettings}
         style={{
           background: 'var(--surface-color)',
@@ -132,17 +135,18 @@ export default function TopBar({
           cursor: 'pointer',
           color: 'var(--text-main)',
           boxShadow: 'var(--shadow-sm)',
-          transition: 'all 0.1s'
+          transition: 'all 0.1s',
+          flexShrink: 0
         }}
         title="Settings"
       >
         <Settings size={18} />
       </button>
 
-      <div style={{ width: '3px', height: '24px', background: 'var(--border-color)', opacity: 0.5 }}></div>
+      <div className="desktop-only" style={{ width: '3px', height: '24px', background: 'var(--border-color)', opacity: 0.5 }}></div>
 
-      {/* Breadcrumbs / Room Code */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '800', color: 'var(--text-main)', fontSize: '14px' }}>
+      {/* Breadcrumbs / Room Code (Desktop) */}
+      <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '800', color: 'var(--text-main)', fontSize: '14px' }}>
         {breadcrumbs.map((crumb, idx) => {
           const isLast = idx === breadcrumbs.length - 1;
           return (
@@ -198,11 +202,17 @@ export default function TopBar({
         })}
       </div>
 
-      <div style={{ width: '3px', height: '24px', background: 'var(--border-color)', opacity: 0.5 }}></div>
+      {/* Compact Room Name Badge for Mobile */}
+      <div className="mobile-only" style={{ display: 'flex', alignItems: 'center' }}>
+        <span className="neo-badge" style={{ background: 'var(--accent-periwinkle)', fontSize: '12px', padding: '4px 8px', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {roomName}
+        </span>
+      </div>
 
-      {/* Host Controls Button */}
+      {/* Host Controls Button (Desktop) */}
       {isHost && (
         <button
+          className="desktop-only"
           onClick={onOpenHostControls}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
@@ -221,9 +231,10 @@ export default function TopBar({
         </button>
       )}
 
-      {/* Teach Button (replaces Roster) */}
+      {/* Teach Button (Desktop) */}
       {canUseTeacherTools && (
         <button
+          className="desktop-only"
           onClick={onOpenRoster}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
@@ -256,14 +267,98 @@ export default function TopBar({
           fontSize: '13px',
           fontWeight: '800',
           cursor: 'pointer',
-          boxShadow: 'var(--shadow-sm)'
+          boxShadow: 'var(--shadow-sm)',
+          flexShrink: 0
         }}
         title="Toggle Microphone"
       >
         {isMicOn ? <Mic size={16} /> : <MicOff size={16} />}
       </button>
 
+      {/* Mobile Menu Toggle Button */}
+      <button
+        className="mobile-only"
+        onClick={() => setShowMobileMenu(!showMobileMenu)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: showMobileMenu ? 'var(--accent-yellow)' : 'var(--surface-color)',
+          border: 'var(--border-width) solid var(--border-color)',
+          borderRadius: '4px',
+          width: '36px', height: '36px',
+          cursor: 'pointer',
+          boxShadow: 'var(--shadow-sm)',
+          flexShrink: 0
+        }}
+        title="More Options"
+      >
+        <MoreVertical size={18} />
+      </button>
+
     </div>
+
+    {/* Mobile Options Popover Menu */}
+    {showMobileMenu && (
+      <div 
+        className="neo-card mobile-only" 
+        style={{
+          position: 'absolute',
+          top: '64px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'calc(100vw - 32px)',
+          maxWidth: '340px',
+          background: 'var(--surface-color)',
+          border: '3px solid #000',
+          boxShadow: '6px 6px 0 #000',
+          zIndex: 1001,
+          padding: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}
+      >
+        <button 
+          onClick={() => { onOpenSettings(); setShowMobileMenu(false); }}
+          className="neo-btn" 
+          style={{ width: '100%', background: 'var(--surface-color)', display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <Settings size={16} /> Board Settings
+        </button>
+
+        <button 
+          onClick={() => { 
+            navigator.clipboard.writeText(roomName); 
+            setCopied(true); 
+            setTimeout(() => setCopied(false), 2000); 
+          }}
+          className="neo-btn" 
+          style={{ width: '100%', background: 'var(--accent-periwinkle)', display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          {copied ? <Check size={16} color="#00a000" /> : <Copy size={16} />} 
+          {copied ? 'Code Copied!' : `Copy Room Code (${roomName.slice(0, 10)})`}
+        </button>
+
+        {isHost && (
+          <button 
+            onClick={() => { onOpenHostControls(); setShowMobileMenu(false); }}
+            className="neo-btn" 
+            style={{ width: '100%', background: 'var(--accent-pink)', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Shield size={16} /> Host Controls
+          </button>
+        )}
+
+        {canUseTeacherTools && (
+          <button 
+            onClick={() => { onOpenRoster(); setShowMobileMenu(false); }}
+            className="neo-btn" 
+            style={{ width: '100%', background: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Users size={16} /> Teaching Roster
+          </button>
+        )}
+      </div>
+    )}
 
     {/* Floating Avatar Stack - Top Right */}
     <div style={{

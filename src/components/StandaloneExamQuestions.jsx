@@ -174,7 +174,7 @@ export const StandaloneCode = ({ shape }) => {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
         {languages.map(l => (
           <button key={l.id} onClick={() => onLangChange(l.id)} style={{ border: '3px solid #000', padding: '6px 12px', fontWeight: '900', fontSize: '12px', cursor: 'pointer', background: localLang === l.id ? 'var(--accent-blue)' : 'var(--surface-color)', color: localLang === l.id ? 'var(--surface-color)' : '#000' }}>
             {l.id.toUpperCase()}

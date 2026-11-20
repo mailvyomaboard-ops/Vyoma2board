@@ -112,29 +112,30 @@ export default function ExamEditor() {
   if (loading) return <div style={{ padding: '40px', textAlign: 'center', fontWeight: 'bold' }}>Loading Editor...</div>;
 
   return (
-    <div style={{ backgroundColor: '#F0F4FF', minHeight: '100vh', paddingBottom: '100px' }}>
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--surface-color)', borderBottom: '4px solid #000', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button className="neo-btn" onClick={() => navigate('/exams')} style={{ background: 'var(--accent-yellow)', padding: '8px 12px' }}><ArrowLeft size={16} /> Back</button>
-          <h2 style={{ margin: 0, fontWeight: '900', fontSize: '20px' }}>{examConfig?.title || 'Exam Editor'}</h2>
+    <div style={{ backgroundColor: '#F0F4FF', minHeight: '100vh', paddingBottom: '100px', overflowX: 'hidden' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--surface-color)', borderBottom: '4px solid #000', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button className="neo-btn" onClick={() => navigate('/exams')} style={{ background: 'var(--accent-yellow)', padding: '6px 10px' }}><ArrowLeft size={16} /> Back</button>
+          <h2 style={{ margin: 0, fontWeight: '900', fontSize: '18px' }}>{examConfig?.title || 'Exam Editor'}</h2>
         </div>
-        <button className="neo-btn" onClick={save} disabled={saving} style={{ background: 'var(--accent-green)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button className="neo-btn" onClick={save} disabled={saving} style={{ background: 'var(--accent-green)', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Save size={16} /> {saving ? 'Saving...' : 'Save Exam'}
         </button>
       </div>
 
-      <div style={{ maxWidth: '800px', margin: '40px auto 0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ maxWidth: '800px', margin: '24px auto 0 auto', display: 'flex', flexDirection: 'column', gap: '20px', padding: '0 12px' }}>
         {questions.map((q, idx) => (
-          <div key={q.id} className="neo-card" style={{ background: 'var(--surface-color)', padding: '24px', position: 'relative' }}>
-            <div style={{ position: 'absolute', left: '-40px', top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <button onClick={() => moveQuestion(idx, -1)} disabled={idx === 0} style={{ background: 'var(--surface-color)', border: '2px solid #000', cursor: idx === 0 ? 'not-allowed' : 'pointer' }}>▲</button>
-              <button onClick={() => moveQuestion(idx, 1)} disabled={idx === questions.length - 1} style={{ background: 'var(--surface-color)', border: '2px solid #000', cursor: idx === questions.length - 1 ? 'not-allowed' : 'pointer' }}>▼</button>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '3px solid #000', paddingBottom: '8px' }}>
-              <span className="neo-badge" style={{ background: 'var(--accent-blue)', fontSize: '12px' }}>
-                {q.type === 'quiz-mcq-shape' ? 'Multiple Choice' : q.type === 'quiz-written-shape' ? 'Written' : 'Code'}
-              </span>
+          <div key={q.id} className="neo-card" style={{ background: 'var(--surface-color)', padding: '20px', position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '3px solid #000', paddingBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="neo-badge" style={{ background: 'var(--accent-blue)', fontSize: '12px' }}>
+                  {q.type === 'quiz-mcq-shape' ? 'Multiple Choice' : q.type === 'quiz-written-shape' ? 'Written' : 'Code'}
+                </span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button onClick={() => moveQuestion(idx, -1)} disabled={idx === 0} style={{ background: 'var(--surface-color)', border: '2px solid #000', cursor: idx === 0 ? 'not-allowed' : 'pointer', padding: '2px 8px', fontSize: '12px', fontWeight: 'bold' }}>▲</button>
+                  <button onClick={() => moveQuestion(idx, 1)} disabled={idx === questions.length - 1} style={{ background: 'var(--surface-color)', border: '2px solid #000', cursor: idx === questions.length - 1 ? 'not-allowed' : 'pointer', padding: '2px 8px', fontSize: '12px', fontWeight: 'bold' }}>▼</button>
+                </div>
+              </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <span style={{ fontWeight: '800', fontSize: '14px' }}>Marks:</span>
                 <input type="number" value={q.props.marks} onChange={e => updateQuestion(idx, 'marks', parseInt(e.target.value) || 0)} style={{ width: '60px', border: '3px solid #000', padding: '4px', fontWeight: 'bold' }} />
@@ -146,14 +147,14 @@ export default function ExamEditor() {
               value={q.props.question} 
               onChange={e => updateQuestion(idx, 'question', e.target.value)} 
               placeholder="Question text..."
-              style={{ width: '100%', minHeight: '80px', border: '3px solid #000', padding: '12px', fontFamily: 'Inter', fontSize: '16px', resize: 'vertical', marginBottom: '16px' }}
+              style={{ width: '100%', minHeight: '80px', border: '3px solid #000', padding: '12px', fontFamily: 'Inter', fontSize: '16px', resize: 'vertical', marginBottom: '16px', boxSizing: 'border-box' }}
             />
 
             {q.type === 'quiz-mcq-shape' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {[1, 2, 3, 4].map(optNum => (
                   <label key={optNum} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <input type="radio" name={`mcq-correct-${q.id}`} checked={q.props.correctOption === optNum} onChange={() => updateQuestion(idx, 'correctOption', optNum)} style={{ width: '20px', height: '20px', accentColor: 'var(--accent-pink)', cursor: 'pointer' }} title="Mark as correct" />
+                    <input type="radio" name={`mcq-correct-${q.id}`} checked={q.props.correctOption === optNum} onChange={() => updateQuestion(idx, 'correctOption', optNum)} style={{ width: '20px', height: '20px', accentColor: 'var(--accent-pink)', cursor: 'pointer', flexShrink: 0 }} title="Mark as correct" />
                     <input type="text" value={q.props[`option${optNum}`]} onChange={e => updateQuestion(idx, `option${optNum}`, e.target.value)} style={{ flex: 1, border: '3px solid #000', padding: '8px', fontSize: '14px', background: q.props.correctOption === optNum ? 'var(--accent-yellow)' : 'var(--surface-color)' }} />
                   </label>
                 ))}
@@ -162,7 +163,7 @@ export default function ExamEditor() {
 
             {q.type === 'quiz-written-shape' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ fontWeight: '700', fontSize: '14px' }}>Expected Lines (Editor Height):</span>
                   <input type="number" value={q.props.expectedLines} onChange={e => updateQuestion(idx, 'expectedLines', parseInt(e.target.value) || 5)} style={{ width: '60px', border: '3px solid #000', padding: '4px' }} />
                 </div>
@@ -170,7 +171,7 @@ export default function ExamEditor() {
                   value={q.props.expectedAnswer || ''} 
                   onChange={e => updateQuestion(idx, 'expectedAnswer', e.target.value)} 
                   placeholder="Expected answer (optional, for manual grading reference)"
-                  style={{ width: '100%', minHeight: '60px', border: '3px solid #000', padding: '12px', fontFamily: 'Inter', fontSize: '14px', resize: 'vertical', background: '#f9f9f9' }}
+                  style={{ width: '100%', minHeight: '60px', border: '3px solid #000', padding: '12px', fontFamily: 'Inter', fontSize: '14px', resize: 'vertical', background: '#f9f9f9', boxSizing: 'border-box' }}
                 />
               </div>
             )}
@@ -206,7 +207,7 @@ export default function ExamEditor() {
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px', flexWrap: 'wrap' }}>
           <button className="neo-btn" onClick={addMcq} style={{ background: 'var(--surface-color)' }}><Plus size={16}/> Add MCQ</button>
           <button className="neo-btn" onClick={addWritten} style={{ background: 'var(--surface-color)' }}><Plus size={16}/> Add Written</button>
           <button className="neo-btn" onClick={addCode} style={{ background: 'var(--surface-color)' }}><Plus size={16}/> Add Code</button>

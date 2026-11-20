@@ -1020,12 +1020,10 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
       onKeyUp={stopPropagation}
     >
       <div 
-        className="modal-content utopian" 
+        className="modal-content utopian file-viewer-modal-content" 
         style={(isFullscreen || isPresenting) ? {
           width: '100vw', height: '100vh', background: 'rgba(9, 9, 11, 1)', display: 'flex', flexDirection: 'column', overflow: 'hidden'
-        } : {
-          width: '90%', maxWidth: '1200px', height: '85vh', background: 'rgba(9, 9, 11, 0.8)', backdropFilter: 'none', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', overflow: 'hidden'
-        }}
+        } : undefined}
         onClick={stopPropagation}
       >
         <style>{`
@@ -1053,28 +1051,28 @@ export default function FileViewerModal({ fileData, folderFiles = [], onClose, o
         
         {/* Global Header */}
         {!isPresenting && (
-        <div style={{ height: '60px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, zIndex: 50 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#e0e0e0', fontWeight: '500', fontSize: '15px' }}>
+        <div className="file-viewer-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e0e0e0', fontWeight: '500', fontSize: '14px', flexShrink: 0 }}>
             {activeZipFile && (
               <button onClick={() => setActiveZipFile(null)} style={{ background: 'transparent', border: 'none', color: '#4ade80', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px 8px', borderRadius: '4px' }}>
                 <ChevronLeft size={18} /> Back
               </button>
             )}
-            {!activeZipFile && isImage && <ImageIcon size={20} color="#a855f7" />}
-            {!activeZipFile && isAudio && <Music size={20} color="#ec4899" />}
-            {!activeZipFile && isCode && <Code size={20} color="#4ade80" />}
-            {!activeZipFile && isWord && <FileText size={20} color="#3b82f6" />}
-            {!activeZipFile && isExcel && <FileSpreadsheet size={20} color="#217346" />}
-            {!activeZipFile && isPowerPoint && <Presentation size={20} color="#6b7280" />}
-            {!activeZipFile && isZip && <Folder size={20} color="#f59e0b" />}
-            {activeZipFile && <File size={20} color="#3b82f6" />}
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+            {!activeZipFile && isImage && <ImageIcon size={18} color="#a855f7" />}
+            {!activeZipFile && isAudio && <Music size={18} color="#ec4899" />}
+            {!activeZipFile && isCode && <Code size={18} color="#4ade80" />}
+            {!activeZipFile && isWord && <FileText size={18} color="#3b82f6" />}
+            {!activeZipFile && isExcel && <FileSpreadsheet size={18} color="#217346" />}
+            {!activeZipFile && isPowerPoint && <Presentation size={18} color="#6b7280" />}
+            {!activeZipFile && isZip && <Folder size={18} color="#f59e0b" />}
+            {activeZipFile && <File size={18} color="#3b82f6" />}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 'min(180px, 40vw)' }}>
                {title}
             </span>
           </div>
           
           {/* Toolbar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="file-viewer-toolbar">
             
             {/* Draw Tools */}
             {!isEditing && (

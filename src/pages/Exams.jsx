@@ -141,7 +141,7 @@ export default function Exams() {
     };
     return (
       <div className="modal-overlay" onClick={() => setShowNewExam(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99998 }}>
-        <div className="neo-window" onClick={e => e.stopPropagation()} style={{ width: '560px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="neo-window" onClick={e => e.stopPropagation()} style={{ width: 'min(560px, 94vw)', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
           <div className="neo-window-header" style={{ background: 'var(--accent-green)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: '900', textTransform: 'uppercase' }}>New Exam</span>
             <button onClick={() => setShowNewExam(false)} style={{ background: 'var(--surface-color)', border: '2px solid #000', cursor: 'pointer', padding: '2px' }}><X size={16} /></button>
@@ -186,8 +186,8 @@ export default function Exams() {
   };
 
   return (
-    <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--board-bg)', color: '#000' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px' }}>
+    <div style={{ width: '100vw', minHeight: '100vh', background: 'var(--board-bg)', color: '#000', overflowX: 'hidden' }}>
+      <div className="page-container-responsive">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button className="neo-btn" onClick={() => navigate('/dashboard')} style={{ background: 'var(--accent-yellow)', padding: '8px 12px' }}>

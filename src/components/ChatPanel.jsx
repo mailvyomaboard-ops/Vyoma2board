@@ -67,7 +67,7 @@ export default function ChatPanel({ onClose, roomInfo }) {
   };
 
   return (
-    <div className="neo-window neo-brutalist-panel" style={{
+    <div className="neo-window neo-brutalist-panel chat-panel-container" style={{
       position: 'absolute',
       right: 16,
       top: 16,

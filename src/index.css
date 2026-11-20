@@ -512,3 +512,358 @@ font-family: 'Fira Code', monospace;
 /* Brutalist UI Panel Overrides */
 .neo-brutalist-panel { border: 3px solid #000 !important; box-shadow: 4px 4px 0 #000 !important; }
 
+
+
+/* ============================================================================
+   RESPONSIVE DESIGN SYSTEM — MOBILE VERTICAL & HORIZONTAL ADAPTATIONS
+   ============================================================================ */
+
+/* Utility classes */
+.mobile-show { display: none !important; }
+.mobile-hide { display: flex !important; }
+.desktop-only { display: flex !important; }
+.mobile-only { display: none !important; }
+
+.page-container-responsive {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.responsive-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+  border: 2px solid #000;
+  border-radius: 6px;
+  background: var(--surface-color);
+  margin-top: 12px;
+}
+
+.analytics-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.auth-container {
+  min-height: 100vh;
+  background: var(--accent-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.auth-window {
+  max-width: 440px;
+  width: 100%;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.auth-window-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(94vh - 46px);
+}
+
+.file-viewer-modal-content {
+  width: 90%;
+  max-width: 1200px;
+  height: 85vh;
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: none;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.file-viewer-header {
+  height: 60px;
+  background: rgba(255,255,255,0.02);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+  z-index: 50;
+  gap: 12px;
+}
+
+.file-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.file-viewer-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ----------------------------------------------------------------------------
+   1. PORTRAIT / VERTICAL MOBILE BREAKPOINT (<= 768px)
+   ---------------------------------------------------------------------------- */
+@media screen and (max-width: 768px) {
+  .mobile-show { display: flex !important; }
+  .mobile-hide { display: none !important; }
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
+
+  /* Safe Area Support */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Typography Scaling */
+  .neo-title-block {
+    font-size: clamp(18px, 5.5vw, 28px) !important;
+    padding: 8px 16px !important;
+  }
+
+  .neo-badge {
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+  }
+
+  .neo-pill {
+    font-size: 12px !important;
+    padding: 4px 10px !important;
+  }
+
+  /* Page container */
+  .page-container-responsive {
+    padding: clamp(12px, 3.5vw, 20px) !important;
+  }
+
+  /* Analytics chart stacking */
+  .analytics-charts-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Home Page elements */
+  .home-nav {
+    padding: 12px 16px !important;
+    margin-bottom: 24px !important;
+    gap: 8px !important;
+  }
+
+  .home-feature-content {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  /* Neo Windows & Cards */
+  .neo-window {
+    max-width: 96vw !important;
+    margin: 8px auto !important;
+    border-width: 2px !important;
+  }
+
+  .neo-card {
+    padding: 16px !important;
+  }
+
+  /* Buttons: Touch friendly minimum 40px */
+  .neo-btn {
+    min-height: 40px;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    touch-action: manipulation;
+  }
+
+  /* Auth Container on Mobile */
+  .auth-container {
+    padding: 12px !important;
+  }
+
+  .auth-window {
+    max-width: 96vw !important;
+  }
+
+  /* File Viewer Modal on Mobile */
+  .file-viewer-modal-content {
+    width: 96vw !important;
+    height: 92vh !important;
+    border-radius: 10px !important;
+  }
+
+  .file-viewer-header {
+    height: 52px !important;
+    padding: 0 12px !important;
+  }
+
+  /* Chat Panel Container on Mobile */
+  .chat-panel-container {
+    right: 8px !important;
+    left: 8px !important;
+    top: 8px !important;
+    bottom: 8px !important;
+    width: auto !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  /* Dashboard Mobile Drawer */
+  .dashboard-sidebar-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    max-width: 80vw !important;
+    height: 100vh !important;
+    z-index: 2000 !important;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 8px 0 0 #000;
+  }
+
+  .dashboard-sidebar-container.mobile-open {
+    transform: translateX(0) !important;
+  }
+
+  .dashboard-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 1999;
+  }
+
+  .dashboard-main-content {
+    padding: 16px !important;
+    width: 100vw !important;
+  }
+
+  /* TopBar in Canvas */
+  .top-bar-panel {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    top: 8px !important;
+  }
+
+  /* Bottom Toolbar in Canvas */
+  .bottom-toolbar-panel {
+    max-width: calc(100vw - 16px) !important;
+    padding: 6px !important;
+    bottom: 12px !important;
+    gap: 6px !important;
+  }
+
+  .bottom-toolbar-panel button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    padding: 8px !important;
+  }
+
+  .modal-window-content {
+    width: 96vw !important;
+    max-height: 90vh !important;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   2. LANDSCAPE / HORIZONTAL MOBILE BREAKPOINT (max-height: 520px)
+   ---------------------------------------------------------------------------- */
+@media screen and (max-height: 520px) and (orientation: landscape) {
+  /* Short Viewport Optimizations */
+  .page-container-responsive {
+    padding: 12px 16px !important;
+  }
+
+  .top-bar-panel {
+    top: 4px !important;
+    padding: 4px 8px !important;
+    height: 36px !important;
+    gap: 4px !important;
+  }
+
+  .top-bar-panel button {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 2px !important;
+  }
+
+  .bottom-toolbar-panel {
+    bottom: 4px !important;
+    padding: 4px !important;
+    gap: 4px !important;
+  }
+
+  .bottom-toolbar-panel button {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .dashboard-main-content {
+    padding: 10px 16px !important;
+  }
+
+  /* Modals must scroll vertically in short landscape screens */
+  .neo-window,
+  .modal-window-content {
+    max-height: 94vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .auth-container {
+    padding: 8px !important;
+  }
+
+  .auth-window {
+    max-height: 94vh !important;
+  }
+
+  .file-viewer-modal-content {
+    width: 98vw !important;
+    height: 96vh !important;
+    border-radius: 8px !important;
+  }
+
+  .file-viewer-header {
+    height: 44px !important;
+    padding: 0 10px !important;
+  }
+
+  .chat-panel-container {
+    right: 4px !important;
+    top: 4px !important;
+    bottom: 4px !important;
+    width: min(320px, 90vw) !important;
+  }
+
+  /* Inputs and forms in landscape */
+  .neo-input {
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+  }
+
+  /* Maximize Canvas Area */
+  .excalidraw-wrapper {
+    height: 100vh !important;
+  }
+}
